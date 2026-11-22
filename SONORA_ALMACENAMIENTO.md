@@ -1,6 +1,6 @@
 # Sonora 3.0 — compartir una biblioteca de hasta 100 canciones
 
-Sonora está publicada en `/sonora.html`. **La biblioteca local sigue funcionando sin configurar nada**. La opción privada de GitHub permite guardar hasta 100 canciones autorizadas y recuperarlas desde otro navegador.
+Woodstock (antes Sonora) está publicado en `/woodstock.html`; `/sonora.html` sigue funcionando como redirección. **La biblioteca local sigue funcionando sin configurar nada**. La opción privada de GitHub permite guardar hasta 100 canciones autorizadas y recuperarlas desde otro navegador.
 
 ## Primera opción: repositorio PRIVADO de GitHub (sin disco de Render)
 
@@ -12,7 +12,7 @@ Sonora está publicada en `/sonora.html`. **La biblioteca local sigue funcionand
    - `SONORA_GITHUB_BRANCH`: `main` (opcional; debe coincidir con la rama de ese repositorio).
    - `SONORA_LIBRARY_TOKEN`: contraseña privada para que las dos personas entren en Sonora, de al menos **16 caracteres**. **No es el token GitHub ni la clave Gemini**.
 4. Guarda y despliega. Comprueba en `/api/sonora/status` que figuren `enabled:true` y `provider:"github"`.
-5. Abre `/sonora.html` en cada dispositivo, introduce la contraseña **de biblioteca** y pulsa **Conectar**. Pulsa **Subir música local** para subir las canciones que hayas añadido a ese navegador, o **Traer música compartida** para recibir canciones del repositorio privado.
+5. Abre `/woodstock.html` en cada dispositivo, introduce la contraseña **de biblioteca** y pulsa **Conectar**. Pulsa **Subir música local** para subir las canciones que hayas añadido a ese navegador, o **Traer música compartida** para recibir canciones del repositorio privado.
 
 La contraseña de biblioteca solo permanece en la memoria de la pestaña; no se guarda en GitHub ni en localStorage. El token privado de GitHub está exclusivamente en las variables de entorno del servidor, sin exponerse al navegador. La contraseña permite consultar y cargar canciones, por eso solo debes compartirla con personas autorizadas.
 
