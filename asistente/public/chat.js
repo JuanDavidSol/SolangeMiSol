@@ -35,6 +35,7 @@
   const SpeechRecognizer = window.SpeechRecognition || window.webkitSpeechRecognition;
   const micSupported = typeof SpeechRecognizer === 'function';
   let micSession = null, micSilenceTimer = null;
+  let voiceConversation = false, voiceGeneration = 0;
 
   /* ---------- Estilos ---------- */
   const css = `
@@ -187,7 +188,7 @@
 
   if (MODE === 'float') {
     head.append(
-      h('button', { type: 'button', title: 'Minimizar', 'aria-label': 'Minimizar', onclick: () => { state.min = !state.min; if (state.min) { stopVoice(); stopMic(true); } save(); layout(); } }, '—'),
+      h('button', { type: 'button', title: 'Minimizar', 'aria-label': 'Minimizar', onclick: () => { state.min = !state.min; if (state.min) stopVoiceConversation('Conversación detenida al minimizar.'); save(); layout(); } }, '—'),
       h('button', { type: 'button', title: 'Cerrar', 'aria-label': 'Cerrar el asistente', onclick: () => setOpen(false) }, '✕'));
     root.append(win, fab);
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.open) setOpen(false); });
@@ -195,6 +196,7 @@
 
   /* ---------- Voz calmada y clara en español (Web Speech API) ---------- */
   function stopVoice() {
+    voiceGeneration++;
     if (voiceSupported) window.speechSynthesis.cancel();
   }
   function preferredVoice() {
@@ -222,10 +224,16 @@
       .replace(/[*_#~>|]/g, ' ')
       .replace(/\s+/g, ' ').trim().slice(0, 3200);
   }
-  function speakReply(text, force = false) {
-    if (!voiceSupported || (!voiceEnabled && !force)) return;
+  function speakReply(text, force = false, onFinished = null) {
+    if (!voiceSupported || (!voiceEnabled && !force)) {
+      if (onFinished) onFinished();
+      return;
+    }
     const words = spokenText(text);
-    if (!words) return;
+    if (!words) {
+      if (onFinished) onFinished();
+      return;
+    }
     stopVoice();
     const speech = new window.SpeechSynthesisUtterance(words);
     const chosen = preferredVoice();
@@ -234,7 +242,17 @@
     speech.rate = 1.18;    // un poco más rápida, manteniendo dicción clara
     speech.pitch = 0.94;   // entonación más serena
     speech.volume = 0.82;  // volumen suave
-    window.speechSynthesis.speak(speech);
+    const generation = voiceGeneration;
+    let finished = false;
+    const done = () => {
+      if (finished || generation !== voiceGeneration) return;
+      finished = true;
+      if (onFinished) onFinished();
+    };
+    speech.onend = done;
+    speech.onerror = done;
+    try { window.speechSynthesis.speak(speech); }
+    catch (_) { done(); }
   }
   function toggleVoice() {
     if (!voiceSupported) return;
@@ -243,7 +261,10 @@
     voiceBtn.title = voiceEnabled ? 'Desactivar respuestas por voz' : 'Activar respuestas por voz';
     voiceBtn.setAttribute('aria-label', voiceBtn.title);
     voiceBtn.setAttribute('aria-pressed', String(voiceEnabled));
-    if (!voiceEnabled) stopVoice();
+    if (!voiceEnabled) {
+      stopVoice();
+      if (voiceConversation && !busy && !micSession) startListening();
+    }
   }
 
   /* ---------- Dictado por voz: solo después de pulsar el micrófono ---------- */
@@ -252,11 +273,18 @@
     micStatus.hidden = !message;
   }
   function markMicListening(isListening) {
-    micBtn.classList.toggle('listening', isListening);
-    micBtn.textContent = isListening ? '⏹' : '🎤';
-    micBtn.title = isListening ? 'Terminar de hablar' : 'Hablar con Snoopy';
+    micBtn.classList.toggle('listening', isListening && voiceConversation);
+    micBtn.textContent = voiceConversation ? '⏹' : '🎤';
+    micBtn.title = voiceConversation ? 'Finalizar conversación por voz' : 'Iniciar conversación por voz';
     micBtn.setAttribute('aria-label', micBtn.title);
-    micBtn.setAttribute('aria-pressed', String(isListening));
+    micBtn.setAttribute('aria-pressed', String(voiceConversation));
+  }
+  function stopVoiceConversation(message = 'Conversación por voz finalizada. Pulsa 🎤 para iniciar otra.') {
+    voiceConversation = false;
+    stopMic(true);
+    stopVoice();
+    markMicListening(false);
+    showMicStatus(message);
   }
   function stopMic(cancel = false) {
     if (!micSession) return;
@@ -298,12 +326,18 @@
     return 'El reconocimiento falló (código: ' + String(code || 'desconocido').replace(/[^a-z-]/g, '').slice(0,40) + '). Revisa el permiso del micrófono y vuelve a intentarlo.';
   }
   function toggleMic() {
-    if (!micSupported || busy) return;
-    if (micSession) {
-      stopMic();  // segunda pulsación: finalizar dictado y enviar lo reconocido
+    if (!micSupported) return;
+    if (voiceConversation) {
+      stopVoiceConversation();
       return;
     }
-    stopVoice(); // evitar que Snoopy se escuche a sí mismo
+    if (busy) return;
+    voiceConversation = true;
+    startListening();
+  }
+  function startListening() {
+    if (!voiceConversation || busy || micSession || document.visibilityState === 'hidden') return;
+    stopVoice(); // nunca grabar el sonido de la voz de Snoopy
     let recognition;
     try { recognition = new SpeechRecognizer(); }
     catch (_) {
@@ -325,7 +359,7 @@
       if (micSession !== current) return;
       current.waitingRestart = false;
       markMicListening(true);
-      showMicStatus('🎤 Te escucho de forma continua. Pulsa ⏹ cuando termines para enviar lo que dijiste.');
+      showMicStatus('🎤 Te escucho. Cuando hagas una pausa, Snoopy responderá automáticamente.');
     };
     recognition.onaudiostart = () => {
       if (micSession !== current) return;
@@ -349,7 +383,14 @@
       current.final = [current.completed, final.trim()].filter(Boolean).join(' ').trim();
       current.interim = interim.trim();
       input.value = [current.base, current.final, current.interim].filter(Boolean).join(' ').trim().slice(0, 500);
-      // No hay temporizador de silencio: el usuario decide cuándo finalizar.
+      // Una pausa natural marca el final de este turno, no el final de la conversación.
+      if (micSilenceTimer) clearTimeout(micSilenceTimer);
+      micSilenceTimer = null;
+      if ((current.final || current.interim) && voiceConversation) {
+        micSilenceTimer = setTimeout(() => {
+          if (micSession === current && !current.stopping && voiceConversation) stopMic(false);
+        }, 1950);
+      }
       showMicStatus(current.interim ? '🎤 Escuchando: ' + current.interim.slice(-100)
         : current.final ? '✓ Entendí: ' + current.final.slice(-110) + '…' : '🎤 Te escucho…');
     };
@@ -376,8 +417,15 @@
       if (current.cancelled || current.error) {
         micSession = null;
         markMicListening(false);
+        if (voiceConversation && !current.cancelled) {
+          if (current.error === 'no-speech') {
+            showMicStatus('🎤 Sigo escuchando…');
+            setTimeout(() => { if (voiceConversation && !busy) startListening(); }, 650);
+          } else stopVoiceConversation(microphoneError(current.error));
+        }
         return;
       }
+      if (!current.stopping && (current.final || current.interim)) current.stopping = true;
       if (!current.stopping) {
         // En algunos navegadores la captura termina sola aunque el modo sea continuo.
         // Conserva lo dictado y reanuda mientras el usuario mantenga activo el botón.
@@ -435,7 +483,7 @@
   function setOpen(v) {
     state.open = v;
     if (v) state.min = false;
-    else { stopVoice(); stopMic(true); }
+    else stopVoiceConversation('Conversación detenida al cerrar.');
     save(); layout();
     if (v) { refreshChips(); setTimeout(() => input.focus(), 50); render(); }
   }
@@ -498,7 +546,7 @@
     if (!cfg || state.msgs.length !== 1 || !state.msgs[0].w) return;
     try { const c = await (await fetch(`${API}/api/config?page=${encodeURIComponent(page())}&section=${encodeURIComponent(section())}`)).json(); state.msgs[0].s = c.faqs || []; save(); render(); } catch { /* se deja como está */ }
   }
-  function newChat() { if (busy) return; stopVoice(); stopMic(true); showMicStatus(''); state = { sid: newSid(), msgs: [], open: true, min: false }; save(); welcome(); input.focus(); }
+  function newChat() { if (busy) return; stopVoiceConversation(''); showMicStatus(''); state = { sid: newSid(), msgs: [], open: true, min: false }; save(); welcome(); input.focus(); }
 
   /* ---------- Petición al servidor (con respuesta en tiempo real) ---------- */
   const headers = { 'Content-Type': 'application/json' };
@@ -581,7 +629,7 @@
     if (!text || busy) return;
     if (micSession) stopMic(true);
     stopVoice();
-    input.value = ''; busy = true; sendBtn.disabled = true; micBtn.disabled = true;
+    input.value = ''; busy = true; sendBtn.disabled = true;
     state.msgs.push({ r: 'u', t: text }); render();
     let bot;
     try {
@@ -594,11 +642,19 @@
     if (liveRaf) cancelAnimationFrame(liveRaf);
     if (!liveText) await new Promise(r => setTimeout(r, 250));   // pausa breve solo si la respuesta no se vio escribiéndose
     liveEl = null; liveRaf = 0; liveText = '';
-    busy = false; sendBtn.disabled = false; micBtn.disabled = !micSupported;
+    busy = false; sendBtn.disabled = false;
     state.msgs.push(bot); state.msgs = state.msgs.slice(-60); save(); render();
-    showMicStatus('');
-    if (bot.q && bot.t && (MODE === 'page' || state.open)) speakReply(bot.t);
-    if (MODE === 'page' || state.open) input.focus();
+    if (voiceConversation) {
+      showMicStatus('🔊 Snoopy está hablando. Al terminar volveré a escucharte…');
+      speakReply(bot.t, false, () => {
+        if (voiceConversation && document.visibilityState !== 'hidden' && (MODE === 'page' || state.open)) startListening();
+      });
+    } else {
+      showMicStatus('');
+      if (bot.q && bot.t && (MODE === 'page' || state.open)) speakReply(bot.t);
+    }
+    markMicListening(false);
+    if (!voiceConversation && (MODE === 'page' || state.open)) input.focus();
   }
 
   async function init() {
@@ -616,5 +672,12 @@
     else document.body.append(root);
     layout();
   }
+  document.addEventListener('visibilitychange', () => {
+    if (document.visibilityState === 'hidden' && voiceConversation)
+      stopVoiceConversation('La conversación terminó al cambiar de pestaña.');
+  });
+  window.addEventListener('pagehide', () => {
+    if (voiceConversation) stopVoiceConversation('');
+  });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
