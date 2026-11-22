@@ -31,7 +31,22 @@
     .tips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px auto}
     .tips span{padding:12px 8px;background:#fff8e6;border:2px solid #2c5486;box-shadow:3px 3px 0 #3463a2;border-radius:4px;text-align:center;font-weight:800;font-size:11px}
     .tips b{font-size:15px;display:block;margin-bottom:5px}
-    @media(max-width:570px){body{padding:13px 7px 30px}#mario-panel{padding:7px;border-width:3px}.screen{border-width:2px}#mario-ctrl{gap:5px}#mario-ctrl button{font-size:10px;min-height:52px;border-width:2px}.tips{grid-template-columns:1fr}.tips span{font-size:11px}h1{text-shadow:2px 2px 0 #fff,3px 3px 0 #2c4d94}}
+    .touch-hint{display:none}
+    @media(max-width:570px){
+      body{padding:12px 7px max(30px,env(safe-area-inset-bottom,0px));overflow-x:hidden}
+      #mario-panel{padding:7px;border-width:3px}
+      .screen{border-width:2px}
+      #mario-ctrl{grid-template-columns:repeat(6,minmax(0,1fr));gap:7px;max-width:440px;margin:13px auto 0}
+      #mario-ctrl button{font-size:clamp(11px,3.3vw,14px);min-height:58px;border-width:2px}
+      #mario-ctrl button:nth-child(-n+3){grid-column:span 2}
+      #mario-ctrl button:nth-child(n+4){grid-column:span 3}
+      #mario-start{min-height:50px;width:100%;max-width:380px}
+      .tips{grid-template-columns:1fr;gap:7px;margin:12px auto}
+      .tips span{font-size:11px;padding:8px}
+      .desktop-hint{display:none}
+      .touch-hint{display:block;font-size:12px;line-height:1.5}
+      h1{text-shadow:2px 2px 0 #fff,3px 3px 0 #2c4d94}
+    }
   </style>
 </head>
 <body>
@@ -46,7 +61,8 @@
       <div class="actions">
         <button id="mario-start" type="button">Jugar / continuar</button>
       </div>
-      <div class="hint">PC: ← → / A-D mover · Espacio saltar · Mantener Shift correr · Q dash · S deslizar / tubería · X poder · Z disparo · B tienda · G mapa · F dificultad · M música · Esc pausa</div>
+      <div class="hint desktop-hint">PC: ← → / A-D mover · Espacio saltar · Mantener Shift correr · Q dash · S deslizar / tubería · X poder · Z disparo · B tienda · G mapa · F dificultad · M música · Esc pausa</div>
+      <div class="hint touch-hint">📱 Celular: usa ◀ ▶ para moverte, SALTAR para brincar y PODER o DISPARO para tus habilidades. Mantén pulsado el movimiento para caminar.</div>
       <div id="mario-ctrl" aria-label="Controles táctiles">
         <button type="button" data-dir="left" aria-label="Izquierda">◀</button>
         <button type="button" data-dir="right" aria-label="Derecha">▶</button>

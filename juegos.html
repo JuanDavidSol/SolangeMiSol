@@ -137,11 +137,12 @@
   @media (max-width: 600px) { .aventura-frame { height: 760px; } }
 </style>
 <link rel="stylesheet" href="snoopy-tema.css">
+<link rel="stylesheet" href="juegos-mobile.css">
 </head>
 <body>
 <div class="wrap">
   <a class="back" href="index.html">← Volver al rinconcito</a>
-  <div style="float:right;display:flex;gap:14px;flex-wrap:wrap;justify-content:flex-end">
+  <div class="top-actions" aria-label="Otras secciones">
     <a class="back" href="woodstock.html">🎵 Woodstock</a>
     <a class="back" href="asistente/">💬 Preguntar a Snoopy</a>
   </div>
@@ -152,6 +153,10 @@
     <button class="tool mute" id="mute" type="button" aria-label="Activar o silenciar el sonido">🔊</button>
   </header>
 
+  <div class="mobile-game-picker">
+    <label for="game-picker">📱 Elige un juego</label>
+    <select id="game-picker" aria-label="Elegir minijuego"></select>
+  </div>
   <div class="tabs" role="tablist" aria-label="Juegos">
     <button role="tab" aria-selected="true" data-tab="ttt">Tres en raya</button>
     <button role="tab" aria-selected="false" data-tab="sudoku">Sudoku</button>
@@ -374,8 +379,24 @@ addEventListener('blur', () => held.clear());
 const dirKey = () => (held.has('ArrowRight') ? 1 : 0) - (held.has('ArrowLeft') ? 1 : 0);
 
 /* ---------- Pestañas ---------- */
-document.querySelectorAll('.tabs button').forEach(tab => tab.addEventListener('click', () => {
-  document.querySelectorAll('.tabs button').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+const gameTabs = Array.from(document.querySelectorAll('.tabs button'));
+const gamePicker = $('#game-picker');
+for (const tab of gameTabs) {
+  const option = document.createElement('option');
+  option.value = tab.dataset.tab;
+  option.textContent = tab.textContent.trim();
+  gamePicker.append(option);
+}
+gamePicker.addEventListener('change', () => {
+  gameTabs.find(tab => tab.dataset.tab === gamePicker.value)?.click();
+});
+gameTabs.forEach(tab => tab.addEventListener('click', () => {
+  gameTabs.forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+  gamePicker.value = tab.dataset.tab;
+  if (window.matchMedia('(max-width: 720px)').matches) {
+    const strip = document.querySelector('.tabs');
+    strip.scrollTo({ left: tab.offsetLeft - strip.offsetLeft - 10, behavior: 'smooth' });
+  }
   for (const name of ['ttt', 'sudoku', 'memo', 'm3', 'hang', 'simon', 'mole', 'catch', 'ace', 'c4', 'g2048', 'flap', 'pac', 'mario', 'shop', 'rewards']) $(`#${name}-panel`).hidden = name !== tab.dataset.tab;
   document.body.classList.toggle('aventura-active', tab.dataset.tab === 'mario');
   if (tab.dataset.tab === 'mario' && !$('#aventura-frame').hasAttribute('src')) {
@@ -1675,13 +1696,17 @@ document.addEventListener('keydown', event => {
   event.preventDefault(); move48(dir);
 });
 let swipe48 = null;
-$('#g48-board').addEventListener('pointerdown', event => { swipe48 = { x: event.clientX, y: event.clientY }; });
+$('#g48-board').addEventListener('pointerdown', event => {
+  swipe48 = { x: event.clientX, y: event.clientY };
+  try { event.currentTarget.setPointerCapture(event.pointerId); } catch {}
+});
 $('#g48-board').addEventListener('pointerup', event => {
   if (!swipe48) return;
   const dx = event.clientX - swipe48.x, dy = event.clientY - swipe48.y; swipe48 = null;
   if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
   move48(Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 0 : 1) : (dy < 0 ? 2 : 3));
 });
+$('#g48-board').addEventListener('pointercancel', () => { swipe48 = null; });
 
 /* ================= Flappy Woodstock ================= */
 const flCv = $('#flap-canvas'), fctx = flCv.getContext('2d');
