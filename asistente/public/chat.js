@@ -36,6 +36,7 @@
   const micSupported = typeof SpeechRecognizer === 'function';
   let micSession = null, micSilenceTimer = null;
   let voiceConversation = false, voiceGeneration = 0;
+  let tabPaused = false, manualPaused = false, pendingVoiceText = '', activeSpeechText = '';
 
   /* ---------- Estilos ---------- */
   const css = `
@@ -197,6 +198,7 @@
   /* ---------- Voz calmada y clara en español (Web Speech API) ---------- */
   function stopVoice() {
     voiceGeneration++;
+    activeSpeechText = '';
     if (voiceSupported) window.speechSynthesis.cancel();
   }
   function preferredVoice() {
@@ -239,14 +241,16 @@
     const chosen = preferredVoice();
     if (chosen) { speech.voice = chosen; speech.lang = chosen.lang; }
     else speech.lang = 'es-PE';
-    speech.rate = 1.18;    // un poco más rápida, manteniendo dicción clara
+    speech.rate = 1.24;    // un poco más rápida sin perder claridad
     speech.pitch = 0.94;   // entonación más serena
     speech.volume = 0.82;  // volumen suave
+    activeSpeechText = text;
     const generation = voiceGeneration;
     let finished = false;
     const done = () => {
       if (finished || generation !== voiceGeneration) return;
       finished = true;
+      activeSpeechText = '';
       if (onFinished) onFinished();
     };
     speech.onend = done;
@@ -263,11 +267,11 @@
     voiceBtn.setAttribute('aria-pressed', String(voiceEnabled));
     if (!voiceEnabled) {
       stopVoice();
-      if (voiceConversation && !busy && !micSession) startListening();
+      if (voiceConversation && !busy && !micSession && !tabPaused && !manualPaused) startListening();
     }
   }
 
-  /* ---------- Dictado por voz: solo después de pulsar el micrófono ---------- */
+  /* ---------- Conversación por voz con pausa automática al cambiar de pestaña ---------- */
   function showMicStatus(message) {
     micStatus.textContent = message || '';
     micStatus.hidden = !message;
@@ -281,6 +285,9 @@
   }
   function stopVoiceConversation(message = 'Conversación por voz finalizada. Pulsa 🎤 para iniciar otra.') {
     voiceConversation = false;
+    manualPaused = false;
+    tabPaused = false;
+    pendingVoiceText = '';
     stopMic(true);
     stopVoice();
     markMicListening(false);
@@ -333,10 +340,13 @@
     }
     if (busy) return;
     voiceConversation = true;
+    tabPaused = false;
+    manualPaused = false;
+    pendingVoiceText = '';
     startListening();
   }
   function startListening() {
-    if (!voiceConversation || busy || micSession || document.visibilityState === 'hidden') return;
+    if (!voiceConversation || manualPaused || tabPaused || busy || micSession || document.visibilityState === 'hidden') return;
     stopVoice(); // nunca grabar el sonido de la voz de Snoopy
     let recognition;
     try { recognition = new SpeechRecognizer(); }
@@ -647,10 +657,17 @@
     busy = false; sendBtn.disabled = false;
     state.msgs.push(bot); state.msgs = state.msgs.slice(-60); save(); render();
     if (voiceConversation) {
-      showMicStatus('🔊 Snoopy está hablando. Al terminar volveré a escucharte…');
-      speakReply(bot.t, false, () => {
-        if (voiceConversation && document.visibilityState !== 'hidden' && (MODE === 'page' || state.open)) startListening();
-      });
+      if (tabPaused || manualPaused || document.visibilityState === 'hidden') {
+        pendingVoiceText = bot.t;
+        showMicStatus(tabPaused || document.visibilityState === 'hidden'
+          ? '⏸ Conversación pausada al cambiar de pestaña; continúa al volver.'
+          : '⏸ Conversación pausada. Pulsa Alt + M para reanudar.');
+      } else {
+        showMicStatus('🔊 Snoopy está hablando. Después volveré a escucharte…');
+        speakReply(bot.t, false, () => {
+          if (voiceConversation && !tabPaused && !manualPaused && document.visibilityState !== 'hidden' && (MODE === 'page' || state.open)) startListening();
+        });
+      }
     } else {
       showMicStatus('');
       if (bot.q && bot.t && (MODE === 'page' || state.open)) speakReply(bot.t);
@@ -674,11 +691,53 @@
     else document.body.append(root);
     layout();
   }
+  /* Pausa/reanudación: cambiar de pestaña no finaliza la conversación. */
+  function resumeVoiceConversation() {
+    if (!voiceConversation || tabPaused || manualPaused || busy || document.visibilityState === 'hidden') return;
+    if (pendingVoiceText) {
+      const message = pendingVoiceText;
+      pendingVoiceText = '';
+      showMicStatus('🔊 Snoopy termina de responder. Después te escucharé…');
+      speakReply(message, false, () => {
+        if (voiceConversation && !tabPaused && !manualPaused) startListening();
+      });
+    } else startListening();
+  }
+  function toggleManualVoicePause() {
+    if (!voiceConversation) return;
+    manualPaused = !manualPaused;
+    if (manualPaused) {
+      if (activeSpeechText) pendingVoiceText = activeSpeechText;
+      stopMic(true);
+      stopVoice();
+      showMicStatus('⏸ Conversación pausada. Pulsa Alt + M para reanudar o ⏹ para finalizar.');
+    } else {
+      showMicStatus(tabPaused ? '⏸ Pestaña en segundo plano; se reanudará al regresar.' : '🎤 Reanudando conversación…');
+      resumeVoiceConversation();
+    }
+  }
+  document.addEventListener('keydown', event => {
+    if (event.altKey && !event.ctrlKey && !event.metaKey && String(event.key).toLowerCase() === 'm' && voiceConversation) {
+      event.preventDefault();
+      toggleManualVoicePause();
+    }
+  });
   document.addEventListener('visibilitychange', () => {
-    if (document.visibilityState === 'hidden' && voiceConversation)
-      stopVoiceConversation('La conversación terminó al cambiar de pestaña.');
+    if (!voiceConversation) return;
+    if (document.visibilityState === 'hidden') {
+      tabPaused = true;
+      if (activeSpeechText) pendingVoiceText = activeSpeechText;
+      stopMic(true);
+      stopVoice();
+      showMicStatus('⏸ Snoopy está pausado mientras usas otra pestaña. Se reactivará al volver.');
+    } else {
+      tabPaused = false;
+      showMicStatus(manualPaused ? '⏸ En pausa manual. Pulsa Alt + M para reanudar.' : '🎤 Volviste. Reanudando…');
+      resumeVoiceConversation();
+    }
   });
   window.addEventListener('pagehide', () => {
+    // Salir o cerrar la página sí finaliza la sesión de voz.
     if (voiceConversation) stopVoiceConversation('');
   });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();

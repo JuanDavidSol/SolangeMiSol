@@ -3,6 +3,7 @@
   'use strict';
   let personalKey = '';
   let revision = 0;
+  const KEY_STORAGE = 'snoopy-gemini-personal-v1';
   const form = document.getElementById('api-key-form');
   const field = document.getElementById('personal-gemini-key');
   const modelField = document.getElementById('personal-gemini-model');
@@ -13,11 +14,42 @@
   const activePanel = document.getElementById('api-active');
   const activeLabel = document.getElementById('api-active-label');
   const change = document.getElementById('api-change');
+  const remember = document.getElementById('api-key-remember');
   const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
   const usableKey = value => typeof value === 'string' && value.length >= 8 && value.length <= 256 && /^[\x21-\x7e]+$/.test(value);
   window.getSnoopyPersonalGeminiKey = () => personalKey;
   window.getSnoopyPersonalGeminiModel = () => modelField ? modelField.value : DEFAULT_MODEL;
-  if (!form || !field || !modelField || !status || !remove || !test || !settings || !activePanel || !activeLabel || !change) return;
+  if (!form || !field || !modelField || !status || !remove || !test || !settings || !activePanel || !activeLabel || !change || !remember) return;
+
+  // Solo se conserva en el almacenamiento de ESTE navegador si se marca la casilla.
+  // Se trata de texto local, no de cifrado; no usar esta opción en equipos compartidos.
+  function removeStoredKey() {
+    try { localStorage.removeItem(KEY_STORAGE); } catch (_) { /* almacenamiento bloqueado */ }
+  }
+  function saveStoredKey() {
+    if (!remember.checked || !personalKey) { removeStoredKey(); return; }
+    try {
+      localStorage.setItem(KEY_STORAGE, JSON.stringify({ key: personalKey, model: modelField.value }));
+    } catch (_) {
+      remember.checked = false;
+      status.textContent = 'Chrome no permitió guardar la clave. Permanecerá activa solo hasta recargar.';
+    }
+  }
+  try {
+    const saved = JSON.parse(localStorage.getItem(KEY_STORAGE) || 'null');
+    if (saved && usableKey(saved.key)) {
+      personalKey = saved.key;
+      if (Array.from(modelField.options).some(option => option.value === saved.model)) modelField.value = saved.model;
+      remember.checked = true;
+      showActive('✓ Gemini recordado en este navegador (conexión aún no verificada).');
+    } else if (saved) removeStoredKey();
+  } catch (_) { /* no acceder al almacenamiento disponible es válido */ }
+  remember.addEventListener('change', () => {
+    saveStoredKey();
+    if (personalKey) status.textContent = remember.checked
+      ? 'Clave recordada solo en este navegador. Evita esta opción en dispositivos compartidos.'
+      : 'Dejaste de recordar la clave. Sigue activa hasta que cierres o recargues esta página.';
+  });
 
   function showActive(message) {
     settings.hidden = true;
@@ -51,6 +83,7 @@
       personalKey = candidate;
       field.value = '';
       revision++;
+      saveStoredKey();
     }
     return personalKey;
   }
@@ -65,6 +98,7 @@
   });
 
   modelField.addEventListener('change', () => {
+    if (personalKey) saveStoredKey();
     status.textContent = personalKey
       ? 'Clave activada. Modelo seleccionado: ' + modelField.value + '. Pulsa «Probar conexión».'
       : 'Selecciona el modelo, pega tu clave y pulsa «Probar conexión».';
@@ -74,7 +108,9 @@
     personalKey = '';
     revision++;
     field.value = '';
-    status.textContent = 'Clave quitada de esta página. No quedó guardada.';
+    remember.checked = false;
+    removeStoredKey();
+    status.textContent = 'Clave quitada de esta página y borrada del almacenamiento de este navegador.';
     showSettings();
   });
 

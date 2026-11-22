@@ -30,6 +30,9 @@
   .api-line .test { background: #467c9f; }
   .api-line button:disabled { opacity: .6; cursor: wait; }
   #api-key-status { min-height: 18px; margin: 8px 0 0; }
+  .api-settings .api-remember{display:flex;align-items:center;gap:8px;font-size:12px;font-weight:600;margin:12px 0 4px;cursor:pointer}
+  .api-remember input{width:16px;height:16px;flex:0 0 16px;accent-color:var(--red)}
+  .api-settings .api-security-hint{margin:0;color:#93604b;font-size:11px}
   .api-active{margin:0 0 16px;padding:12px 16px;border:1px solid #b6dbc7;border-radius:16px;background:#f3fff7;color:#225b41;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;font-weight:600}
   .api-active[hidden],.api-settings[hidden]{display:none!important}
   .api-active button{border:1px solid #b6dbc7;border-radius:10px;padding:8px 12px;background:#fff;color:#225b41;cursor:pointer;font:600 12px inherit}
@@ -52,6 +55,11 @@
         <button type="submit">Activar mi API</button>
         <button class="remove" id="api-key-remove" type="button">Quitar</button>
       </div>
+      <label class="api-remember" for="api-key-remember">
+        <input type="checkbox" id="api-key-remember">
+        Recordar mi clave en este navegador
+      </label>
+      <p class="api-security-hint">Opcional: el navegador guardará la clave sin cifrado adicional. No la guardes en equipos compartidos. En otro dispositivo tendrás que introducirla de nuevo.</p>
       <label for="personal-gemini-model">Modelo de IA</label>
       <div class="api-line">
         <select id="personal-gemini-model" aria-describedby="api-key-status">
@@ -63,7 +71,7 @@
         <button class="test" id="api-key-test" type="button">Probar conexión</button>
       </div>
     </form>
-    <p id="api-key-status" role="status" aria-live="polite">Pega tu clave de Gemini. Puedes pulsar «Probar conexión» directamente: no hace falta activarla primero. No guardamos la clave y tendrás que volver a pegarla al recargar.</p>
+    <p id="api-key-status" role="status" aria-live="polite">Pega tu clave de Gemini. Puedes pulsar «Probar conexión» directamente. La clave solo se recordará en este navegador si marcas la casilla; de lo contrario se borra al recargar.</p>
     <p>La clave viaja por HTTPS a este servidor y de allí a Gemini en cada mensaje. Quien administra el servidor debe ser de confianza; el uso de tu clave puede consumir cuota o generar cargos.</p>
   </details>
   <div id="api-active" class="api-active" role="status" aria-live="polite" hidden>
@@ -71,7 +79,7 @@
     <button type="button" id="api-change">Cambiar clave o modelo</button>
   </div>
   <div id="chat-root"></div>
-  <p class="note">Puedes escribir o pulsar 🎤 para hablar con Snoopy. El navegador podría usar su servicio de reconocimiento de voz para procesar el audio. Los mensajes enviados con tu API se procesan en Gemini; evita compartir datos personales o secretos.</p>
+  <p class="note">Puedes escribir o pulsar 🎤 para conversar con Snoopy. Al cambiar de pestaña se pausa y al volver se reanuda; Alt + M permite pausar manualmente. El navegador podría usar su servicio de reconocimiento de voz para procesar el audio. Los mensajes enviados con tu API se procesan en Gemini; evita compartir datos personales o secretos.</p>
 </div>
 <script src="api-personal.js"></script>
 <script src="chat.js" data-mode="page"></script>
