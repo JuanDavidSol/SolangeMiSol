@@ -447,6 +447,7 @@
         <span class="chat-info">Órdenes locales sin clave · Para conversar sobre cualquier tema, activa Gemini. La voz necesita permiso del micrófono.</span>
         <div>
           <label class="chat-voice-setting"><input id="chat-speak" type="checkbox" checked> 🔊 Responder en voz alta</label>
+          <button id="chat-chirp-preview" type="button" title="Escuchar el pío de Woodstock">🐥 Escuchar pío</button>
           <button id="chat-settings" type="button">⚙ Ajustes</button> <button id="chat-clear" type="button">Limpiar chat</button>
         </div>
       </div>
@@ -495,6 +496,8 @@
         <div class="settings-group-body">
         <p class="settings-note">Ajusta cómo habla Woodstock. Las respuestas seguirán apareciendo por escrito.</p>
         <label class="switch"><input type="checkbox" id="set-replies" checked> Leer respuestas en voz alta (además de mostrarlas por escrito)</label>
+        <label class="switch"><input type="checkbox" id="set-chirp" checked> 🐥 Sonidito de Woodstock al escribirle</label>
+        <p class="settings-note">Un pío musical original, suave y breve. Puedes desactivarlo sin apagar su voz. Nunca suena al abrir la página.</p>
         <label>Velocidad de la voz: <output id="voice-rate-value">1×</output><input id="set-voice-rate" type="range" min="0.75" max="1.4" value="1" step="0.05"></label>
         <p class="settings-note">El micrófono se activa manualmente. Cuando esté encendido, habla con naturalidad, sin decir «Woodstock». No se envían los archivos de audio de tu biblioteca a Gemini.</p>
               </div>
@@ -561,6 +564,44 @@
       let playlists = (() => { try { return JSON.parse(readSetting('sonora-playlists') || '[]'); } catch { return []; } })();
       let listening = false, restartTimer, lastVoice = { key: '', time: 0 };
       let voiceReplies = readSetting('sonora-replies') !== 'false';
+      const CHIRP_PREFERENCE = 'woodstock-chirp-enabled-v1';
+      let chirpEnabled = readSetting(CHIRP_PREFERENCE) !== 'false';
+      let chirpAudioContext = null;
+      function playWoodstockChirp(preview = false) {
+        if (!preview && !chirpEnabled) return;
+        const Context = window.AudioContext || window.webkitAudioContext;
+        if (!Context) return;
+        try {
+          if (!chirpAudioContext || chirpAudioContext.state === 'closed') chirpAudioContext = new Context();
+          if (chirpAudioContext.state === 'suspended') chirpAudioContext.resume().catch(() => {});
+          const now = chirpAudioContext.currentTime + .015;
+          // Gorjeo propio de tres notas breves: no reproduce un audio de Peanuts.
+          const notes = [
+            { offset: 0, from: 910, to: 1380, duration: .115 },
+            { offset: .15, from: 1100, to: 1590, duration: .12 },
+            { offset: .315, from: 980, to: 1470, duration: .16 }
+          ];
+          for (const note of notes) {
+            const t = now + note.offset;
+            const oscillator = chirpAudioContext.createOscillator();
+            const volume = chirpAudioContext.createGain();
+            oscillator.type = 'sine';
+            oscillator.frequency.setValueAtTime(note.from, t);
+            oscillator.frequency.exponentialRampToValueAtTime(note.to, t + note.duration * .7);
+            oscillator.frequency.exponentialRampToValueAtTime(note.to * .94, t + note.duration);
+            volume.gain.setValueAtTime(.0001, t);
+            volume.gain.exponentialRampToValueAtTime(.018, t + .025);
+            volume.gain.exponentialRampToValueAtTime(.0001, t + note.duration);
+            oscillator.connect(volume);
+            volume.connect(chirpAudioContext.destination);
+            oscillator.start(t);
+            oscillator.stop(t + note.duration + .015);
+            oscillator.onended = () => { oscillator.disconnect(); volume.disconnect(); };
+          }
+        } catch {
+          // Si el navegador bloquea el audio, el chat continúa normalmente.
+        }
+      }
       function scheduleRender() { if (renderQueued) return; renderQueued = true; requestAnimationFrame(() => { renderQueued = false; renderTracks(); }); }
       const tracks = [];
       let activeIndex = -1;
@@ -982,6 +1023,8 @@
         }
         chatBusy = true; chatSend.disabled = true;
         appendChat('TÚ', message);
+        // Solo tras una interacción escrita; no activar el micrófono con el pío.
+        if (source === 'text') playWoodstockChirp();
         chatStatus.textContent = source === 'voice' ? 'Te escuché. Procesando…' : 'Procesando…';
         let reply = '';
         try {
@@ -1020,6 +1063,7 @@
         if (event.key === 'Enter' && !event.shiftKey && !event.isComposing) { event.preventDefault(); sendChat(); }
       });
       chatMic.addEventListener('click', () => toggleListening());
+      document.querySelector('#chat-chirp-preview').addEventListener('click', () => playWoodstockChirp(true));
       chatSpeak.addEventListener('change', e => {
         voiceReplies = e.target.checked; saveSetting('sonora-replies', String(voiceReplies));
         document.querySelector('#set-replies').checked = voiceReplies;
@@ -1117,6 +1161,7 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: amable, 
         document.querySelector('#set-accent').checked = accentEnabled;
         syncSleepNote();
         document.querySelector('#set-replies').checked = voiceReplies;
+        document.querySelector('#set-chirp').checked = chirpEnabled;
         document.querySelector('#set-ai').checked = readSetting('sonora-ai-enabled') === 'true';
         document.querySelector('#set-key').value = aiKey();
         document.querySelector('#set-remember-key').checked = rememberKey();
@@ -2049,6 +2094,11 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: amable, 
         voiceReplies = event.target.checked; saveSetting('sonora-replies',String(voiceReplies));
         chatSpeak.checked = voiceReplies;
         if (!voiceReplies) { ttsGeneration++; window.speechSynthesis?.cancel(); ttsInProgress = false; if (listening) beginRecognition(); }
+      });
+      document.querySelector('#set-chirp').addEventListener('change', event => {
+        chirpEnabled = event.target.checked;
+        saveSetting(CHIRP_PREFERENCE, String(chirpEnabled));
+        if (chirpEnabled) playWoodstockChirp(true);
       });
       document.querySelector('#set-voice-rate').addEventListener('input', event => {
         const n=Number(event.target.value);saveSetting('sonora-voice-rate',String(n));
