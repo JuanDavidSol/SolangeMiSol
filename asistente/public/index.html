@@ -24,9 +24,11 @@
   .api-settings p { font-size: 12px; line-height: 1.7; color: var(--muted); }
   .api-settings label { font-size: 12px; font-weight: 700; display: block; margin: 12px 0 6px; }
   .api-line { display: flex; gap: 8px; flex-wrap: wrap; }
-  .api-line input { flex: 1 1 230px; min-width: 0; padding: 10px 12px; border: 1px solid #d7c5c5; border-radius: 12px; font: inherit; font-size: 13px; }
+  .api-line input, .api-line select { flex: 1 1 230px; min-width: 0; padding: 10px 12px; border: 1px solid #d7c5c5; border-radius: 12px; background: white; color: var(--ink); font: inherit; font-size: 13px; }
   .api-line button { border: 0; border-radius: 12px; background: var(--red); padding: 10px 13px; color: white; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
   .api-line .remove { background: #e9e6e6; color: var(--ink); }
+  .api-line .test { background: #467c9f; }
+  .api-line button:disabled { opacity: .6; cursor: wait; }
   #api-key-status { min-height: 18px; margin: 8px 0 0; }
 </style>
 </head>
@@ -47,8 +49,18 @@
         <button type="submit">Activar mi API</button>
         <button class="remove" id="api-key-remove" type="button">Quitar</button>
       </div>
+      <label for="personal-gemini-model">Modelo de IA</label>
+      <div class="api-line">
+        <select id="personal-gemini-model" aria-describedby="api-key-status">
+          <option value="gemini-3.1-flash-lite">Gemini 3.1 Flash-Lite — igual que Sonora</option>
+          <option value="gemini-3.5-flash-lite">Gemini 3.5 Flash-Lite — rápido</option>
+          <option value="gemini-3.6-flash">Gemini 3.6 Flash — equilibrado</option>
+          <option value="gemini-3.8-flash">Gemini 3.8 Flash — avanzado</option>
+        </select>
+        <button class="test" id="api-key-test" type="button">Probar conexión</button>
+      </div>
     </form>
-    <p id="api-key-status" role="status" aria-live="polite">La clave no se guarda: tendrás que volver a introducirla al recargar la página.</p>
+    <p id="api-key-status" role="status" aria-live="polite">La clave solo se mantiene en memoria. Pulsa «Probar conexión» después de activarla. Al recargar tendrás que introducirla otra vez.</p>
     <p>La clave viaja por HTTPS a este servidor y de allí a Gemini en cada mensaje. Quien administra el servidor debe ser de confianza; el uso de tu clave puede consumir cuota o generar cargos.</p>
   </details>
   <div id="chat-root"></div>

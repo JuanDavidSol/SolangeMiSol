@@ -115,6 +115,24 @@ async function publicApi(req, res, url) {
     const S = db.settings, page = sec.clean(url.searchParams.get('page') || '', 80), section = sec.clean(url.searchParams.get('section') || '', 40);
     return send(res, 200, { name: S.assistantName, welcome: S.welcome, enabled: S.enabled, siteBase: S.siteBase, faqs: S.showFaqs ? assistant.faqs(page, section, S.quickCount) : [] });
   }
+  /* Prueba real de Gemini: sin guardar la clave, el mensaje ni la respuesta. */
+  if (req.method === 'POST' && p === '/api/gemini/test') {
+    if (!sec.limit('gemini-test:' + sec.ip(req), 6, 60000))
+      return send(res, 429, { error: 'Demasiadas pruebas. Espera un minuto.' });
+    const b = await readJson(req);
+    const key = typeof b.personalGeminiKey === 'string' ? b.personalGeminiKey.trim() : '';
+    const model = typeof b.personalGeminiModel === 'string' ? b.personalGeminiModel.trim() : personalGemini.DEFAULT_MODEL;
+    if (!/^[A-Za-z0-9_-]{20,256}$/.test(key))
+      return send(res, 400, { error: 'Introduce una clave de Gemini con un formato válido.' });
+    if (!personalGemini.validModel(model))
+      return send(res, 400, { error: 'Selecciona un modelo Gemini válido.' });
+    try {
+      await personalGemini.reply({ key, model, text: 'Di solamente: listo.' });
+      return send(res, 200, { ok: true, model });
+    } catch (error) {
+      return send(res, 502, { ok: false, error: error.publicMessage || 'No se pudo conectar con Gemini.' });
+    }
+  }
   if (req.method === 'POST' && (p === '/api/chat' || p === '/api/chat/stream')) {
     if (!sec.limit('chat:' + sec.ip(req), cfg.RATE_CHAT_PER_MIN, 60000)) return send(res, 429, { error: 'Vas muy rápido 😅 Espera un momento y vuelve a intentarlo.' });
     const b = await readJson(req);
@@ -129,8 +147,11 @@ async function publicApi(req, res, url) {
     if (personalKey && !/^[A-Za-z0-9_-]{20,256}$/.test(personalKey)) {
       return send(res, 400, { error: 'La clave personal de Gemini no tiene un formato válido.' });
     }
+    const personalModel = typeof b.personalGeminiModel === 'string' ? b.personalGeminiModel.trim() : personalGemini.DEFAULT_MODEL;
+    if (personalKey && !personalGemini.validModel(personalModel))
+      return send(res, 400, { error: 'El modelo personal de Gemini no es válido.' });
     const respond = opts => personalKey
-      ? personalGemini.reply({ ...opts, key: personalKey, assistantName: db.settings.assistantName,
+      ? personalGemini.reply({ ...opts, key: personalKey, model: personalModel, assistantName: db.settings.assistantName,
           faqs: assistant.faqs(page, section, 7) })
       : assistant.reply(opts);
 

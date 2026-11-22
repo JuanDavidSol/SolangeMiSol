@@ -235,7 +235,11 @@
     const body = { session: state.sid, message: text, page: page(), section: section() };
     const getKey = window.getSnoopyPersonalGeminiKey;
     const key = typeof getKey === 'function' ? getKey() : '';
-    if (key) body.personalGeminiKey = key;
+    if (key) {
+      body.personalGeminiKey = key;
+      const getModel = window.getSnoopyPersonalGeminiModel;
+      if (typeof getModel === 'function') body.personalGeminiModel = getModel();
+    }
     return JSON.stringify(body);
   };
   const botFrom = (j, text) => ({ r: 'a', t: j.reply, l: j.links || [], s: j.suggestions || [], q: text, src: j.source || '' });
