@@ -311,6 +311,9 @@
     .settings-body .settings-group summary:focus-visible{outline:2px solid #d95273;outline-offset:-2px}
     .settings-body .settings-group .settings-group-body{padding:13px 15px}
     .settings-body .settings-group p.settings-note:first-child{margin-top:0}
+    .settings-body .model-picker-label{display:block;margin-top:12px}
+    .settings-body #gemini-model-select{width:100%;min-height:42px;padding:9px 12px;border:1px solid #e8c4d2;border-radius:10px;background:#fff;color:#453b48;font:13px 'DM Sans',sans-serif}
+    .settings-body #gemini-model-select:focus-visible{outline:2px solid #dd728c;outline-offset:2px}
     .notice{border-radius:12px;background:#fff6df;color:#80665b;border-left-color:#eda26b}
     .footer{border-color:#eacbd4;color:#927c87}
     .toast{background:#fff0f5;color:#ab3650;border-color:#e7b3c7}
@@ -518,6 +521,15 @@
         <label>Modelo de Gemini<input id="set-model" type="text" list="gemini-models" spellcheck="false" autocomplete="off"></label>
         <datalist id="gemini-models"><option value="gemini-3.5-flash-lite"></option><option value="gemini-3.7-flash"></option><option value="gemini-3.1-flash-lite"></option></datalist>
         <button id="list-models" type="button">Buscar modelos disponibles</button>
+        <label class="model-picker-label" for="gemini-model-select">Elegir modelo encontrado
+          <select id="gemini-model-select" aria-label="Elegir modelo Gemini">
+            <option value="">Selecciona un modelo o pulsa Buscar modelos</option>
+            <option value="gemini-3.5-flash-lite">gemini-3.5-flash-lite</option>
+            <option value="gemini-3.7-flash">gemini-3.7-flash</option>
+            <option value="gemini-3.1-flash-lite">gemini-3.1-flash-lite</option>
+          </select>
+        </label>
+        <p class="settings-note">El modelo elegido se guarda automáticamente en este navegador. También puedes escribir uno manualmente.</p>
         <div class="settings-actions"><button id="test-ai" type="button">Probar conexión</button><button id="clear-key" type="button">Borrar clave</button></div>
         <p id="ai-test-status" aria-live="polite"></p>
               </div>
@@ -743,6 +755,27 @@
             localStorage.removeItem('sonora-ai-key');
           }
         } catch {}
+      }
+      const modelSelector = document.querySelector('#gemini-model-select');
+      function chooseModelInSelector(model) {
+        const chosen = String(model || '').trim();
+        if (!chosen) return;
+        if (!Array.from(modelSelector.options).some(opt => opt.value === chosen)) {
+          const option = document.createElement('option');
+          option.value = chosen;
+          option.textContent = chosen + ' (modelo guardado)';
+          modelSelector.append(option);
+        }
+        modelSelector.value = chosen;
+      }
+      function saveSelectedModel(model, message = true) {
+        const chosen = String(model || '').trim();
+        if (!chosen) return;
+        saveSetting('sonora-ai-model', chosen);
+        document.querySelector('#set-model').value = chosen;
+        chooseModelInSelector(chosen);
+        if (message) document.querySelector('#ai-test-status').textContent =
+          '✓ Modelo ' + chosen + ' guardado en este navegador. Puedes probar la conexión.';
       }
       function aiSettings() {
         const key = aiKey();
@@ -1087,7 +1120,9 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: amable, 
         document.querySelector('#set-ai').checked = readSetting('sonora-ai-enabled') === 'true';
         document.querySelector('#set-key').value = aiKey();
         document.querySelector('#set-remember-key').checked = rememberKey();
-        document.querySelector('#set-model').value = readSetting('sonora-ai-model') || AI_DEFAULT_MODEL;
+        const preferredModel = readSetting('sonora-ai-model') || AI_DEFAULT_MODEL;
+        document.querySelector('#set-model').value = preferredModel;
+        chooseModelInSelector(preferredModel);
         aiInput.hidden = !aiSettings().enabled;
       }
 
@@ -2021,7 +2056,12 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: amable, 
       });
       document.querySelector('#set-key').addEventListener('input', event => setAiKey(event.target.value));
       document.querySelector('#set-remember-key').addEventListener('change', event => { saveSetting('sonora-ai-remember', String(event.target.checked)); setAiKey(aiKey()); });
-      document.querySelector('#set-model').addEventListener('input', event => saveSetting('sonora-ai-model', event.target.value.trim()));
+      document.querySelector('#set-model').addEventListener('input', event => {
+        const model = event.target.value.trim();
+        if (model) saveSelectedModel(model, false);
+        else modelSelector.value = '';
+      });
+      modelSelector.addEventListener('change', event => saveSelectedModel(event.target.value));
       document.querySelector('#set-ai').addEventListener('change', event => {
         const box = event.target;
         if (box.checked) {
@@ -2043,13 +2083,31 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: amable, 
         catch (error) { status.textContent = error.message; }
       });
       document.querySelector('#list-models').addEventListener('click', async () => {
-        const status = document.querySelector('#ai-test-status'); status.textContent = 'Buscando modelos de Google…';
+        const status = document.querySelector('#ai-test-status');
+        const button = document.querySelector('#list-models');
+        status.textContent = 'Buscando modelos de Google…';
+        button.disabled = true;
         try {
-          const models = await fetchModels();
-          const list = document.querySelector('#gemini-models'); list.replaceChildren();
-          for (const model of models) { const opt = document.createElement('option'); opt.value = model; list.append(opt); }
-          status.textContent = models.length ? `Se encontraron ${models.length} modelos compatibles. Escribe o selecciona uno en «Modelo».` : 'No se encontraron modelos compatibles con esta clave.';
-        } catch(error) { status.textContent = error.message; }
+          const models = [...new Set(await fetchModels())].sort();
+          const list = document.querySelector('#gemini-models');
+          const previous = (readSetting('sonora-ai-model') || AI_DEFAULT_MODEL).trim();
+          list.replaceChildren();
+          modelSelector.replaceChildren();
+          const placeholder = document.createElement('option');
+          placeholder.value = '';
+          placeholder.textContent = 'Elige un modelo de los disponibles';
+          modelSelector.append(placeholder);
+          for (const model of models) {
+            const option = document.createElement('option'); option.value = model; option.textContent = model;
+            modelSelector.append(option);
+            const hint = document.createElement('option'); hint.value = model; list.append(hint);
+          }
+          chooseModelInSelector(previous);
+          status.textContent = models.length
+            ? `✓ Se encontraron ${models.length} modelos. Elige uno en la lista; se guardará en este navegador.`
+            : 'Google no devolvió modelos compatibles con esta clave. Se conservó tu elección anterior.';
+        } catch (error) { status.textContent = error.message; }
+        finally { button.disabled = false; }
       });
       aiInput.addEventListener('keydown', event => {
         if (event.key !== 'Enter') return;
