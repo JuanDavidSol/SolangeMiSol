@@ -32,6 +32,9 @@
   let liveEl = null, liveText = '', liveRaf = 0;   // respuesta que se está escribiendo en este momento
   const voiceSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
   let voiceEnabled = voiceSupported;
+  const SpeechRecognizer = window.SpeechRecognition || window.webkitSpeechRecognition;
+  const micSupported = typeof SpeechRecognizer === 'function';
+  let micSession = null, micSilenceTimer = null;
 
   /* ---------- Estilos ---------- */
   const css = `
@@ -42,7 +45,7 @@
   .as-win{position:fixed;right:18px;bottom:90px;z-index:2147483000;width:min(380px,calc(100vw - 16px));height:min(560px,calc(100vh - 110px));display:flex;flex-direction:column;overflow:hidden;border-radius:22px;background:#fff;border:2px solid var(--line);box-shadow:0 18px 50px #0003;animation:as-pop .25s ease}
   .as-win.as-page{position:static;width:min(720px,100%);height:min(680px,78vh);margin:0 auto;animation:none;box-shadow:0 10px 28px #e8505b22}
   .as-win.as-min{height:auto}
-  .as-win.as-min .as-log,.as-win.as-min .as-form{display:none}
+  .as-win.as-min .as-log,.as-win.as-min .as-form,.as-win.as-min .as-mic-status{display:none}
   .as-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--r);color:#fff}
   .as-head .as-av{font-size:26px}
   .as-head .as-t{flex:1;min-width:0;line-height:1.2}
@@ -80,10 +83,15 @@
   .as-form input:focus{outline:none;border-color:var(--r)}
   .as-form button{border:0;border-radius:999px;padding:0 18px;background:var(--r);color:#fff;font:600 14px inherit;cursor:pointer}
   .as-form button:disabled{opacity:.5;cursor:default}
+  .as-form button.as-mic{flex:0 0 44px;width:44px;height:44px;padding:0;background:#fce8ec;color:#9c3045;border:1px solid var(--line);font-size:21px}
+  .as-form button.as-mic.listening{background:var(--r);color:#fff;box-shadow:0 0 0 4px #e8505b33;animation:as-mic-pulse 1.3s ease-in-out infinite}
+  .as-mic-status{padding:6px 14px;font-size:12px;color:var(--muted);background:#fffaf5;border-top:1px solid var(--line)}
+  .as-mic-status[hidden]{display:none}
   .as-err{padding:20px;text-align:center;color:var(--muted);font-size:14px}
   @keyframes as-pop{from{transform:translateY(14px) scale(.97);opacity:0}}
   @keyframes as-in{from{transform:translateY(6px);opacity:0}}
   @keyframes as-dot{0%,80%,100%{transform:translateY(0);opacity:.4}40%{transform:translateY(-5px);opacity:1}}
+  @keyframes as-mic-pulse{50%{box-shadow:0 0 0 8px #e8505b16}}
   @media (prefers-reduced-motion:reduce){.as-root *{animation:none!important;transition:none!important}}`;
   document.head.append(h('style', {}, css));
 
@@ -151,7 +159,15 @@
   const log = h('div', { class: 'as-log', role: 'log', 'aria-live': 'polite', 'aria-label': 'Conversación con el asistente' });
   const input = h('input', { type: 'text', maxlength: '500', placeholder: 'Escribe tu pregunta…', 'aria-label': 'Escribe tu pregunta', autocomplete: 'off' });
   const sendBtn = h('button', { type: 'submit' }, 'Enviar');
-  const form = h('form', { class: 'as-form', onsubmit: e => { e.preventDefault(); ask(input.value); } }, input, sendBtn);
+  const micBtn = h('button', {
+    type: 'button', class: 'as-mic',
+    title: micSupported ? 'Hablar con Snoopy' : 'Este navegador no admite dictado por voz',
+    'aria-label': micSupported ? 'Hablar con Snoopy' : 'Dictado no disponible',
+    'aria-pressed': 'false', onclick: toggleMic
+  }, '🎤');
+  micBtn.disabled = !micSupported;
+  const micStatus = h('div', { class: 'as-mic-status', role: 'status', 'aria-live': 'polite', hidden: 'hidden' });
+  const form = h('form', { class: 'as-form', onsubmit: e => { e.preventDefault(); ask(input.value); } }, input, micBtn, sendBtn);
   const title = h('b', {}, 'Asistente');
   const voiceBtn = h('button', {
     type: 'button', class: 'as-speech',
@@ -165,13 +181,13 @@
     h('div', { class: 'as-t' }, title, h('small', {}, 'Te ayudo con esta web')),
     voiceBtn,
     h('button', { type: 'button', title: 'Nueva conversación', 'aria-label': 'Nueva conversación', onclick: newChat }, '➕'));
-  const win = h('div', { class: 'as-win' + (MODE === 'page' ? ' as-page' : ''), role: 'dialog', 'aria-label': 'Asistente virtual' }, head, log, form);
+  const win = h('div', { class: 'as-win' + (MODE === 'page' ? ' as-page' : ''), role: 'dialog', 'aria-label': 'Asistente virtual' }, head, log, micStatus, form);
   const root = h('div', { class: 'as-root' });
   const fab = h('button', { class: 'as-fab', type: 'button', 'aria-label': 'Abrir el asistente', onclick: () => setOpen(true) }, '💬');
 
   if (MODE === 'float') {
     head.append(
-      h('button', { type: 'button', title: 'Minimizar', 'aria-label': 'Minimizar', onclick: () => { state.min = !state.min; save(); layout(); } }, '—'),
+      h('button', { type: 'button', title: 'Minimizar', 'aria-label': 'Minimizar', onclick: () => { state.min = !state.min; if (state.min) { stopVoice(); stopMic(true); } save(); layout(); } }, '—'),
       h('button', { type: 'button', title: 'Cerrar', 'aria-label': 'Cerrar el asistente', onclick: () => setOpen(false) }, '✕'));
     root.append(win, fab);
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.open) setOpen(false); });
@@ -188,10 +204,11 @@
     const score = v => {
       const lang = (v.lang || '').toLowerCase();
       const name = (v.name || '').toLowerCase();
-      const locale = lang.startsWith('es-pe') ? 95 : lang.startsWith('es-mx') ? 85
-        : lang.startsWith('es-us') ? 80 : lang.startsWith('es') ? 65 : 0;
-      return locale + (/natural|neural|premium|google|microsoft/i.test(name) ? 30 : 0)
-        + (v.localService ? 5 : 0);
+      // Preferimos una voz natural y más suave, diferente de la preferencia es-PE anterior.
+      const quality = /neural|natural|premium|online/i.test(name) ? 80 : /google|microsoft/i.test(name) ? 30 : 0;
+      const locale = lang.startsWith('es-mx') ? 35 : lang.startsWith('es-es') ? 32
+        : lang.startsWith('es-us') ? 22 : lang.startsWith('es-pe') ? 10 : 12;
+      return quality + locale + (v.localService ? 2 : 0);
     };
     spanish.sort((a, b) => score(b) - score(a));
     return spanish[0] || null;
@@ -214,9 +231,9 @@
     const chosen = preferredVoice();
     if (chosen) { speech.voice = chosen; speech.lang = chosen.lang; }
     else speech.lang = 'es-PE';
-    speech.rate = 1.04;    // velocidad intermedia, fácil de entender
-    speech.pitch = 1.02;   // tono suave
-    speech.volume = 0.88;  // volumen agradable
+    speech.rate = 1.18;    // un poco más rápida, manteniendo dicción clara
+    speech.pitch = 0.94;   // entonación más serena
+    speech.volume = 0.82;  // volumen suave
     window.speechSynthesis.speak(speech);
   }
   function toggleVoice() {
@@ -229,6 +246,129 @@
     if (!voiceEnabled) stopVoice();
   }
 
+  /* ---------- Dictado por voz: solo después de pulsar el micrófono ---------- */
+  function showMicStatus(message) {
+    micStatus.textContent = message || '';
+    micStatus.hidden = !message;
+  }
+  function markMicListening(isListening) {
+    micBtn.classList.toggle('listening', isListening);
+    micBtn.textContent = isListening ? '⏹' : '🎤';
+    micBtn.title = isListening ? 'Terminar de hablar' : 'Hablar con Snoopy';
+    micBtn.setAttribute('aria-label', micBtn.title);
+    micBtn.setAttribute('aria-pressed', String(isListening));
+  }
+  function stopMic(cancel = false) {
+    if (!micSession) return;
+    const current = micSession;
+    if (cancel) {
+      current.cancelled = true;
+      micSession = null;
+      markMicListening(false);
+    }
+    if (micSilenceTimer) clearTimeout(micSilenceTimer);
+    micSilenceTimer = null;
+    try {
+      if (cancel) current.recognition.abort();
+      else current.recognition.stop();
+    } catch (_) {
+      if (micSession === current) {
+        micSession = null;
+        markMicListening(false);
+      }
+    }
+  }
+  function microphoneError(code) {
+    if (code === 'not-allowed' || code === 'service-not-allowed') {
+      return 'El micrófono está bloqueado. Dale permiso a esta página en Chrome.';
+    }
+    if (code === 'audio-capture') return 'No se detectó ningún micrófono. Revisa el dispositivo.';
+    if (code === 'no-speech') return 'No escuché palabras. Prueba otra vez más cerca del micrófono.';
+    if (code === 'network') return 'El reconocimiento de voz no pudo conectarse. Revisa Internet.';
+    if (code === 'language-not-supported') return 'Tu navegador no admite dictado en español.';
+    return 'No se pudo reconocer la voz. Prueba otra vez o escribe tu pregunta.';
+  }
+  function toggleMic() {
+    if (!micSupported || busy) return;
+    if (micSession) {
+      stopMic();  // segunda pulsación: enviar la frase reconocida
+      return;
+    }
+    stopVoice(); // evitar que Snoopy se escuche a sí mismo
+    let recognition;
+    try { recognition = new SpeechRecognizer(); }
+    catch (_) {
+      showMicStatus('No se pudo iniciar el reconocimiento de voz.');
+      return;
+    }
+    recognition.lang = 'es-PE';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognition.maxAlternatives = 1;
+    const current = {
+      recognition, base: input.value.trim(), final: '', interim: '',
+      cancelled: false, error: ''
+    };
+    micSession = current;
+    recognition.onstart = () => {
+      if (micSession !== current) return;
+      markMicListening(true);
+      showMicStatus('🎤 Te escucho… Habla con naturalidad. Al terminar, enviaré tu pregunta.');
+    };
+    recognition.onresult = event => {
+      if (micSession !== current) return;
+      let final = '', interim = '';
+      for (let i = 0; i < event.results.length; i++) {
+        const segment = event.results[i];
+        const text = segment[0] && segment[0].transcript || '';
+        if (segment.isFinal) final += ' ' + text;
+        else interim += ' ' + text;
+      }
+      current.final = final.trim();
+      current.interim = interim.trim();
+      input.value = [current.base, current.final, current.interim].filter(Boolean).join(' ').trim().slice(0, 500);
+      if (micSilenceTimer) clearTimeout(micSilenceTimer);
+      micSilenceTimer = null;
+      if (current.final && !current.interim) {
+        micSilenceTimer = setTimeout(() => {
+          if (micSession === current) stopMic();
+        }, 1700);
+      }
+      showMicStatus(current.interim ? '🎤 Escuchando: ' + current.interim.slice(-100)
+        : current.final ? '✓ Entendí: ' + current.final.slice(-110) + '…' : '🎤 Te escucho…');
+    };
+    recognition.onerror = event => {
+      if (micSession !== current) return;
+      current.error = event.error || 'unknown';
+      showMicStatus(microphoneError(current.error));
+    };
+    recognition.onend = () => {
+      if (micSession !== current) return;
+      micSession = null;
+      if (micSilenceTimer) clearTimeout(micSilenceTimer);
+      micSilenceTimer = null;
+      markMicListening(false);
+      if (current.cancelled || current.error) return;
+      const heard = (current.final || current.interim).trim();
+      if (!heard) {
+        showMicStatus('No escuché una pregunta. Pulsa 🎤 para volver a hablar.');
+        return;
+      }
+      const sentence = [current.base, heard].filter(Boolean).join(' ').trim().slice(0, 500);
+      showMicStatus('✓ Pregunta reconocida. Enviando a Snoopy…');
+      ask(sentence);
+    };
+    try {
+      recognition.start();
+      markMicListening(true);
+      showMicStatus('Preparando micrófono… Puede que Chrome solicite permiso.');
+    } catch (_) {
+      micSession = null;
+      markMicListening(false);
+      showMicStatus('No pude encender el micrófono. Comprueba los permisos del navegador.');
+    }
+  }
+
   /* ---------- Lógica ---------- */
   function layout() {
     if (MODE !== 'float') return;
@@ -237,7 +377,10 @@
     win.classList.toggle('as-min', state.min);
   }
   function setOpen(v) {
-    state.open = v; if (v) state.min = false; else stopVoice(); save(); layout();
+    state.open = v;
+    if (v) state.min = false;
+    else { stopVoice(); stopMic(true); }
+    save(); layout();
     if (v) { refreshChips(); setTimeout(() => input.focus(), 50); render(); }
   }
   function resolveUrl(u) {
@@ -299,7 +442,7 @@
     if (!cfg || state.msgs.length !== 1 || !state.msgs[0].w) return;
     try { const c = await (await fetch(`${API}/api/config?page=${encodeURIComponent(page())}&section=${encodeURIComponent(section())}`)).json(); state.msgs[0].s = c.faqs || []; save(); render(); } catch { /* se deja como está */ }
   }
-  function newChat() { if (busy) return; stopVoice(); state = { sid: newSid(), msgs: [], open: true, min: false }; save(); welcome(); input.focus(); }
+  function newChat() { if (busy) return; stopVoice(); stopMic(true); showMicStatus(''); state = { sid: newSid(), msgs: [], open: true, min: false }; save(); welcome(); input.focus(); }
 
   /* ---------- Petición al servidor (con respuesta en tiempo real) ---------- */
   const headers = { 'Content-Type': 'application/json' };
@@ -380,8 +523,9 @@
   async function ask(text) {
     text = String(text || '').trim().slice(0, 500);
     if (!text || busy) return;
+    if (micSession) stopMic(true);
     stopVoice();
-    input.value = ''; busy = true; sendBtn.disabled = true;
+    input.value = ''; busy = true; sendBtn.disabled = true; micBtn.disabled = true;
     state.msgs.push({ r: 'u', t: text }); render();
     let bot;
     try {
@@ -394,7 +538,7 @@
     if (liveRaf) cancelAnimationFrame(liveRaf);
     if (!liveText) await new Promise(r => setTimeout(r, 250));   // pausa breve solo si la respuesta no se vio escribiéndose
     liveEl = null; liveRaf = 0; liveText = '';
-    busy = false; sendBtn.disabled = false;
+    busy = false; sendBtn.disabled = false; micBtn.disabled = !micSupported;
     state.msgs.push(bot); state.msgs = state.msgs.slice(-60); save(); render();
     if (bot.q && bot.t && (MODE === 'page' || state.open)) speakReply(bot.t);
     if (MODE === 'page' || state.open) input.focus();

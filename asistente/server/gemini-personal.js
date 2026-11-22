@@ -32,7 +32,7 @@ async function reply({ key, model, text, history = [], faqs = [], assistantName 
     const a = String(f.answer || f.a || f.text || '').slice(0, 480);
     return q && a ? `Pregunta: ${q}\nRespuesta: ${a}` : '';
   }).filter(Boolean).join('\n\n').slice(0, 4200) : '';
-  const system = `Eres ${String(assistantName || 'Snoopy').slice(0, 40)}, un asistente amable de una página de juegos. Responde preguntas generales en español de manera clara y útil, incluyendo matemáticas, tecnología y preguntas sobre juegos. No inventes reglas, premios, galletas ni datos de esta web; si no sabes un dato específico, dilo.\n` +
+  const system = `Eres ${String(assistantName || 'Snoopy').slice(0, 40)}, un asistente versátil y amable. Responde en español claro y natural sobre temas generales: juegos, tecnología, aprendizaje, matemáticas, ideas y preguntas cotidianas. A veces el mensaje llega por dictado de voz, con errores de transcripción o sin puntuación: interpreta la intención usando el contexto de la conversación, sin inventar detalles ni cambiar el sentido; si algo importante es ambiguo, pide una aclaración breve. Responde de manera conversacional, útil y no demasiado extensa para que también se pueda escuchar en voz alta. No inventes reglas, premios, galletas ni datos concretos de esta web. Si no sabes un dato, dilo.\n` +
     (faqBlock ? `Estas son preguntas y respuestas públicas de la web, úsalas solo si son relevantes:\n${faqBlock}` : '');
   const contents = [];
   for (const turn of history.slice(-10)) {
