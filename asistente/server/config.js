@@ -12,7 +12,7 @@ module.exports = {
   SITE_DIR: path.resolve(process.env.SITE_DIR || path.join(ROOT, '..')),
 
   PORT: Number(process.env.PORT) || 3000,
-  HOST: process.env.HOST || '127.0.0.1',
+  HOST: process.env.HOST || '0.0.0.0',
 
   /* Ollama: IA local de respaldo */
   OLLAMA_URL: (process.env.OLLAMA_URL || 'http://127.0.0.1:11434').replace(/\/$/, ''),
