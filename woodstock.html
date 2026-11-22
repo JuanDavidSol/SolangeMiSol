@@ -496,8 +496,8 @@
         <div class="settings-group-body">
         <p class="settings-note">Ajusta cómo habla Woodstock. Las respuestas seguirán apareciendo por escrito.</p>
         <label class="switch"><input type="checkbox" id="set-replies" checked> Leer respuestas en voz alta (además de mostrarlas por escrito)</label>
-        <label class="switch"><input type="checkbox" id="set-chirp" checked> 🐥 Sonidito de Woodstock al escribirle</label>
-        <p class="settings-note">Un pío musical original, suave y breve. Puedes desactivarlo sin apagar su voz. Nunca suena al abrir la página.</p>
+        <label class="switch"><input type="checkbox" id="set-chirp" checked> 🐥 Píos ocasionales en momentos alegres</label>
+        <p class="settings-note">Woodstock pía de vez en cuando ante saludos o buenas noticias, no con cada mensaje. Lo puedes desactivar sin apagar su voz. Nunca suena al abrir la página.</p>
         <label>Velocidad de la voz: <output id="voice-rate-value">1×</output><input id="set-voice-rate" type="range" min="0.75" max="1.4" value="1" step="0.05"></label>
         <p class="settings-note">El micrófono se activa manualmente. Cuando esté encendido, habla con naturalidad, sin decir «Woodstock». No se envían los archivos de audio de tu biblioteca a Gemini.</p>
               </div>
@@ -567,6 +567,29 @@
       const CHIRP_PREFERENCE = 'woodstock-chirp-enabled-v1';
       let chirpEnabled = readSetting(CHIRP_PREFERENCE) !== 'false';
       let chirpAudioContext = null;
+      let lastAutomaticChirp = -Infinity;
+      let messagesSinceChirp = 2;
+      function maybePlayContextualChirp(message, source) {
+        // Una reacción ocasional y contextual; nunca automática al cargar la página.
+        if (!chirpEnabled || source !== 'text' || document.hidden) return;
+        messagesSinceChirp++;
+        const text = normalizeVoiceText(message);
+        // Evitar píos cuando la persona trata temas difíciles o delicados.
+        if (/\b(?:triste|tristeza|enfermo|enferma|muerte|murio|fallecio|hospital|ansiedad|ansioso|ansiosa|miedo|asustado|asustada|preocupado|preocupada|problema|ayuda urgente|accidente|dolor|malas noticias|estoy mal|no estoy bien)\b/.test(text)) return;
+        // Las órdenes normales de reproducción nunca activan el efecto.
+        if (parseExtendedCommand(message) || parseCommand(message) || isMusicIntent(message)) return;
+        const greeting = /^(?:hola|buenas|buenos dias|buenas tardes|buenas noches|hey woodstock|hola woodstock)(?:\s|$)/.test(text);
+        const gratitude = /^(?:gracias|muchas gracias|mil gracias|te agradezco)(?:\s|$)/.test(text);
+        const joyful = /\b(?:lo logre|lo logramos|aprobe|ganamos|gane|que alegria|estoy feliz|que emocion|genial|increible|maravilloso|que bonito|me encanta|felicitaciones|lo conseguimos)\b/.test(text);
+        if (!greeting && !gratitude && !joyful) return;
+        if (messagesSinceChirp < 3 || Date.now() - lastAutomaticChirp < 75000) return;
+        // Un saludo no implica necesariamente un pío; una celebración es más probable.
+        const chance = joyful ? 0.65 : gratitude ? 0.5 : 0.4;
+        if (Math.random() >= chance) return;
+        playWoodstockChirp();
+        lastAutomaticChirp = Date.now();
+        messagesSinceChirp = 0;
+      }
       function playWoodstockChirp(preview = false) {
         if (!preview && !chirpEnabled) return;
         const Context = window.AudioContext || window.webkitAudioContext;
@@ -1023,8 +1046,8 @@
         }
         chatBusy = true; chatSend.disabled = true;
         appendChat('TÚ', message);
-        // Solo tras una interacción escrita; no activar el micrófono con el pío.
-        if (source === 'text') playWoodstockChirp();
+        // Una reacción espontánea solo cuando encaja con el contexto.
+        maybePlayContextualChirp(message, source);
         chatStatus.textContent = source === 'voice' ? 'Te escuché. Procesando…' : 'Procesando…';
         let reply = '';
         try {
