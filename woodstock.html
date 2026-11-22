@@ -1103,7 +1103,7 @@
       chatSpeak.addEventListener('change', e => {
         voiceReplies = e.target.checked; saveSetting('sonora-replies', String(voiceReplies));
         document.querySelector('#set-replies').checked = voiceReplies;
-        if (!voiceReplies) { ttsGeneration++; window.speechSynthesis?.cancel(); ttsInProgress = false; if (listening) beginRecognition(); }
+        if (!voiceReplies) { pendingSpeech = null; stopWoodstockSpeech(); if (listening && !voiceTabPaused) beginRecognition(); }
       });
       document.querySelectorAll('[data-voice-example]').forEach(button => button.addEventListener('click', () => dispatchRequest(button.dataset.voiceExample)));
       document.querySelector('#chat-settings').addEventListener('click', () => { syncSettings(); settingsDialog.showModal(); });
@@ -2263,7 +2263,7 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
       document.querySelector('#set-replies').addEventListener('change', event => {
         voiceReplies = event.target.checked; saveSetting('sonora-replies',String(voiceReplies));
         chatSpeak.checked = voiceReplies;
-        if (!voiceReplies) { ttsGeneration++; window.speechSynthesis?.cancel(); ttsInProgress = false; if (listening) beginRecognition(); }
+        if (!voiceReplies) { pendingSpeech = null; stopWoodstockSpeech(); if (listening && !voiceTabPaused) beginRecognition(); }
       });
       document.querySelector('#set-chirp').addEventListener('change', event => {
         chirpEnabled = event.target.checked;
