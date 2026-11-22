@@ -219,7 +219,15 @@
     .voice-hints button:hover { border-color: var(--lime); }
     .chat-voice-setting { display:flex; align-items:center; gap:5px; cursor:pointer; white-space:nowrap; }
     .chat-voice-setting input { accent-color:var(--lime); }
-    .chat-message { white-space: pre-wrap; }
+    .chat-message { white-space: normal; }
+    .chat-message > :last-child { margin-bottom: 0; }
+    .chat-message p { margin: 0 0 9px; white-space: pre-wrap; }
+    .chat-message ul,.chat-message ol { margin: 7px 0 11px; padding-left: 20px; }
+    .chat-message li { margin: 4px 0; }
+    .chat-message h3,.chat-message h4 { margin: 7px 0 8px; color: inherit; font: 700 14px/1.45 'DM Sans',sans-serif; }
+    .chat-message pre { overflow-x: auto; max-width: 100%; border-radius: 9px; background: #f7edf1; padding: 9px 11px; white-space: pre-wrap; word-break: break-word; }
+    .chat-message code { font-family: 'DM Mono',monospace; font-size: 12px; }
+    .chat-message a { color: #af3657; text-decoration: underline; text-underline-offset: 2px; }
     #chat-status:empty::before { content: 'Activa el micrófono para hablar sin decir «Woodstock». Las respuestas también aparecerán por escrito.'; opacity:.75; }
 
     .chat-compose button:disabled { opacity: .5; cursor: wait; }
@@ -800,12 +808,79 @@
       const chatSpeak = document.querySelector('#chat-speak');
       const chatMode = document.querySelector('#chat-mode');
       let chatBusy = false;
+      /* Markdown sencillo y seguro: construye nodos de texto, nunca inserta HTML de la IA. */
+      function inlineChatMarkdown(parent, source) {
+        const input = String(source || '');
+        const pattern = /(\[([^\]\n]+)\]\((https?:\/\/[^\s)]+)\)|\*\*([^*\n]+)\*\*|__([^_\n]+)__|\x60([^\x60\n]+)\x60|\*([^*\n]+)\*|_([^_\n]+)_)/g;
+        let offset = 0, hit;
+        while ((hit = pattern.exec(input))) {
+          if (hit.index > offset) parent.append(document.createTextNode(input.slice(offset, hit.index)));
+          if (hit[2]) {
+            const link = document.createElement('a');
+            link.textContent = hit[2];
+            link.href = hit[3]; link.target = '_blank'; link.rel = 'noopener noreferrer';
+            parent.append(link);
+          } else {
+            const el = document.createElement(hit[4] || hit[5] ? 'strong' : hit[6] ? 'code' : 'em');
+            el.textContent = hit[4] || hit[5] || hit[6] || hit[7] || hit[8] || '';
+            parent.append(el);
+          }
+          offset = pattern.lastIndex;
+        }
+        if (offset < input.length) parent.append(document.createTextNode(input.slice(offset)));
+      }
+      function formattedChatMessage(message) {
+        const fragment = document.createDocumentFragment();
+        const lines = String(message || '').replace(/\r\n?/g, '\n').split('\n');
+        let paragraph = [], activeList = null;
+        function flushParagraph() {
+          if (!paragraph.length) return;
+          const p = document.createElement('p');
+          inlineChatMarkdown(p, paragraph.join('\n'));
+          fragment.append(p); paragraph = [];
+        }
+        for (let i = 0; i < lines.length; i++) {
+          const line = lines[i];
+          if (/^\s*\x60{3}/.test(line)) {
+            flushParagraph(); activeList = null;
+            const code = [];
+            while (++i < lines.length && !/^\s*\x60{3}/.test(lines[i])) code.push(lines[i]);
+            const pre = document.createElement('pre'), tag = document.createElement('code');
+            tag.textContent = code.join('\n'); pre.append(tag); fragment.append(pre);
+            continue;
+          }
+          if (!line.trim()) { flushParagraph(); activeList = null; continue; }
+          const heading = /^\s{0,3}(#{1,3})\s+(.+)$/.exec(line);
+          if (heading) {
+            flushParagraph(); activeList = null;
+            const h = document.createElement(heading[1].length <= 2 ? 'h3' : 'h4');
+            inlineChatMarkdown(h, heading[2]); fragment.append(h); continue;
+          }
+          const bullet = /^\s{0,3}(?:([-*•])|(\d+)[.)])\s+(.+)$/.exec(line);
+          if (bullet) {
+            flushParagraph();
+            const type = bullet[2] ? 'ol' : 'ul';
+            if (!activeList || activeList.tagName.toLowerCase() !== type) {
+              activeList = document.createElement(type);
+              fragment.append(activeList);
+            }
+            const li = document.createElement('li');
+            inlineChatMarkdown(li, bullet[3]); activeList.append(li);
+            continue;
+          }
+          activeList = null; paragraph.push(line);
+        }
+        flushParagraph();
+        return fragment;
+      }
       function appendChat(who, message) {
         const bubble = document.createElement('div');
         bubble.className = 'chat-message' + (who === 'TÚ' ? ' user' : '');
         const tag = document.createElement('span');
         tag.className = 'who'; tag.textContent = who;
-        bubble.append(tag, document.createTextNode(String(message || '')));
+        bubble.append(tag);
+        if (who === 'TÚ') bubble.append(document.createTextNode(String(message || '')));
+        else bubble.append(formattedChatMessage(message));
         chatFeed.append(bubble);
         while (chatFeed.children.length > 90) chatFeed.firstElementChild.remove();
         chatFeed.scrollTop = chatFeed.scrollHeight;
