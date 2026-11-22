@@ -122,7 +122,7 @@ async function publicApi(req, res, url) {
     const b = await readJson(req);
     const key = typeof b.personalGeminiKey === 'string' ? b.personalGeminiKey.trim() : '';
     const model = typeof b.personalGeminiModel === 'string' ? b.personalGeminiModel.trim() : personalGemini.DEFAULT_MODEL;
-    if (!/^[A-Za-z0-9_-]{20,256}$/.test(key))
+    if (!personalGemini.validKey(key))
       return send(res, 400, { error: 'Introduce una clave de Gemini con un formato válido.' });
     if (!personalGemini.validModel(model))
       return send(res, 400, { error: 'Selecciona un modelo Gemini válido.' });
@@ -144,7 +144,7 @@ async function publicApi(req, res, url) {
     const history = turnsOf(sid);
     // La clave solo se usa en esta solicitud; nunca se persiste ni se registra.
     const personalKey = typeof b.personalGeminiKey === 'string' ? b.personalGeminiKey.trim() : '';
-    if (personalKey && !/^[A-Za-z0-9_-]{20,256}$/.test(personalKey)) {
+    if (personalKey && !personalGemini.validKey(personalKey)) {
       return send(res, 400, { error: 'La clave personal de Gemini no tiene un formato válido.' });
     }
     const personalModel = typeof b.personalGeminiModel === 'string' ? b.personalGeminiModel.trim() : personalGemini.DEFAULT_MODEL;

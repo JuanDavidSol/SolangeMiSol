@@ -9,8 +9,14 @@ function validModel(model) {
 const ENV_MODEL = process.env.GEMINI_PERSONAL_MODEL || '';
 const FALLBACK_MODEL = validModel(ENV_MODEL) ? ENV_MODEL : DEFAULT_MODEL;
 
+function validKey(key) {
+  // No suponemos el formato exacto que Google asigna a las claves: la API decide si es válida.
+  // Solo bloqueamos valores vacíos, excesivamente largos o con caracteres no imprimibles.
+  return typeof key === 'string' && key.length >= 8 && key.length <= 256 && /^[\x21-\x7e]+$/.test(key);
+}
+
 async function reply({ key, model, text, history = [], faqs = [], assistantName = 'Snoopy', onText }) {
-  if (!/^[A-Za-z0-9_-]{20,256}$/.test(key || '')) {
+  if (!validKey(key)) {
     const e = new Error('Invalid personal Gemini key');
     e.publicMessage = 'La clave de Gemini no tiene un formato válido.';
     throw e;
@@ -79,4 +85,4 @@ async function reply({ key, model, text, history = [], faqs = [], assistantName 
     throw error;
   } finally { clearTimeout(timeout); }
 }
-module.exports = { reply, validModel, DEFAULT_MODEL };
+module.exports = { reply, validKey, validModel, DEFAULT_MODEL };
