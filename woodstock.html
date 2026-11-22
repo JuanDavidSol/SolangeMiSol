@@ -2058,8 +2058,13 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: amable, 
       document.querySelector('#set-remember-key').addEventListener('change', event => { saveSetting('sonora-ai-remember', String(event.target.checked)); setAiKey(aiKey()); });
       document.querySelector('#set-model').addEventListener('input', event => {
         const model = event.target.value.trim();
-        if (model) saveSelectedModel(model, false);
-        else modelSelector.value = '';
+        // Guardar mientras se escribe, pero no añadir opciones incompletas al menú.
+        saveSetting('sonora-ai-model', model);
+        modelSelector.value = Array.from(modelSelector.options).some(opt => opt.value === model) ? model : '';
+      });
+      document.querySelector('#set-model').addEventListener('change', event => {
+        const model = event.target.value.trim();
+        if (model) chooseModelInSelector(model);
       });
       modelSelector.addEventListener('change', event => saveSelectedModel(event.target.value));
       document.querySelector('#set-ai').addEventListener('change', event => {
