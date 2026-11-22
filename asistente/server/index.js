@@ -9,6 +9,7 @@ const sec = require('./security');
 const assistant = require('./assistant');
 const ollama = require('./ollama');
 const gemini = require('./gemini');
+const personalGemini = require('./gemini-personal');
 const indexer = require('./indexer');
 
 /* Solo se sirven archivos con estas extensiones. Cualquier otra (sin extensión, .env, .log, .bak…) responde 404 */
@@ -123,11 +124,26 @@ async function publicApi(req, res, url) {
     const page = sec.clean(b.page, 80), section = sec.clean(b.section, 40);
     const safe = sec.maskPII(text);   // a la IA no se le envían correos ni teléfonos
     const history = turnsOf(sid);
+    // La clave solo se usa en esta solicitud; nunca se persiste ni se registra.
+    const personalKey = typeof b.personalGeminiKey === 'string' ? b.personalGeminiKey.trim() : '';
+    if (personalKey && !/^[A-Za-z0-9_-]{20,256}$/.test(personalKey)) {
+      return send(res, 400, { error: 'La clave personal de Gemini no tiene un formato válido.' });
+    }
+    const respond = opts => personalKey
+      ? personalGemini.reply({ ...opts, key: personalKey, assistantName: db.settings.assistantName,
+          faqs: assistant.faqs(page, section, 7) })
+      : assistant.reply(opts);
 
     /* Versión clásica: una sola respuesta JSON cuando la IA termina */
     if (p === '/api/chat') {
-      const r = await assistant.reply({ text: safe, page, section, history });
-      remember(sid, safe, r.reply); logTurn(sid, page, text, r.reply, r.source);
+      let r;
+      try {
+        r = await respond({ text: safe, page, section, history });
+      } catch (error) {
+        if (personalKey) return send(res, 502, { error: error.publicMessage || 'No se pudo contactar con Gemini.' });
+        throw error;
+      }
+      remember(sid, safe, r.reply); if (!personalKey) logTurn(sid, page, text, r.reply, r.source);
       return send(res, 200, { reply: r.reply, links: r.links, suggestions: r.suggestions, source: r.source });
     }
 
@@ -141,12 +157,12 @@ async function publicApi(req, res, url) {
     res.on('close', () => { open = false; });   // si el visitante cierra la página, se deja de escribir
     const line = o => { if (open) res.write(JSON.stringify(o) + '\n'); };
     try {
-      const r = await assistant.reply({ text: safe, page, section, history, onText: t => line({ type: 'delta', text: t }) });
-      remember(sid, safe, r.reply); logTurn(sid, page, text, r.reply, r.source);
+      const r = await respond({ text: safe, page, section, history, onText: t => line({ type: 'delta', text: t }) });
+      remember(sid, safe, r.reply); if (!personalKey) logTurn(sid, page, text, r.reply, r.source);
       line({ type: 'done', reply: r.reply, links: r.links, suggestions: r.suggestions, source: r.source });
     } catch (e) {
       console.error('Error en el chat:', e && e.message);
-      line({ type: 'error', error: 'Ups, algo salió mal. Inténtalo de nuevo.' });
+      line({ type: 'error', error: personalKey && e.publicMessage ? e.publicMessage : 'Ups, algo salió mal. Inténtalo de nuevo.' });
     }
     res.end();
     return true;

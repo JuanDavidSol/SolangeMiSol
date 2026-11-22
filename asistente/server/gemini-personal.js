@@ -2,8 +2,8 @@
    La clave no se guarda ni se incluye en errores o URLs.
    Node 18+ (fetch integrado). */
 'use strict';
-const MODEL_ENV = process.env.GEMINI_PERSONAL_MODEL || 'gemini-2.5-flash';
-const MODEL = /^[A-Za-z0-9._-]{1,70}$/.test(MODEL_ENV) ? MODEL_ENV : 'gemini-2.5-flash';
+const MODEL_ENV = process.env.GEMINI_PERSONAL_MODEL || 'gemini-3.8-flash';
+const MODEL = /^[A-Za-z0-9._-]{1,70}$/.test(MODEL_ENV) ? MODEL_ENV : 'gemini-3.8-flash';
 
 async function reply({ key, text, history = [], faqs = [], assistantName = 'Snoopy', onText }) {
   if (!/^[A-Za-z0-9_-]{20,256}$/.test(key || '')) {

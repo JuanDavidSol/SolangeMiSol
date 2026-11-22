@@ -231,7 +231,13 @@
 
   /* ---------- Petición al servidor (con respuesta en tiempo real) ---------- */
   const headers = { 'Content-Type': 'application/json' };
-  const payload = text => JSON.stringify({ session: state.sid, message: text, page: page(), section: section() });
+  const payload = text => {
+    const body = { session: state.sid, message: text, page: page(), section: section() };
+    const getKey = window.getSnoopyPersonalGeminiKey;
+    const key = typeof getKey === 'function' ? getKey() : '';
+    if (key) body.personalGeminiKey = key;
+    return JSON.stringify(body);
+  };
   const botFrom = (j, text) => ({ r: 'a', t: j.reply, l: j.links || [], s: j.suggestions || [], q: text, src: j.source || '' });
   const failBot = msg => ({ r: 'a', t: msg, l: [], s: [] });
 
