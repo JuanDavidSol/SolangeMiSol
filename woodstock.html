@@ -1952,13 +1952,73 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
         }).filter(match => match.score >= threshold).sort((a, b) => b.score - a.score);
       }
 
-      // Evita que el micrófono transcriba la propia voz sintetizada.
+      // La misma regla que Snoopy: pausa voz/micrófono si la pestaña se oculta.
+      // Al regresar, reanuda la voz pendiente sin repetir toda la respuesta.
+      let voiceTabPaused = document.visibilityState === 'hidden';
+      let voicePageLeaving = false;
+      let pendingSpeech = null;
+      let speechState = null;
       let ttsGeneration = 0;
       let ttsInProgress = false;
+
+      function stopWoodstockSpeech() {
+        ttsGeneration++;
+        speechState = null;
+        ttsInProgress = false;
+        try { window.speechSynthesis?.cancel(); } catch {}
+      }
+      function finishWoodstockSpeech(state) {
+        if (speechState !== state || state.finished) return;
+        state.finished = true;
+        speechState = null;
+        ttsInProgress = false;
+        if (listening && !voiceTabPaused && !voicePageLeaving) {
+          clearTimeout(restartTimer);
+          restartTimer = setTimeout(() => {
+            if (listening && !ttsInProgress && !voiceTabPaused && !voicePageLeaving) beginRecognition();
+          }, 450);
+        }
+      }
+      function speakWoodstockChunk(state) {
+        if (speechState !== state || state.finished || voiceTabPaused || voicePageLeaving) return;
+        if (state.chunkIndex >= state.chunks.length) { finishWoodstockSpeech(state); return; }
+        const chunk = state.chunks[state.chunkIndex].slice(state.offset);
+        if (!chunk.trim()) {
+          state.chunkIndex++; state.offset = 0;
+          speakWoodstockChunk(state);
+          return;
+        }
+        const utterance = new SpeechSynthesisUtterance(chunk);
+        utterance.lang = state.voice?.lang || 'es-ES';
+        utterance.rate = state.rate;
+        utterance.pitch = 1.13;
+        utterance.volume = .88;
+        if (state.voice) utterance.voice = state.voice;
+        state.utterance = utterance;
+        state.interrupted = false;
+        const originalOffset = state.offset;
+        utterance.onboundary = event => {
+          if (speechState !== state || state.utterance !== utterance || !Number.isFinite(event.charIndex)) return;
+          const at = Math.max(0, Math.min(chunk.length, event.charIndex));
+          const whitespace = chunk.slice(at).search(/\s/);
+          state.offset = Math.max(state.offset, originalOffset + (whitespace < 0 ? chunk.length : at + whitespace + 1));
+        };
+        utterance.onend = () => {
+          if (speechState !== state || state.utterance !== utterance) return;
+          state.chunkIndex++; state.offset = 0; state.utterance = null;
+          speakWoodstockChunk(state);
+        };
+        utterance.onerror = () => {
+          if (speechState !== state || state.utterance !== utterance) return;
+          if (voiceTabPaused || state.paused) { state.interrupted = true; return; }
+          finishWoodstockSpeech(state);
+        };
+        try { window.speechSynthesis.speak(utterance); }
+        catch { finishWoodstockSpeech(state); }
+      }
       function speak(message, preview = false) {
-        if ((!voiceReplies && !preview) || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
-        const serial = ++ttsGeneration;
-        const synth = window.speechSynthesis;
+        if (voicePageLeaving || ((!voiceReplies && !preview) ||
+          !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window))) return;
         const plain = String(message || '')
           .replace(/\x60{3}[\s\S]*?\x60{3}/g, ' un bloque de código ')
           .replace(/\[([^\]]+)\]\(https?:\/\/[^)]+\)/g, '$1')
@@ -1969,11 +2029,17 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
           .replace(/\s*\n+\s*/g, '. ')
           .replace(/\s{2,}/g, ' ').trim().slice(0,4500);
         if (!plain) return;
+        if (voiceTabPaused || document.visibilityState === 'hidden') {
+          pendingSpeech = { message, preview };
+          stopWoodstockSpeech();
+          return;
+        }
+        pendingSpeech = null;
+        stopWoodstockSpeech();
         ttsInProgress = true;
         clearTimeout(restartTimer);
-        try { if (listening) recognition?.stop(); } catch {}
-        synth.cancel();
-        // Algunos navegadores cortan frases muy largas: dividir en fragmentos.
+        try { if (listening) recognition?.abort(); } catch {}
+        // Separar frases extensas para evitar cortes de voz en Chrome/Edge.
         const chunks = [];
         let remaining = plain;
         while (remaining) {
@@ -1985,9 +2051,7 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
           chunks.push(remaining.slice(0, cut).trim());
           remaining = remaining.slice(cut).trim();
         }
-        const voices = synth.getVoices();
-        // Preferir voces de español naturales y de timbre suave cuando existan.
-        // El navegador decide las voces instaladas: no hay una voz oficial de Woodstock.
+        const voices = window.speechSynthesis.getVoices();
         const voice = voices.filter(v => /^es(?:-|$)/i.test(v.lang || ''))
           .sort((a,b) => {
             const score = v => {
@@ -1998,27 +2062,64 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
             };
             return score(b) - score(a);
           })[0];
-        const rate = currentWoodstockVoiceRate();
-        let index = 0;
-        function resumeMic() {
-          if (serial !== ttsGeneration) return;
-          ttsInProgress = false;
-          if (listening) restartTimer = setTimeout(()=>{ if (listening && !ttsInProgress) beginRecognition(); }, 450);
+        speechState = { chunks, chunkIndex: 0, offset: 0, utterance: null,
+          voice, rate: currentWoodstockVoiceRate(), paused: false, interrupted: false, finished: false };
+        speakWoodstockChunk(speechState);
+      }
+      function pauseWoodstockForTab() {
+        if (voiceTabPaused || voicePageLeaving) return;
+        voiceTabPaused = true;
+        clearTimeout(restartTimer);
+        try { if (listening) recognition?.abort(); } catch {}
+        if (speechState) {
+          speechState.paused = true;
+          try {
+            if (typeof window.speechSynthesis?.pause === 'function') window.speechSynthesis.pause();
+            else speechState.interrupted = true;
+          } catch { speechState.interrupted = true; }
         }
-        function nextChunk() {
-          if (serial !== ttsGeneration) return;
-          if (index >= chunks.length) return resumeMic();
-          const utterance = new SpeechSynthesisUtterance(chunks[index++]);
-          utterance.lang = voice?.lang || 'es-ES';
-          utterance.rate = rate;
-          utterance.pitch = 1.13;
-          utterance.volume = .88;
-          if (voice) utterance.voice = voice;
-          utterance.onend = nextChunk;
-          utterance.onerror = resumeMic;
-          synth.speak(utterance);
+        if (listening) setListening(true);
+        if (listening || speechState) voiceStatus.textContent =
+          '⏸ Woodstock en pausa mientras estás en otra pestaña. Al volver continuará la voz o el micrófono.';
+      }
+      function resumeWoodstockFromTab() {
+        if (!voiceTabPaused || voicePageLeaving || document.visibilityState === 'hidden') return;
+        voiceTabPaused = false;
+        if (listening) setListening(true);
+        if (pendingSpeech) {
+          const deferred = pendingSpeech;
+          pendingSpeech = null;
+          speak(deferred.message, deferred.preview);
+          voiceStatus.textContent = '🔊 Woodstock retomó su respuesta al volver a la pestaña.';
+          return;
         }
-        nextChunk();
+        const state = speechState;
+        if (state) {
+          const synth = window.speechSynthesis;
+          if (synth?.speaking && !state.interrupted) {
+            state.paused = false;
+            try {
+              if (synth.paused) synth.resume();
+              voiceStatus.textContent = '🔊 Woodstock continúa desde donde se pausó.';
+              return;
+            } catch { state.interrupted = true; }
+          }
+          state.paused = false;
+          // Si Chrome descartó el audio, retomar desde la última palabra confirmada.
+          // Si no hubo marcas de lectura, no repetir toda la respuesta.
+          if (state.utterance) {
+            state.utterance = null;
+            try { synth?.cancel(); } catch {}
+            if (!state.offset) {
+              state.chunkIndex++;
+            }
+          }
+          speakWoodstockChunk(state);
+          voiceStatus.textContent = '🔊 Woodstock reanudó su respuesta.';
+        } else if (listening && !chatBusy) {
+          beginRecognition();
+          voiceStatus.textContent = '🎙 Woodstock volvió a escuchar.';
+        }
       }
 
       async function handleVoiceCommand(transcript) {
@@ -2028,20 +2129,21 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
       function setListening(on) {
         listening = on;
         voiceButton.setAttribute('aria-pressed', String(on));
-        voiceButton.textContent = on ? '🎙 Escuchando (S)' : '🎙 Hablar (S)';
+        voiceButton.textContent = on ? (voiceTabPaused ? '⏸ Pausado (S)' : '🎙 Escuchando (S)') : '🎙 Hablar (S)';
         chatMic.setAttribute('aria-pressed',String(on));
-        chatMic.textContent = on ? '⏹ Detener micro' : '🎙 Hablar';
+        chatMic.textContent = on ? (voiceTabPaused ? '⏸ Pausado' : '⏹ Detener micro') : '🎙 Hablar';
         if (!on) { clearTimeout(restartTimer); try { recognition?.abort(); } catch {} }
       }
 
       function beginRecognition() {
+        if (!listening || voiceTabPaused || voicePageLeaving || document.visibilityState === 'hidden') return;
         const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
         try {
           if (!recognition) {
             recognition = new SpeechRecognition();
             recognition.lang = 'es-ES'; recognition.continuous = true; recognition.interimResults = false; recognition.maxAlternatives = 3;
             recognition.onresult = event => {
-              if (ttsInProgress || window.speechSynthesis?.speaking) return;
+              if (voiceTabPaused || voicePageLeaving || ttsInProgress || window.speechSynthesis?.speaking) return;
               for (let i=event.resultIndex; i<event.results.length; i++) {
                 if (!event.results[i].isFinal) continue;
                 const heard = Array.from(event.results[i]).map(x=>String(x.transcript||'').trim()).filter(Boolean);
@@ -2063,7 +2165,12 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
               }[event.error];
               if (fatal) { voiceStatus.textContent = fatal; setListening(false); }
             };
-            recognition.onend = () => { if (listening && !ttsInProgress) restartTimer = setTimeout(() => { if (listening && !ttsInProgress) beginRecognition(); }, 450); };
+            recognition.onend = () => {
+              if (listening && !ttsInProgress && !voiceTabPaused && !voicePageLeaving)
+                restartTimer = setTimeout(() => {
+                  if (listening && !ttsInProgress && !voiceTabPaused && !voicePageLeaving) beginRecognition();
+                }, 450);
+            };
           }
           recognition.start();
         } catch (error) {
@@ -2093,6 +2200,24 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
       picker.addEventListener('change', () => { addFiles(picker.files); picker.value = ''; });
       folderPicker.addEventListener('change', () => { addFiles(folderPicker.files); folderPicker.value = ''; });
       voiceButton.addEventListener('click', toggleListening);
+      document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'hidden') pauseWoodstockForTab();
+        else resumeWoodstockFromTab();
+      });
+      window.addEventListener('pagehide', () => {
+        // Salir de Woodstock finaliza la sesión hablada. La música no se altera.
+        voicePageLeaving = true;
+        voiceTabPaused = true;
+        pendingSpeech = null;
+        clearTimeout(restartTimer);
+        if (listening) setListening(false);
+        stopWoodstockSpeech();
+      });
+      window.addEventListener('pageshow', () => {
+        // El navegador puede restaurar una página desde el historial (bfcache).
+        voicePageLeaving = false;
+        if (document.visibilityState !== 'hidden') resumeWoodstockFromTab();
+      });
       document.querySelector('#playlist-select').addEventListener('change', event => { currentPlaylist = event.target.value; renderTracks(); });
       document.querySelector('#new-playlist').addEventListener('click', () => {
         const name = (window.prompt('Nombre de la nueva playlist') || '').trim();
