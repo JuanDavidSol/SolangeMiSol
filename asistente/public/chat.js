@@ -36,7 +36,7 @@
   const micSupported = typeof SpeechRecognizer === 'function';
   let micSession = null, micSilenceTimer = null;
   let voiceConversation = false, voiceGeneration = 0;
-  let tabPaused = false, manualPaused = false, pendingVoiceText = '', activeSpeechText = '';
+  let tabPaused = false, manualPaused = false, pendingVoiceText = '', speechState = null;
 
   /* ---------- Estilos ---------- */
   const css = `
@@ -198,7 +198,7 @@
   /* ---------- Voz calmada y clara en español (Web Speech API) ---------- */
   function stopVoice() {
     voiceGeneration++;
-    activeSpeechText = '';
+    speechState = null;
     if (voiceSupported) window.speechSynthesis.cancel();
   }
   function preferredVoice() {
@@ -226,6 +226,52 @@
       .replace(/[*_#~>|]/g, ' ')
       .replace(/\s+/g, ' ').trim().slice(0, 3200);
   }
+  /* Mantener el punto de lectura al pausar una respuesta. */
+  function finishSpeech(state) {
+    if (speechState !== state || state.finished) return;
+    state.finished = true;
+    speechState = null;
+    if (typeof state.onFinished === 'function') state.onFinished();
+  }
+  function speakSegment(state) {
+    if (speechState !== state || state.finished) return;
+    const remainder = state.words.slice(state.cursor);
+    if (!remainder.trim()) { finishSpeech(state); return; }
+    const from = state.cursor;
+    const utterance = new window.SpeechSynthesisUtterance(remainder);
+    const chosen = preferredVoice();
+    if (chosen) { utterance.voice = chosen; utterance.lang = chosen.lang; }
+    else utterance.lang = 'es-PE';
+    utterance.rate = 1.4;
+    utterance.pitch = 0.94;
+    utterance.volume = 0.82;
+    state.utterance = utterance;
+    state.paused = false;
+    state.interrupted = false;
+    utterance.onboundary = event => {
+      if (speechState !== state || state.utterance !== utterance || state.finished) return;
+      if (!Number.isFinite(event.charIndex)) return;
+      const at = Math.max(0, Math.min(remainder.length, event.charIndex));
+      // Si el navegador cancela la voz, empezar después de la última palabra reconocida.
+      const gap = remainder.slice(at).search(/\s/);
+      state.cursor = Math.max(state.cursor, from + (gap < 0 ? remainder.length : at + gap + 1));
+    };
+    utterance.onend = () => {
+      if (speechState !== state || state.utterance !== utterance) return;
+      state.cursor = state.words.length;
+      finishSpeech(state);
+    };
+    utterance.onerror = () => {
+      if (speechState !== state || state.utterance !== utterance) return;
+      if (state.paused || tabPaused || manualPaused || document.visibilityState === 'hidden') {
+        state.interrupted = true;
+        return;
+      }
+      finishSpeech(state);
+    };
+    try { window.speechSynthesis.speak(utterance); }
+    catch (_) { finishSpeech(state); }
+  }
   function speakReply(text, force = false, onFinished = null) {
     if (!voiceSupported || (!voiceEnabled && !force)) {
       if (onFinished) onFinished();
@@ -237,27 +283,43 @@
       return;
     }
     stopVoice();
-    const speech = new window.SpeechSynthesisUtterance(words);
-    const chosen = preferredVoice();
-    if (chosen) { speech.voice = chosen; speech.lang = chosen.lang; }
-    else speech.lang = 'es-PE';
-    speech.rate = 1.24;    // un poco más rápida sin perder claridad
-    speech.pitch = 0.94;   // entonación más serena
-    speech.volume = 0.82;  // volumen suave
-    activeSpeechText = text;
-    const generation = voiceGeneration;
-    let finished = false;
-    const done = () => {
-      if (finished || generation !== voiceGeneration) return;
-      finished = true;
-      activeSpeechText = '';
-      if (onFinished) onFinished();
-    };
-    speech.onend = done;
-    speech.onerror = done;
-    try { window.speechSynthesis.speak(speech); }
-    catch (_) { done(); }
+    speechState = { words, cursor: 0, utterance: null, paused: false,
+      interrupted: false, finished: false, onFinished };
+    speakSegment(speechState);
   }
+  function pauseSpokenAnswer() {
+    if (!speechState || speechState.finished || speechState.paused) return;
+    speechState.paused = true;
+    if (typeof window.speechSynthesis.pause === 'function') {
+      try { window.speechSynthesis.pause(); }
+      catch (_) { speechState.interrupted = true; }
+    } else speechState.interrupted = true;
+  }
+  function resumeSpokenAnswer() {
+    const state = speechState;
+    if (!state || state.finished) return false;
+    if (state.paused) {
+      const synth = window.speechSynthesis;
+      // La pausa nativa es lo más preciso: no reinicia ninguna frase.
+      if (synth.speaking && !state.interrupted) {
+        state.paused = false;
+        try { if (synth.paused) synth.resume(); return true; }
+        catch (_) { state.interrupted = true; }
+      }
+      state.paused = false;
+      // Recuperar solo lo pendiente cuando Chrome descartó el audio.
+      if (state.cursor > 0 && state.cursor < state.words.length) {
+        voiceGeneration++;
+        try { synth.cancel(); } catch (_) {}
+        speakSegment(state);
+      } else {
+        // Sin posición conocida no repetimos toda la respuesta.
+        finishSpeech(state);
+      }
+    }
+    return Boolean(speechState);
+  }
+
   function toggleVoice() {
     if (!voiceSupported) return;
     voiceEnabled = !voiceEnabled;
@@ -694,10 +756,15 @@
   /* Pausa/reanudación: cambiar de pestaña no finaliza la conversación. */
   function resumeVoiceConversation() {
     if (!voiceConversation || tabPaused || manualPaused || busy || document.visibilityState === 'hidden') return;
+    if (speechState) {
+      // Retomar desde donde estaba la voz, no desde el comienzo.
+      resumeSpokenAnswer();
+      return;
+    }
     if (pendingVoiceText) {
       const message = pendingVoiceText;
       pendingVoiceText = '';
-      showMicStatus('🔊 Snoopy termina de responder. Después te escucharé…');
+      showMicStatus('🔊 Snoopy responde a la pregunta pendiente…');
       speakReply(message, false, () => {
         if (voiceConversation && !tabPaused && !manualPaused) startListening();
       });
@@ -707,10 +774,9 @@
     if (!voiceConversation) return;
     manualPaused = !manualPaused;
     if (manualPaused) {
-      if (activeSpeechText) pendingVoiceText = activeSpeechText;
       stopMic(true);
-      stopVoice();
-      showMicStatus('⏸ Conversación pausada. Pulsa Alt + M para reanudar o ⏹ para finalizar.');
+      pauseSpokenAnswer();
+      showMicStatus('⏸ Conversación pausada. Pulsa Alt + M para continuar o ⏹ para finalizar.');
     } else {
       showMicStatus(tabPaused ? '⏸ Pestaña en segundo plano; se reanudará al regresar.' : '🎤 Reanudando conversación…');
       resumeVoiceConversation();
@@ -726,10 +792,9 @@
     if (!voiceConversation) return;
     if (document.visibilityState === 'hidden') {
       tabPaused = true;
-      if (activeSpeechText) pendingVoiceText = activeSpeechText;
       stopMic(true);
-      stopVoice();
-      showMicStatus('⏸ Snoopy está pausado mientras usas otra pestaña. Se reactivará al volver.');
+      pauseSpokenAnswer();
+      showMicStatus('⏸ Snoopy está pausado. Al volver seguirá hablando desde donde quedó o solo escuchará si ya terminó.');
     } else {
       tabPaused = false;
       showMicStatus(manualPaused ? '⏸ En pausa manual. Pulsa Alt + M para reanudar.' : '🎤 Volviste. Reanudando…');
