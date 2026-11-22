@@ -1887,20 +1887,55 @@
 
   // Power-up de Woodstock: animación extraída de la hoja aportada por el usuario.
   // No modifica el poder, su hitbox ni las cápsulas de las otras habilidades.
+  // Dibujo autónomo de respaldo: siempre se ve la burbuja, incluso sin PNG.
+  function drawWoodstockBubbleFallback(x, y, radius) {
+    const pulse = 0.7 + Math.sin(state.time * 6) * .12;
+    ctx.save();
+    ctx.translate(Math.round(x), Math.round(y));
+    ctx.fillStyle = 'rgba(80,195,255,.20)';
+    ctx.beginPath(); ctx.arc(0, 0, radius + 3, 0, Math.PI * 2); ctx.fill();
+    ctx.fillStyle = 'rgba(65,115,205,.35)';
+    ctx.beginPath(); ctx.arc(0, 0, radius - 1, 0, Math.PI * 2); ctx.fill();
+    ctx.strokeStyle = 'rgba(138,227,255,' + pulse + ')';
+    ctx.lineWidth = Math.max(1.1, radius / 8);
+    ctx.beginPath(); ctx.arc(0, 0, radius - 1, 0, Math.PI * 2); ctx.stroke();
+    const birdDrawn = paintGameSprite(birdSprites, BIRD_CELL, 0,
+      Math.floor(state.time * 5) % 4, 0, radius * .55,
+      radius * 1.23, radius * 1.23, 1);
+    if (!birdDrawn) {
+      // Respaldo adicional si tampoco terminó de cargar el atlas del personaje.
+      ctx.fillStyle = '#ffe137';
+      ctx.beginPath(); ctx.ellipse(-2, 1, radius * .48, radius * .42, -.18, 0, Math.PI * 2); ctx.fill();
+      ctx.fillRect(-4, -radius * .53, 3, radius * .25);
+      ctx.fillRect(-1, -radius * .61, 3, radius * .30);
+      ctx.fillStyle = '#f4a42c';
+      ctx.beginPath(); ctx.moveTo(radius * .27, 0); ctx.lineTo(radius * .63, radius * .08);
+      ctx.lineTo(radius * .28, radius * .22); ctx.fill();
+      ctx.fillStyle = '#19212d'; ctx.fillRect(radius * .14, -radius * .14, 2, 2);
+    }
+    ctx.strokeStyle = 'rgba(245,253,255,.92)';
+    ctx.lineWidth = Math.max(1, radius / 8);
+    ctx.beginPath(); ctx.arc(-radius * .40, -radius * .37, radius * .25, 3.45, 4.95); ctx.stroke();
+    ctx.restore();
+  }
   function drawPowerPickup(x, y, bob, type) {
-    if (type === 'bird' && woodstockPickupSprites.ready && woodstockPickupSprites.image) {
+    if (type === 'bird') {
       const frame = Math.floor(state.time * 6.5) % 8;
       const bubbleY = y + bob;
       ctx.save();
       ctx.fillStyle = 'rgba(80, 196, 255, .20)';
       ctx.beginPath(); ctx.ellipse(x, bubbleY + 20, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
-      ctx.imageSmoothingEnabled = false;
-      ctx.drawImage(woodstockPickupSprites.image, frame * 40, 0, 40, 40,
-        Math.round(x - 19), Math.round(bubbleY - 19), 38, 38);
+      if (woodstockPickupSprites.ready && woodstockPickupSprites.image) {
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(woodstockPickupSprites.image, frame * 40, 0, 40, 40,
+          Math.round(x - 19), Math.round(bubbleY - 19), 38, 38);
+      } else {
+        drawWoodstockBubbleFallback(x, bubbleY, 17);
+      }
       ctx.restore();
       return;
     }
-    // Mantener el antiguo dibujo como respaldo si falla la carga del archivo.
+    // Los demás poderes no cambian de apariencia ni de comportamiento.
     const info = {
       double: { color: '#9a6bff', edge: '#4a2ca8', symbol: '⇈', label: 'D', glow: 'rgba(180,140,255,.35)' },
       shield: { color: '#5ec5ff', edge: '#236c95', symbol: '◈', label: 'S', glow: 'rgba(120,220,255,.35)' },
@@ -1993,7 +2028,7 @@
   }
   const enemySprites = loadGameSprite('enemies', 'assets/enemigos-jefes-sprites.png');
   const birdSprites = loadGameSprite('bird', 'assets/pajarito-sprites.png');
-  const woodstockPickupSprites = loadGameSprite('woodstockPickup', 'assets/woodstock-bubble-pickup.png');
+  const woodstockPickupSprites = loadGameSprite('woodstockPickup', 'assets/woodstock-bubble-pickup.png?v=20261122b');
   function paintGameSprite(record, cell, row, frame, middleX, bottomY, drawW, drawH, facing) {
     if (!record.ready || !record.image || !record.image.naturalWidth) return false;
     ctx.save();
@@ -2246,12 +2281,15 @@
     }[player.power]) : null;
     if (powerMeta) {
       ctx.fillStyle = powerMeta.color;
-      if (player.power === 'bird' && woodstockPickupSprites.ready) {
-        const spriteFrame = Math.floor(state.time * 5) % 8;
-        ctx.save();
-        ctx.imageSmoothingEnabled = false;
-        ctx.drawImage(woodstockPickupSprites.image, spriteFrame * 40, 0, 40, 40, 14, 43, 20, 20);
-        ctx.restore();
+      if (player.power === 'bird') {
+        if (woodstockPickupSprites.ready && woodstockPickupSprites.image) {
+          const spriteFrame = Math.floor(state.time * 5) % 8;
+          ctx.save(); ctx.imageSmoothingEnabled = false;
+          ctx.drawImage(woodstockPickupSprites.image, spriteFrame * 40, 0, 40, 40, 14, 43, 20, 20);
+          ctx.restore();
+        } else {
+          drawWoodstockBubbleFallback(24, 52, 9);
+        }
         ctx.fillText('WOODSTOCK', 38, 56);
       } else {
         ctx.fillText(powerMeta.icon + ' ' + powerMeta.name, 18, 56);
