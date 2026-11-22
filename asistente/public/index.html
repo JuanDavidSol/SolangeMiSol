@@ -19,6 +19,15 @@
   h1 { margin: 0; font: 400 clamp(28px, 7vw, 40px)/1.1 'Pacifico', cursive; color: var(--red); }
   header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
   .note { margin: 14px 4px 0; color: var(--muted); font-size: 12px; text-align: center; }
+  .api-settings { margin: 0 0 16px; padding: 12px 16px; border: 1px solid #efc9cb; border-radius: 18px; background: #fff; box-shadow: 0 5px 18px #e8505b0d; }
+  .api-settings summary { color: #b73549; cursor: pointer; font-size: 14px; font-weight: 700; }
+  .api-settings p { font-size: 12px; line-height: 1.7; color: var(--muted); }
+  .api-settings label { font-size: 12px; font-weight: 700; display: block; margin: 12px 0 6px; }
+  .api-line { display: flex; gap: 8px; flex-wrap: wrap; }
+  .api-line input { flex: 1 1 230px; min-width: 0; padding: 10px 12px; border: 1px solid #d7c5c5; border-radius: 12px; font: inherit; font-size: 13px; }
+  .api-line button { border: 0; border-radius: 12px; background: var(--red); padding: 10px 13px; color: white; font: inherit; font-size: 12px; font-weight: 700; cursor: pointer; }
+  .api-line .remove { background: #e9e6e6; color: var(--ink); }
+  #api-key-status { min-height: 18px; margin: 8px 0 0; }
 </style>
 </head>
 <body>
@@ -28,9 +37,24 @@
     <div class="mascot" aria-hidden="true">🐶</div>
     <div><h1>Pregúntale a Snoopy</h1><p>Dudas sobre los juegos, las galletas, los premios y los vales.</p></div>
   </header>
+  <details class="api-settings">
+    <summary>🔑 ¿Tienes tu propia API de Gemini? Configurar</summary>
+    <p>Puedes usar tu propia clave para conversar con Snoopy. Es opcional y no necesitas contraseña de administrador.</p>
+    <form id="api-key-form" autocomplete="off">
+      <label for="personal-gemini-key">Tu clave de Gemini</label>
+      <div class="api-line">
+        <input id="personal-gemini-key" type="password" autocomplete="off" autocapitalize="off" spellcheck="false" placeholder="Pega tu clave aquí" aria-describedby="api-key-status" maxlength="256">
+        <button type="submit">Activar mi API</button>
+        <button class="remove" id="api-key-remove" type="button">Quitar</button>
+      </div>
+    </form>
+    <p id="api-key-status" role="status" aria-live="polite">La clave no se guarda: tendrás que volver a introducirla al recargar la página.</p>
+    <p>La clave viaja por HTTPS a este servidor y de allí a Gemini en cada mensaje. Quien administra el servidor debe ser de confianza; el uso de tu clave puede consumir cuota o generar cargos.</p>
+  </details>
   <div id="chat-root"></div>
-  <p class="note">Soy un asistente virtual y respondo con la información de esta web. No guardo tu nombre ni tus datos personales.</p>
+  <p class="note">Soy un asistente virtual. Los mensajes enviados con tu API se procesan en Gemini; evita compartir datos personales o secretos.</p>
 </div>
+<script src="api-personal.js"></script>
 <script src="chat.js" data-mode="page"></script>
 </body>
 </html>
