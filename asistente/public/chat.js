@@ -348,7 +348,7 @@
       if (micSilenceTimer) clearTimeout(micSilenceTimer);
       micSilenceTimer = null;
       markMicListening(false);
-      if (current.cancelled || current.error) return;
+      if (current.cancelled || (current.error && !(current.error === 'no-speech' && current.final))) return;
       const heard = (current.final || current.interim).trim();
       if (!heard) {
         showMicStatus('No escuché una pregunta. Pulsa 🎤 para volver a hablar.');
@@ -540,6 +540,7 @@
     liveEl = null; liveRaf = 0; liveText = '';
     busy = false; sendBtn.disabled = false; micBtn.disabled = !micSupported;
     state.msgs.push(bot); state.msgs = state.msgs.slice(-60); save(); render();
+    showMicStatus('');
     if (bot.q && bot.t && (MODE === 'page' || state.open)) speakReply(bot.t);
     if (MODE === 'page' || state.open) input.focus();
   }
