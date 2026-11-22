@@ -265,6 +265,8 @@
       current.cancelled = true;
       micSession = null;
       markMicListening(false);
+    } else {
+      current.stopping = true; // Detención normal: no mostrar «aborted» como fallo
     }
     if (micSilenceTimer) clearTimeout(micSilenceTimer);
     micSilenceTimer = null;
@@ -285,8 +287,10 @@
     if (code === 'audio-capture') return 'No se detectó ningún micrófono. Revisa el dispositivo.';
     if (code === 'no-speech') return 'No escuché palabras. Prueba otra vez más cerca del micrófono.';
     if (code === 'network') return 'El reconocimiento de voz no pudo conectarse. Revisa Internet.';
-    if (code === 'language-not-supported') return 'Tu navegador no admite dictado en español.';
-    return 'No se pudo reconocer la voz. Prueba otra vez o escribe tu pregunta.';
+    if (code === 'language-not-supported') return 'Chrome no admite el idioma de dictado seleccionado. Prueba cambiando el idioma del navegador a español.';
+    if (code === 'aborted') return 'El reconocimiento se interrumpió. Pulsa 🎤 para intentarlo de nuevo.';
+    if (code === 'phrases-not-supported') return 'Chrome no permite esta función de dictado. Prueba con una versión actualizada.';
+    return 'El reconocimiento falló (código: ' + String(code || 'desconocido').replace(/[^a-z-]/g, '').slice(0,40) + '). Revisa el permiso del micrófono y vuelve a intentarlo.';
   }
   function toggleMic() {
     if (!micSupported || busy) return;
@@ -301,13 +305,14 @@
       showMicStatus('No se pudo iniciar el reconocimiento de voz.');
       return;
     }
-    recognition.lang = 'es-PE';
+    // Usa el español configurado en Chrome; es-ES como alternativa ampliamente disponible.
+    recognition.lang = /^es(?:-|$)/i.test(navigator.language || '') ? navigator.language : 'es-ES';
     recognition.continuous = true;
     recognition.interimResults = true;
     recognition.maxAlternatives = 1;
     const current = {
       recognition, base: input.value.trim(), final: '', interim: '',
-      cancelled: false, error: ''
+      cancelled: false, stopping: false, error: ''
     };
     micSession = current;
     recognition.onstart = () => {
@@ -339,7 +344,12 @@
     };
     recognition.onerror = event => {
       if (micSession !== current) return;
-      current.error = event.error || 'unknown';
+      const errorCode = event && event.error || 'unknown';
+      // Chrome puede emitir «aborted» al terminar una captura solicitada por el usuario.
+      if (current.stopping && errorCode === 'aborted') return;
+      // Si ya reconoció la frase, los errores posteriores no deben borrar la respuesta.
+      if (current.final && (errorCode === 'no-speech' || errorCode === 'aborted')) return;
+      current.error = errorCode;
       showMicStatus(microphoneError(current.error));
     };
     recognition.onend = () => {
@@ -348,7 +358,7 @@
       if (micSilenceTimer) clearTimeout(micSilenceTimer);
       micSilenceTimer = null;
       markMicListening(false);
-      if (current.cancelled || (current.error && !(current.error === 'no-speech' && current.final))) return;
+      if (current.cancelled || current.error) return;
       const heard = (current.final || current.interim).trim();
       if (!heard) {
         showMicStatus('No escuché una pregunta. Pulsa 🎤 para volver a hablar.');
