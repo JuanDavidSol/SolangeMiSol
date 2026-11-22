@@ -270,6 +270,11 @@
     }
     if (micSilenceTimer) clearTimeout(micSilenceTimer);
     micSilenceTimer = null;
+    if (!cancel && current.waitingRestart) {
+      // Chrome ya cerró su turno; completa el dictado con el texto disponible.
+      current.recognition.onend();
+      return;
+    }
     try {
       if (cancel) current.recognition.abort();
       else current.recognition.stop();
@@ -313,11 +318,12 @@
     recognition.maxAlternatives = 1;
     const current = {
       recognition, base: input.value.trim(), final: '', interim: '',
-      cancelled: false, stopping: false, error: '', audioStarted: false, speechStarted: false, completed: ''
+      cancelled: false, stopping: false, error: '', audioStarted: false, speechStarted: false, completed: '', waitingRestart: false
     };
     micSession = current;
     recognition.onstart = () => {
       if (micSession !== current) return;
+      current.waitingRestart = false;
       markMicListening(true);
       showMicStatus('🎤 Te escucho de forma continua. Pulsa ⏹ cuando termines para enviar lo que dijiste.');
     };
@@ -375,6 +381,7 @@
       if (!current.stopping) {
         // En algunos navegadores la captura termina sola aunque el modo sea continuo.
         // Conserva lo dictado y reanuda mientras el usuario mantenga activo el botón.
+        current.waitingRestart = true;
         current.completed = (current.final || current.completed).trim();
         current.final = current.completed;
         current.interim = '';
