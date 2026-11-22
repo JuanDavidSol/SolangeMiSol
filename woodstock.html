@@ -498,7 +498,9 @@
         <label class="switch"><input type="checkbox" id="set-replies" checked> Leer respuestas en voz alta (además de mostrarlas por escrito)</label>
         <label class="switch"><input type="checkbox" id="set-chirp" checked> 🐥 Píos ocasionales en momentos alegres</label>
         <p class="settings-note">Woodstock pía de vez en cuando ante saludos o buenas noticias, no con cada mensaje. Lo puedes desactivar sin apagar su voz. Nunca suena al abrir la página.</p>
-        <label>Velocidad de la voz: <output id="voice-rate-value">1×</output><input id="set-voice-rate" type="range" min="0.75" max="1.4" value="1" step="0.05"></label>
+        <label>Velocidad de la voz: <output id="voice-rate-value">1.5×</output><input id="set-voice-rate" type="range" min="0.75" max="1.75" value="1.5" step="0.05"></label>
+        <button id="preview-woodstock-voice" type="button">▶ Probar voz tierna</button>
+        <p class="settings-note">Voz suave y ligeramente aguda, a 1.5× como prueba. La calidad y las voces disponibles dependen del navegador; puedes ajustar la velocidad cuando quieras.</p>
         <p class="settings-note">El micrófono se activa manualmente. Cuando esté encendido, habla con naturalidad, sin decir «Woodstock». No se envían los archivos de audio de tu biblioteca a Gemini.</p>
               </div>
       </details>
@@ -564,6 +566,17 @@
       let playlists = (() => { try { return JSON.parse(readSetting('sonora-playlists') || '[]'); } catch { return []; } })();
       let listening = false, restartTimer, lastVoice = { key: '', time: 0 };
       let voiceReplies = readSetting('sonora-replies') !== 'false';
+      const WOODSTOCK_VOICE_PRESET = 'woodstock-sweet-voice-v1';
+      function currentWoodstockVoiceRate() {
+        // Aplicar esta nueva prueba a 1.5× una sola vez, respetando cambios posteriores.
+        if (readSetting(WOODSTOCK_VOICE_PRESET) !== 'true') {
+          saveSetting('sonora-voice-rate', '1.5');
+          saveSetting(WOODSTOCK_VOICE_PRESET, 'true');
+        }
+        const saved = Number(readSetting('sonora-voice-rate'));
+        return Number.isFinite(saved) && saved > 0
+          ? Math.min(1.75, Math.max(.75, saved)) : 1.5;
+      }
       const CHIRP_PREFERENCE = 'woodstock-chirp-enabled-v1';
       let chirpEnabled = readSetting(CHIRP_PREFERENCE) !== 'false';
       let chirpAudioContext = null;
@@ -1175,7 +1188,7 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
 
       function syncSettings() {
         chatSpeak.checked = voiceReplies;
-        const rate = Math.min(1.4, Math.max(.75, Number(readSetting('sonora-voice-rate')) || 1));
+        const rate = currentWoodstockVoiceRate();
         document.querySelector('#set-voice-rate').value = String(rate);
         document.querySelector('#voice-rate-value').textContent = `${rate.toFixed(2).replace(/\.?0+$/, '')}×`;
         document.querySelector('#set-crossfade').value = String(crossfadeSeconds);
@@ -1942,8 +1955,8 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
       // Evita que el micrófono transcriba la propia voz sintetizada.
       let ttsGeneration = 0;
       let ttsInProgress = false;
-      function speak(message) {
-        if (!voiceReplies || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
+      function speak(message, preview = false) {
+        if ((!voiceReplies && !preview) || !('speechSynthesis' in window) || !('SpeechSynthesisUtterance' in window)) return;
         const serial = ++ttsGeneration;
         const synth = window.speechSynthesis;
         const plain = String(message || '')
@@ -1973,13 +1986,19 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
           remaining = remaining.slice(cut).trim();
         }
         const voices = synth.getVoices();
+        // Preferir voces de español naturales y de timbre suave cuando existan.
+        // El navegador decide las voces instaladas: no hay una voz oficial de Woodstock.
         const voice = voices.filter(v => /^es(?:-|$)/i.test(v.lang || ''))
           .sort((a,b) => {
-            const score = v => (/natural|neural|premium/i.test(v.name || '') ? 5 : 0)
-              + (/^es-(?:PE|MX|ES)/i.test(v.lang || '') ? 2 : 0);
-            return score(b)-score(a);
+            const score = v => {
+              const name = String(v.name || '');
+              return (/natural|neural|premium|enhanced/i.test(name) ? 5 : 0)
+                + (/sabina|dalia|elvira|helena|paloma|paulina|lucia|sof[ií]a|carmen|m[oó]nica|isabela|camila|alondra|femenina|female/i.test(name) ? 6 : 0)
+                + (/^es-(?:PE|MX|ES)/i.test(v.lang || '') ? 2 : 0);
+            };
+            return score(b) - score(a);
           })[0];
-        const rate = Math.min(1.4, Math.max(.75, Number(readSetting('sonora-voice-rate')) || 1));
+        const rate = currentWoodstockVoiceRate();
         let index = 0;
         function resumeMic() {
           if (serial !== ttsGeneration) return;
@@ -1990,7 +2009,10 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
           if (serial !== ttsGeneration) return;
           if (index >= chunks.length) return resumeMic();
           const utterance = new SpeechSynthesisUtterance(chunks[index++]);
-          utterance.lang = 'es-ES'; utterance.rate = rate;
+          utterance.lang = voice?.lang || 'es-ES';
+          utterance.rate = rate;
+          utterance.pitch = 1.13;
+          utterance.volume = .88;
           if (voice) utterance.voice = voice;
           utterance.onend = nextChunk;
           utterance.onerror = resumeMic;
@@ -2124,8 +2146,12 @@ Usa solo números n de la lista. En "mensaje", conversa como Woodstock: curioso,
         if (chirpEnabled) playWoodstockChirp(true);
       });
       document.querySelector('#set-voice-rate').addEventListener('input', event => {
-        const n=Number(event.target.value);saveSetting('sonora-voice-rate',String(n));
+        const n=Number(event.target.value);
+        saveSetting('sonora-voice-rate',String(n));
         document.querySelector('#voice-rate-value').textContent = `${n.toFixed(2).replace(/\.?0+$/, '')}×`;
+      });
+      document.querySelector('#preview-woodstock-voice').addEventListener('click', () => {
+        speak('¡Piu piu! Hola, soy Woodstock. Qué bonito es compartir música contigo. ¿Escuchamos una canción?', true);
       });
       document.querySelector('#set-key').addEventListener('input', event => setAiKey(event.target.value));
       document.querySelector('#set-remember-key').addEventListener('change', event => { saveSetting('sonora-ai-remember', String(event.target.checked)); setAiKey(aiKey()); });
