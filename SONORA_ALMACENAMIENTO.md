@@ -1,32 +1,41 @@
-# Sonora 3.0 — Biblioteca compartida opcional
+# Sonora 3.0 — compartir una biblioteca de hasta 100 canciones
 
-Sonora está en `/sonora.html`. La biblioteca local funciona sin configuración adicional y guarda los archivos de música mediante IndexedDB en el navegador del visitante.
+Sonora está publicada en `/sonora.html`. **La biblioteca local sigue funcionando sin configurar nada**. La opción privada de GitHub permite guardar hasta 100 canciones autorizadas y recuperarlas desde otro navegador.
 
-## Diferencia entre guardar localmente y en el servidor
+## Primera opción: repositorio PRIVADO de GitHub (sin disco de Render)
 
-- **Local (predeterminado):** al pulsar «Añadir música», las canciones se guardan únicamente en ese navegador. No se suben por sí solas.
-- **Compartida (opcional):** permite subir canciones de forma explícita y descargarlas desde otro navegador introduciendo una contraseña independiente de Gemini.
-- La biblioteca remota está **desactivada** hasta configurar almacenamiento persistente y una contraseña. Nunca se guarda automáticamente música en el sistema de archivos temporal de Render.
-- La clave de Gemini y la contraseña de la biblioteca compartida son independientes. No deben subirse al repositorio.
+1. En GitHub crea un repositorio **privado y separado** de `JuanDavidSol/SolangeMiSol`, por ejemplo `Sonora-Biblioteca`. Inicialízalo con un archivo `README.md` para que exista la rama `main`. **Nunca pongas las canciones en el repositorio público de la web.**
+2. En GitHub, en **Settings → Developer settings → Personal access tokens → Fine-grained tokens**, crea un token destinado únicamente a ese repositorio privado. Dale acceso al repositorio seleccionado y permiso **Contents: Read and write**. Configura una caducidad y renueva el token cuando venza.
+3. En el servicio de Render que ejecuta Snoopy/Sonora, abre **Environment** e introduce:
+   - `SONORA_GITHUB_REPOSITORY`: `TU_USUARIO/Sonora-Biblioteca` (el nombre exacto del repositorio privado).
+   - `SONORA_GITHUB_TOKEN`: el token de acceso de GitHub, **solo en Render**.
+   - `SONORA_GITHUB_BRANCH`: `main` (opcional; debe coincidir con la rama de ese repositorio).
+   - `SONORA_LIBRARY_TOKEN`: contraseña privada para que las dos personas entren en Sonora, de al menos **16 caracteres**. **No es el token GitHub ni la clave Gemini**.
+4. Guarda y despliega. Comprueba en `/api/sonora/status` que figuren `enabled:true` y `provider:"github"`.
+5. Abre `/sonora.html` en cada dispositivo, introduce la contraseña **de biblioteca** y pulsa **Conectar**. Pulsa **Subir música local** para subir las canciones que hayas añadido a ese navegador, o **Traer música compartida** para recibir canciones del repositorio privado.
 
-## Activar biblioteca compartida en Render
+La contraseña de biblioteca solo permanece en la memoria de la pestaña; no se guarda en GitHub ni en localStorage. El token privado de GitHub está exclusivamente en las variables de entorno del servidor, sin exponerse al navegador. La contraseña permite consultar y cargar canciones, por eso solo debes compartirla con personas autorizadas.
 
-1. Elige un servicio de Render con disco persistente. Los servicios **Free no admiten discos persistentes** y borran sus archivos locales tras reinicios, despliegues y suspensión.
-2. En la sección **Disk** del servicio, adjunta un disco con ruta de montaje `/var/data`. El disco y el servicio de pago pueden generar cargos; revisa el precio antes de activarlos.
-3. En **Environment**, añade estas variables (no las escribas en archivos de GitHub):
-   - `SONORA_STORAGE_DIR`: `/var/data/sonora`
-   - `SONORA_LIBRARY_TOKEN`: una contraseña privada y aleatoria de **al menos 16 caracteres**; distinta de cualquier clave API.
-4. Guarda y despliega el servicio. Comprueba que `GET /api/sonora/status` devuelva `enabled: true`.
-5. Abre `/sonora.html`, introduce la contraseña en «Nuestra biblioteca compartida», y pulsa **Conectar**.
-6. Usa **☁ Subir música local** para guardar las canciones de ese navegador en el disco o **↓ Traer música compartida** para traer las canciones al dispositivo actual.
+### Límites importantes
 
-La contraseña se conserva solo en la memoria de la página; será necesario volver a introducirla al recargar. El acceso de lectura y escritura al servidor requiere esa contraseña.
+- Máximo **100 canciones**, con **20 MB por archivo** y **850 MB en total** para los archivos de la biblioteca.
+- GitHub recomienda mantener un repositorio por debajo de aproximadamente **1 GB** y no hacer más de **6 actualizaciones por minuto**. Por eso Sonora limita el ritmo de subida a alrededor de una canción cada 10,5 segundos; subir 100 canciones puede llevar bastante tiempo.
+- GitHub **no es una plataforma de streaming ni almacenamiento musical**. Esta función está planteada como una biblioteca pequeña de uso personal, no como una distribución pública. Si el uso crece, convendrá migrar a almacenamiento de objetos.
+- Comparte **únicamente canciones que tengas permiso para subir y compartir**. No copies canciones comerciales sin autorización.
+- No hay sincronización automática: la subida es explícita y se puede importar manualmente desde otro navegador. La biblioteca local continúa funcionando, incluso si GitHub no está disponible.
+- Es recomendable mantener copias de seguridad aparte. Git conserva versiones históricas y un repositorio que recibe muchas modificaciones puede crecer con el tiempo.
+- No coloques `SONORA_GITHUB_TOKEN`, `SONORA_LIBRARY_TOKEN` ni claves Gemini en código de GitHub, capturas de pantalla o chats.
 
-## Límites y precauciones
+## Segunda opción: disco persistente en Render (si prefieres no usar GitHub)
 
-- Hasta **200 canciones** de **20 MB** cada una en el almacén remoto; extensiones MP3, M4A, WAV, OGG, FLAC, AAC y OPUS.
-- No subas canciones de terceros sin permiso para compartirlas. Evita exponer la contraseña a personas no autorizadas.
-- La biblioteca compartida no sustituye una copia de seguridad. Configura copias en otro lugar cuando sea importante conservar los archivos.
-- Si prefieres seguir en el plan gratuito de Render, la alternativa para un futuro es integrar almacenamiento externo (por ejemplo un proveedor de almacenamiento de objetos) con autenticación y cuotas; esta versión todavía **no** incorpora un proveedor externo.
+El backend conserva la integración anterior con disco. Si no se configura GitHub, puedes añadir en **Render → Disk** un volumen persistente montado en `/var/data`, y en **Environment**:
+- `SONORA_STORAGE_DIR=/var/data/sonora`
+- `SONORA_LIBRARY_TOKEN=CONTRASEÑA_PRIVADA_DE_16_CARACTERES_O_MAS`
 
-Documentación oficial: https://render.com/docs/disks y https://render.com/docs/free.
+En el disco anterior la capacidad del servidor era de 200 canciones. Si se configura GitHub, **GitHub tiene prioridad** y aplica el límite de 100 canciones. Los discos persistentes de Render requieren un servicio compatible y pueden generar cargos; en Render Free no hay discos persistentes.
+
+## Enlaces útiles
+
+- [Documentación oficial de límites de GitHub](https://docs.github.com/en/repositories/creating-and-managing-repositories/repository-limits)
+- [API de Git blobs](https://docs.github.com/en/rest/git/blobs)
+- [Discos persistentes de Render](https://render.com/docs/disks)

@@ -372,8 +372,8 @@
     </section>
 
     <section class="cloud-library" id="cloud-library" aria-labelledby="cloud-library-title">
-      <div class="cloud-head"><h2 id="cloud-library-title">☁ Nuestra biblioteca compartida</h2><span>Música disponible en otros dispositivos, si configuras almacenamiento permanente</span></div>
-      <p class="cloud-help">Puedes seguir usando la biblioteca local sin servidor. Para compartir archivos necesitas una contraseña de biblioteca distinta de tu clave Gemini, almacenamiento persistente y permiso para alojar la música.</p>
+      <div class="cloud-head"><h2 id="cloud-library-title">☁ Nuestra biblioteca compartida</h2><span>Comparte hasta 100 canciones usando un repositorio privado GitHub</span></div>
+      <p class="cloud-help">La música sigue siendo local hasta que pulses «Subir música local». También puedes activar una biblioteca privada en GitHub, sin disco de Render, mediante una contraseña distinta de tu clave Gemini. Sube solo música propia o autorizada.</p>
       <div class="cloud-actions">
         <input id="cloud-password" type="password" autocomplete="off" placeholder="Contraseña de biblioteca compartida" aria-label="Contraseña de biblioteca compartida">
         <button type="button" id="cloud-connect">Conectar</button>
@@ -2025,8 +2025,9 @@ Usa solo números n de la lista. "mensaje" es una explicación útil en español
           const config = await response.json();
           cloudReady = Boolean(config.enabled);
           cloudMessage(cloudReady
-            ? '☁ Servidor preparado. Introduce la contraseña de biblioteca para acceder. Las canciones solo se subirán al pulsar el botón.'
-            : '♫ Modo local activo. Para guardar en el servidor configura un disco persistente y SONORA_LIBRARY_TOKEN y SONORA_STORAGE_DIR en Render.');
+            ? (config.provider === 'github' ? '☁ GitHub privado configurado.' : '☁ Disco persistente configurado.')
+              + ' Introduce la contraseña para consultar y compartir la biblioteca.'
+            : '♫ Modo local. Para compartir desde GitHub configura SONORA_GITHUB_REPOSITORY, SONORA_GITHUB_TOKEN y SONORA_LIBRARY_TOKEN en Render.');
           cloudConnect.disabled = !cloudReady;
         } catch (_) {
           cloudMessage('♫ Biblioteca local funcionando. El servicio de almacenamiento remoto no está disponible en esta web.');
@@ -2045,7 +2046,7 @@ Usa solo números n de la lista. "mensaje" es una explicación útil en español
           const list = await res.json();
           cloudUpload.disabled = false;
           cloudDownload.disabled = false;
-          cloudMessage('✓ Biblioteca conectada. ' + list.length + ' canciones guardadas en el servidor. Ahora puedes subir o traer música.');
+          cloudMessage('✓ Biblioteca conectada: ' + list.length + ' canciones compartidas. Puedes subir o traer música.');
         } catch (error) {
           cloudToken = '';
           cloudUpload.disabled = true;

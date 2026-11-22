@@ -5,12 +5,15 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { once } = require('events');
+const githubStore = require('./sonora-github');
 
 const MAX_BYTES = 20 * 1024 * 1024;
 const MAX_TRACKS = 200;
 const DIR = process.env.SONORA_STORAGE_DIR || '';
 const TOKEN = process.env.SONORA_LIBRARY_TOKEN || '';
-const enabled = path.isAbsolute(DIR) && TOKEN.length >= 16;
+const diskEnabled = path.isAbsolute(DIR) && TOKEN.length >= 16;
+const enabled = githubStore.enabled && TOKEN.length >= 16 || diskEnabled;
+const provider = githubStore.enabled && TOKEN.length >= 16 ? 'github' : diskEnabled ? 'disk' : 'none';
 const MIMES = Object.freeze({
   '.mp3':'audio/mpeg', '.m4a':'audio/mp4', '.wav':'audio/wav', '.ogg':'audio/ogg',
   '.flac':'audio/flac', '.aac':'audio/aac', '.opus':'audio/ogg'
@@ -105,10 +108,11 @@ async function download(res, id) {
 module.exports = async function handleSonora(req,res,url) {
   const p=url.pathname;
   if(p==='/api/sonora/status' && req.method==='GET')
-    return reply(res,200,{enabled,maxFileMB:20,maxTracks:MAX_TRACKS,private:true});
-  if(!enabled) return reply(res,503,{error:'Almacenamiento de Sonora no configurado. Debe usarse un disco persistente y una contraseña exclusiva.'});
+    return reply(res,200,{enabled,maxFileMB:20,maxTracks:provider==='github'?githubStore.MAX_TRACKS:MAX_TRACKS,private:true,provider});
+  if(!enabled) return reply(res,503,{error:'Biblioteca compartida no configurada. Conecta un repositorio privado GitHub o un disco persistente y define SONORA_LIBRARY_TOKEN.'});
   if(!sameSite(req)) return reply(res,403,{error:'Solicitud de origen no permitido.'});
   if(!authorized(req)) return reply(res,401,{error:'Contraseña de la biblioteca incorrecta.'});
+  if(provider==='github') return githubStore.handle(req,res,url,reply);
   if(p==='/api/sonora/tracks' && req.method==='GET')
     return reply(res,200,await list());
   if(p==='/api/sonora/tracks' && req.method==='POST')
