@@ -798,7 +798,7 @@
       shoot();
     } else if (player.power === 'bird') {
       player.powerTime = Math.max(player.powerTime, easier() ? 12 : 9);
-      notify('🐤 ¡Ayuda del pajarito activada!');
+      notify('🐤 ¡Woodstock está listo para ayudar!');
     }
     sound('power');
   }
@@ -809,7 +809,7 @@
     player.power = item.type;
     player.powerTime = item.type === 'shot' ? 12 : item.type === 'bird' ? (easier() ? 12 : 9) : 9;
     player.ammo = item.type === 'shot' ? (state.meta.upgrades.ammo ? 7 : 3) : 0;
-    const labels = { double: 'Doble salto', shield: 'Escudo', speed: 'Supervelocidad', shot: 'Proyectiles', bird: 'Ayuda del pajarito' };
+    const labels = { double: 'Doble salto', shield: 'Escudo', speed: 'Supervelocidad', shot: 'Proyectiles', bird: 'Ayuda de Woodstock' };
     notify(`⭐ Poder obtenido: ${labels[item.type] || 'Poder especial'}`);
     sound('power');
     burst(item.x, item.y, '#fff0a6', 18);
@@ -1885,7 +1885,22 @@
     }
   }
 
+  // Power-up de Woodstock: animación extraída de la hoja aportada por el usuario.
+  // No modifica el poder, su hitbox ni las cápsulas de las otras habilidades.
   function drawPowerPickup(x, y, bob, type) {
+    if (type === 'bird' && woodstockPickupSprites.ready && woodstockPickupSprites.image) {
+      const frame = Math.floor(state.time * 6.5) % 8;
+      const bubbleY = y + bob;
+      ctx.save();
+      ctx.fillStyle = 'rgba(80, 196, 255, .20)';
+      ctx.beginPath(); ctx.ellipse(x, bubbleY + 20, 12, 3, 0, 0, Math.PI * 2); ctx.fill();
+      ctx.imageSmoothingEnabled = false;
+      ctx.drawImage(woodstockPickupSprites.image, frame * 40, 0, 40, 40,
+        Math.round(x - 19), Math.round(bubbleY - 19), 38, 38);
+      ctx.restore();
+      return;
+    }
+    // Mantener el antiguo dibujo como respaldo si falla la carga del archivo.
     const info = {
       double: { color: '#9a6bff', edge: '#4a2ca8', symbol: '⇈', label: 'D', glow: 'rgba(180,140,255,.35)' },
       shield: { color: '#5ec5ff', edge: '#236c95', symbol: '◈', label: 'S', glow: 'rgba(120,220,255,.35)' },
@@ -1978,6 +1993,7 @@
   }
   const enemySprites = loadGameSprite('enemies', 'assets/enemigos-jefes-sprites.png');
   const birdSprites = loadGameSprite('bird', 'assets/pajarito-sprites.png');
+  const woodstockPickupSprites = loadGameSprite('woodstockPickup', 'assets/woodstock-bubble-pickup.png');
   function paintGameSprite(record, cell, row, frame, middleX, bottomY, drawW, drawH, facing) {
     if (!record.ready || !record.image || !record.image.naturalWidth) return false;
     ctx.save();
@@ -2226,11 +2242,20 @@
       shield:{name:'PODER ESCUDO', icon:'◈', color:'#8ee4ff'},
       speed:{name:'PODER VELOZ', icon:'⚡', color:'#8bf19b'},
       shot:{name:'PODER DISPARO', icon:'✦', color:'#ff9a9a'},
-      bird:{name:'PODER PAJARITO', icon:'🐤', color:'#ffe27a'}
+      bird:{name:'WOODSTOCK', icon:'🐤', color:'#b9f1ff'}
     }[player.power]) : null;
     if (powerMeta) {
       ctx.fillStyle = powerMeta.color;
-      ctx.fillText(powerMeta.icon + ' ' + powerMeta.name, 18, 56);
+      if (player.power === 'bird' && woodstockPickupSprites.ready) {
+        const spriteFrame = Math.floor(state.time * 5) % 8;
+        ctx.save();
+        ctx.imageSmoothingEnabled = false;
+        ctx.drawImage(woodstockPickupSprites.image, spriteFrame * 40, 0, 40, 40, 14, 43, 20, 20);
+        ctx.restore();
+        ctx.fillText('WOODSTOCK', 38, 56);
+      } else {
+        ctx.fillText(powerMeta.icon + ' ' + powerMeta.name, 18, 56);
+      }
       ctx.fillStyle = '#ffffff';
       ctx.fillText(Math.ceil(Math.max(0, player.powerTime)) + 's', 164, 56);
     }
