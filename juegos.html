@@ -327,15 +327,8 @@
     <p class="score" id="pac-best"></p>
   </section>
 
-  <section class="panel" id="mario-panel" hidden>
-    <span class="aventura-label">DEMO JUGABLE · VERSIÓN 3.0.2</span>
-    <h2>La aventura de Snoopy 🏁</h2>
-    <p class="rules">5 mundos · 15 niveles · 5 jefes. Esta demo funciona de forma independiente, pero también puedes jugarla aquí.</p>
-    <div class="bar">
-      <a class="tool aventura-link" href="aventura-demo.html" target="_blank" rel="noopener">🎮 Abrir demo en pestaña nueva</a>
-    </div>
-    <iframe class="aventura-frame" id="aventura-frame" title="La aventura de Snoopy, demo jugable" data-src="aventura-demo.html" loading="lazy" allow="fullscreen"></iframe>
-    <p class="score">El progreso de la aventura se guarda automáticamente en este navegador.</p>
+  <section class="panel aventura-compact" id="mario-panel" hidden aria-label="La aventura de Snoopy">
+    <iframe class="aventura-frame" id="aventura-frame" title="La aventura de Snoopy, juego y controles" data-src="aventura-demo.html?embed=1" loading="lazy" scrolling="no" allow="fullscreen"></iframe>
   </section>
 
   <section class="panel" id="shop-panel" hidden>
@@ -410,6 +403,16 @@ gameTabs.forEach(tab => tab.addEventListener('click', () => {
   store.set('snoopy-tab', tab.dataset.tab);
   document.body.dataset.assistantSection = tab.dataset.tab;   /* el asistente usa la sección activa */
 }));
+
+/* Ajustar la altura del marco a la pantalla y mandos que dibuja la aventura. */
+window.addEventListener('message', event => {
+  const frame = $('#aventura-frame');
+  if (event.origin !== window.location.origin || event.source !== frame.contentWindow ||
+      event.data?.type !== 'snoopy-adventure-embed-height') return;
+  const measuredHeight = Number(event.data.height);
+  if (!Number.isFinite(measuredHeight) || measuredHeight < 200 || measuredHeight > 1800) return;
+  frame.style.height = Math.ceil(measuredHeight) + 'px';
+});
 
 /* ---------- Sonido ---------- */
 let audioCtx, muted = store.get('snoopy-muted', false);

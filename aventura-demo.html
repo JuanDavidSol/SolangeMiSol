@@ -5,6 +5,11 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#172944">
   <title>La aventura de Snoopy 3.0.2 — Mapas y poderes mejorados</title>
+  <script>
+    if (new URLSearchParams(location.search).get('embed') === '1') {
+      document.documentElement.classList.add('embedded-game');
+    }
+  </script>
   <style>
     :root{color-scheme:light;--sun:#ffce48;--blue:#316be4;--ink:#263759}
     *{box-sizing:border-box}
@@ -47,6 +52,72 @@
       .touch-hint{display:block;font-size:12px;line-height:1.5}
       h1{text-shadow:2px 2px 0 #fff,3px 3px 0 #2c4d94}
     }
+    /* Vista compacta SOLO cuando se abre desde la sección Juegos. */
+    html.embedded-game,html.embedded-game body{
+      min-height:0;height:auto;overflow-x:hidden;background:none!important;
+    }
+    html.embedded-game body{padding:0!important}
+    html.embedded-game .shell{width:100%;margin:0;padding:0;max-width:none}
+    html.embedded-game header,
+    html.embedded-game .hint,
+    html.embedded-game .tips,
+    html.embedded-game .foot,
+    html.embedded-game .extra{display:none!important}
+    html.embedded-game #mario-panel{
+      border:4px solid #203252;box-shadow:none;border-radius:13px;
+      padding:8px;background:#f8f1d3;overflow:hidden;
+    }
+    html.embedded-game .screen{
+      border:3px solid #203252;border-radius:8px;
+      box-shadow:inset 0 0 0 2px #86cfff;
+    }
+    html.embedded-game .actions{margin:9px 0 8px}
+    html.embedded-game #mario-start{
+      min-height:44px;width:min(100%,240px);font-size:13px;
+    }
+    html.embedded-game #mario-ctrl{
+      display:grid!important;grid-template-columns:repeat(4,minmax(0,1fr))!important;
+      gap:7px!important;width:100%;max-width:590px;margin:11px auto 5px;
+      touch-action:none;
+    }
+    html.embedded-game #mario-ctrl button{
+      min-height:58px!important;min-width:0!important;min-height:58px!important;
+      padding:8px 2px;border:2px solid #214b75;border-radius:12px;
+      background:#e8f1ff;color:#213e65;
+      font-size:clamp(10px,2.5vw,13px)!important;font-weight:900;
+      box-shadow:0 3px 0 #17365c;touch-action:none!important;
+      user-select:none;-webkit-user-select:none;-webkit-tap-highlight-color:transparent;
+    }
+    html.embedded-game #mario-ctrl button.is-active,
+    html.embedded-game #mario-ctrl button:active{
+      background:#a8e5ff;transform:translateY(2px);box-shadow:none;
+    }
+    html.embedded-game #mario-ctrl button[data-dir="left"]{grid-area:1/1;background:#c7eaff}
+    html.embedded-game #mario-ctrl button[data-dir="right"]{grid-area:1/2;background:#c7eaff}
+    html.embedded-game #mario-ctrl button[data-dir="jump"]{grid-area:1/3;background:#bdebc5}
+    html.embedded-game #mario-ctrl button[data-dir="power"]{grid-area:1/4;background:#efd9ff}
+    html.embedded-game #mario-ctrl button[data-dir="run"]{grid-area:2/1;background:#ffebb8}
+    html.embedded-game #mario-ctrl button[data-dir="slide"]{grid-area:2/2;background:#d5edff}
+    html.embedded-game #mario-ctrl button[data-dir="dash"]{grid-area:2/3;background:#ffd6b6}
+    html.embedded-game #mario-ctrl button[data-dir="shoot"]{grid-area:2/4;background:#ffd4de}
+    html.embedded-game #snoopy-tools{
+      max-width:100%;gap:6px!important;margin:9px auto!important;
+    }
+    html.embedded-game #snoopy-tools button,
+    html.embedded-game #snoopy-tools select{
+      min-height:42px!important;padding:8px!important;
+      font-size:clamp(10px,2.5vw,12px)!important;
+    }
+    @media(max-width:570px){
+      html.embedded-game #mario-panel{padding:5px;border-width:3px}
+      html.embedded-game .screen{border-width:2px}
+      html.embedded-game #mario-ctrl{gap:6px!important}
+      html.embedded-game #mario-ctrl button{min-height:55px!important;padding:8px 2px}
+    }
+    @media(max-width:360px){
+      html.embedded-game #mario-ctrl{gap:4px!important}
+      html.embedded-game #mario-ctrl button{font-size:10px!important}
+    }
   </style>
 </head>
 <body>
@@ -66,14 +137,29 @@
       <div id="mario-ctrl" aria-label="Controles táctiles">
         <button type="button" data-dir="left" aria-label="Izquierda">◀</button>
         <button type="button" data-dir="right" aria-label="Derecha">▶</button>
-        <button type="button" data-dir="jump" aria-label="Saltar">SALTAR</button>
-        <button type="button" data-dir="power" aria-label="Poder">PODER</button>
-        <button type="button" data-dir="shoot" aria-label="Disparo">DISPARO</button>
+        <button type="button" data-dir="jump" aria-label="Saltar">↑ SALTAR</button>
+        <button type="button" data-dir="power" aria-label="Poder">✨ PODER</button>
+        <button type="button" data-dir="shoot" aria-label="Disparo">✦ DISPARO</button>
       </div>
     </section>
     <div class="tips"><span><b>🐤 PÁJARO GUARDIÁN</b>Activa su poder temporal para que ataque a enemigos cercanos</span><span><b>⬇️ PISOTONES</b>Cae sobre los enemigos desde arriba para derrotarlos y rebotar</span><span><b>🟨 BLOQUES</b>Salta para golpearlos desde abajo</span><span><b>🟩 TUBERÍAS</b>Pulsa S junto a una tubería verde. En la zona bonus, pulsa S para regresar</span><span><b>⭐ TESOROS</b>Recoge monedas y estrellas secretas</span></div>
     <p class="foot">Mapa de mundos con niveles y estrellas · Modo fácil por defecto (puedes activar Normal) · Guardado automático · 3 estrellas por nivel · Tienda permanente · Funciona sin internet. No modifica tu página principal.</p>
   </main>
   <script src="aventura.js"></script>
+  <script>
+    /* La ventana incrustada ocupa solo lo que mide el juego y sus controles. */
+    if (document.documentElement.classList.contains('embedded-game')) {
+      const reportGameHeight = () => {
+        const shell = document.querySelector('.shell');
+        if (!shell || window.parent === window) return;
+        const height = Math.ceil(shell.getBoundingClientRect().height) + 3;
+        window.parent.postMessage({ type: 'snoopy-adventure-embed-height', height }, location.origin);
+      };
+      if ('ResizeObserver' in window) new ResizeObserver(reportGameHeight).observe(document.querySelector('.shell'));
+      window.addEventListener('load', reportGameHeight);
+      window.addEventListener('resize', reportGameHeight);
+      requestAnimationFrame(reportGameHeight);
+    }
+  </script>
 </body>
 </html>
