@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+
+    <meta charset="UTF-8">
+
+    <meta
+        name="viewport"
+        content="width=device-width, initial-scale=1.0"
+    >
+
+    <title>Para ti ♡</title>
+
+
+    <!-- FUENTES -->
+
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+
+    <link
+        rel="preconnect"
+        href="https://fonts.gstatic.com"
+        crossorigin
+    >
+
+    <link
+        href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:wght@300;400;500;600&family=Poppins:wght@300;400;500&display=swap"
+        rel="stylesheet"
+    >
+
+
+    <!-- CSS -->
+
+    <link
+        rel="stylesheet"
+        href="animacion.css"
+    >
+
+</head>
+
+
+<body>
+
+
+    <!-- =================================================
+         ESCENA 3D
+    ================================================== -->
+
+    <div id="scene"></div>
+
+
+    <!-- =================================================
+         FONDO DECORATIVO
+    ================================================== -->
+
+    <div class="background"></div>
+
+    <div class="stars">
+
+        <span class="star"></span>
+        <span class="star"></span>
+        <span class="star"></span>
+        <span class="star"></span>
+        <span class="star"></span>
+        <span class="star"></span>
+        <span class="star"></span>
+        <span class="star"></span>
+
+    </div>
+
+    <div class="glow"></div>
+
+    <div class="vignette"></div>
+
+
+    <!-- =================================================
+         MENSAJE
+    ================================================== -->
+
+    <div class="message">
+
+        <span class="small-text">
+            Y DE REPENTE...
+        </span>
+
+        <h1>
+            todo se vuelve<br>
+            un poquito más bonito.
+        </h1>
+
+        <div class="message-line"></div>
+
+    </div>
+
+
+    <!-- =================================================
+         CORAZÓN
+    ================================================== -->
+
+    <div class="heart">
+        ♡
+    </div>
+
+
+    <!-- =================================================
+         MENSAJE FINAL
+    ================================================== -->
+
+    <div class="final-message">
+
+        <small>
+            y todo comenzó con una flor
+        </small>
+
+        <h2>
+            para alguien<br>
+            muy especial.
+        </h2>
+
+    </div>
+
+
+    <!-- =================================================
+         CARGANDO
+    ================================================== -->
+
+    <div class="loading">
+
+        <div class="loading-flower"></div>
+
+        <p>
+            preparando algo bonito
+        </p>
+
+    </div>
+
+
+    <!-- =================================================
+         BOTÓN
+    ================================================== -->
+
+    <button id="restart">
+
+        volver a verlo
+
+    </button>
+
+
+    <!-- =================================================
+         THREE.JS
+    ================================================== -->
+
+    <script type="importmap">
+    {
+        "imports": {
+            "three": "https://cdn.jsdelivr.net/npm/three@0.180.0/build/three.module.js"
+        }
+    }
+    </script>
+
+
+    <script
+        type="module"
+        src="animacion.js"
+    ></script>
+
+</body>
+
+</html>

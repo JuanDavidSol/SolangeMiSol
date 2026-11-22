@@ -1,0 +1,201 @@
+/* =====================================================================
+   Tema "Tiras de Snoopy" para el Rincón de juegos
+   Se carga DESPUÉS del <style> de juegos.html, así que solo sobreescribe.
+   Para quitarlo: borra la línea <link ... snoopy-tema.css> del HTML.
+   Todo lo nuevo lleva el prefijo "sn-" para no chocar con los juegos.
+   ===================================================================== */
+
+:root {
+  --sn-ink: #3b3a4a;
+  --sn-pink: #ffc9ce;
+  --sn-cream: #fff7c2;
+}
+
+/* ---------- Papel de cómic: crema con puntitos ---------- */
+body {
+  background:
+    radial-gradient(circle at 15% 0, #fff 0, #fff0 45%),
+    radial-gradient(#e8505b1f 1.3px, #0000 1.7px) 0 0 / 14px 14px,
+    var(--bg);
+  background-attachment: fixed;
+}
+.wrap { position: relative; z-index: 1; }
+
+:where(button, select, a, [tabindex]):focus-visible {
+  outline: 3px solid var(--red);
+  outline-offset: 3px;
+}
+
+/* ---------- Fondo que flota: corazones, estrellas y avioncitos ---------- */
+.sn-layer { position: fixed; inset: 0; z-index: 0; overflow: hidden; pointer-events: none; }
+.sn-amb { position: absolute; bottom: -60px; opacity: .5; line-height: 1; will-change: transform; animation: sn-drift linear infinite; }
+.sn-heart { color: #f27a85; }
+.sn-star { color: #ffd24d; text-shadow: 0 0 6px #ffd24d88; }
+.sn-plane svg { display: block; width: 2.4em; height: auto; }
+@keyframes sn-drift {
+  from { transform: translate3d(0, 0, 0) rotate(0); }
+  to   { transform: translate3d(var(--dx), -115vh, 0) rotate(var(--rot)); }
+}
+
+/* ---------- Encabezado como tarjeta de título de tira ---------- */
+header {
+  position: relative;
+  margin: 16px 0 26px;
+  padding: 12px 16px;
+  border: 3px solid var(--sn-ink);
+  border-radius: 24px;
+  background: #fff;
+  box-shadow: 5px 5px 0 var(--sn-pink);
+  transform: rotate(-.5deg);
+}
+header h1 { text-shadow: 2px 2px 0 #fff, 4px 4px 0 var(--sn-pink); }
+.back {
+  display: inline-block;
+  padding: 3px 12px;
+  border: 2px solid var(--sn-ink);
+  border-radius: 999px;
+  background: #fff;
+  box-shadow: 0 2px 0 var(--sn-ink);
+  font-size: 14px;
+}
+.back:hover { background: var(--red-soft); }
+
+/* Mascota: pegatina que flota y mira hacia donde mueves el mouse */
+.sn-stage { position: relative; flex: none; cursor: pointer; animation: sn-bob 3.4s ease-in-out infinite; }
+.sn-stage.sn-hop { animation: sn-hop .6s ease; }
+.mascot {
+  width: 76px; height: 76px;
+  border: 4px solid #fff;
+  box-shadow: 0 0 0 3px var(--sn-ink), 0 8px 16px #0002;
+  transform: perspective(500px) rotateX(var(--rx, 0deg)) rotateY(var(--ry, 0deg));
+  transition: transform .12s linear;
+}
+model-viewer.sn-3d {
+  display: block; width: 112px; height: 112px;
+  border-radius: 24px;
+  background: radial-gradient(circle at 50% 40%, #fff, var(--sky));
+  box-shadow: 0 0 0 3px var(--sn-ink);
+  --poster-color: transparent;
+  outline: none;
+}
+@keyframes sn-bob { 50% { transform: translateY(-5px) rotate(2deg); } }
+@keyframes sn-hop {
+  30% { transform: translateY(-16px) scale(1.08) rotate(-6deg); }
+  60% { transform: translateY(0) scale(.96); }
+}
+
+/* El subtítulo se convierte en globo de diálogo cuando Snoopy "habla" */
+p.sn-say {
+  display: inline-block;
+  padding: 3px 12px;
+  border: 2px solid var(--sn-ink);
+  border-radius: 14px;
+  background: var(--sn-cream);
+  color: var(--sn-ink);
+  font-weight: 600;
+  animation: sn-pop .3s ease;
+}
+@keyframes sn-pop { from { transform: scale(.85); opacity: 0; } }
+
+.coins {
+  border: 2px solid var(--sn-ink);
+  background: #ffe9b8;
+  color: #8a5a14;
+  box-shadow: 0 2px 0 var(--sn-ink);
+}
+
+/* ---------- Pestañas: etiquetas de cómic ligeramente torcidas ---------- */
+.tabs { gap: 10px; margin-bottom: 8px; }
+.tabs button, .tool {
+  border: 2px solid var(--sn-ink);
+  box-shadow: 0 3px 0 var(--sn-ink);
+  transition: transform .15s, box-shadow .15s, background .15s;
+}
+.tabs button:nth-child(odd)  { transform: rotate(-1deg); }
+.tabs button:nth-child(even) { transform: rotate(1deg); }
+.tabs button:hover { transform: translateY(-2px) rotate(0); border-color: var(--sn-ink); background: var(--red-soft); }
+.tabs button[aria-selected="true"] {
+  border-color: var(--sn-ink);
+  background: var(--red);
+  color: #fff;
+  transform: translateY(-1px) rotate(0);
+}
+.tabs button[aria-selected="true"]::before { content: "🐾 "; }
+.tool:hover { border-color: var(--sn-ink); background: var(--red-soft); }
+.tool:active, .tabs button:active { transform: translateY(3px); box-shadow: 0 0 0 var(--sn-ink); }
+
+/* ---------- Cada juego es un recuadro de tira cómica ---------- */
+.panel {
+  position: relative;
+  margin-top: 36px;
+  border: 3px solid var(--sn-ink);
+  border-radius: 26px;
+  box-shadow: 7px 7px 0 var(--sn-pink);
+  animation: sn-panel .35s ease;
+}
+.panel::before, .panel::after { position: absolute; color: var(--red); opacity: .65; pointer-events: none; }
+.panel::before { content: "✦"; top: 12px; right: 18px; font-size: 18px; animation: sn-twinkle 2.4s ease-in-out infinite; }
+.panel::after  { content: "♥"; bottom: 12px; left: 18px; font-size: 16px; animation: sn-twinkle 3.1s ease-in-out infinite; }
+@keyframes sn-twinkle { 50% { opacity: .2; transform: scale(.75) rotate(18deg); } }
+@keyframes sn-panel { from { opacity: 0; transform: translateY(10px) rotate(-.4deg); } }
+
+/* El título del juego es una cinta que asoma por arriba del recuadro */
+.panel h2 {
+  display: inline-block;
+  margin: -42px 0 12px;
+  padding: 6px 22px;
+  border: 3px solid var(--sn-ink);
+  border-radius: 999px;
+  background: var(--red);
+  box-shadow: 3px 3px 0 var(--sn-ink);
+  color: #fff;
+  font: 400 20px/1.3 'Pacifico', cursive;
+  transform: rotate(-1.5deg);
+}
+.rules {
+  padding: 8px 12px;
+  border: 2px dashed var(--line);
+  border-radius: 14px;
+  background: #fffaf3;
+}
+
+/* Piezas y tableros con trazo de tinta */
+.cell, .mc, .hole { border-color: var(--sn-ink); }
+.cell { box-shadow: 0 3px 0 var(--line); }
+canvas.catch { border: 3px solid var(--sn-ink); box-shadow: 5px 5px 0 var(--sn-pink); }
+.m3, .g48 { box-shadow: inset 0 0 0 3px var(--sn-ink); }
+.status { font-family: 'Pacifico', cursive; font-weight: 400; font-size: 17px; }
+
+/* ---------- Premios y vales: tarjetas que se inclinan en 3D ---------- */
+.reward {
+  border: 2px solid var(--sn-ink);
+  box-shadow: 4px 4px 0 var(--sn-pink);
+  transition: transform .2s, box-shadow .2s;
+}
+.reward:not(.locked):hover {
+  transform: perspective(600px) rotateX(4deg) rotateY(-6deg) translateY(-3px);
+  box-shadow: 8px 8px 0 var(--sn-pink);
+}
+
+/* ---------- Efectos: corazones al tocar a Snoopy y "+galletas" ---------- */
+.sn-burst { position: fixed; z-index: 11; pointer-events: none; color: #f27a85; font-size: 20px; animation: sn-burst .85s ease-out forwards; }
+@keyframes sn-burst {
+  from { transform: translate(-50%, -50%) scale(.6); opacity: 1; }
+  to   { transform: translate(calc(-50% + var(--bx)), calc(-50% + var(--by))) scale(1.2); opacity: 0; }
+}
+.sn-float { position: fixed; z-index: 11; pointer-events: none; font-weight: 700; color: #8a5a14; text-shadow: 0 1px 0 #fff; animation: sn-float 1s ease-out forwards; }
+@keyframes sn-float {
+  from { transform: translate(-50%, 0); opacity: 1; }
+  to   { transform: translate(-50%, -38px); opacity: 0; }
+}
+
+/* ---------- Pie con la casita ---------- */
+.sn-casita { margin-top: 34px; text-align: center; color: var(--muted); font-size: 13px; }
+.sn-casita svg { width: 92px; height: auto; display: block; margin: 0 auto 6px; }
+.sn-casita b { display: block; color: var(--red); font: 400 18px 'Pacifico', cursive; }
+
+@media (max-width: 520px) {
+  header { padding: 10px 12px; }
+  .mascot { width: 62px; height: 62px; }
+  .panel h2 { font-size: 17px; padding: 5px 16px; }
+}

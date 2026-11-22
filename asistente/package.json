@@ -1,0 +1,14 @@
+{
+  "name": "asistente-snoopy",
+  "version": "1.0.0",
+  "description": "Asistente virtual para el Rincón de juegos: servidor Node sin dependencias, base de conocimientos y Ollama opcional.",
+  "private": true,
+  "license": "MIT",
+  "engines": { "node": ">=18" },
+  "scripts": {
+    "start": "node server/index.js",
+    "reindex": "node server/indexer.js",
+    "set-password": "node server/setpass.js",
+    "test": "node test/run.js"
+  }
+}

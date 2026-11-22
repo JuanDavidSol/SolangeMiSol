@@ -1,0 +1,63 @@
+<!doctype html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#172944">
+  <title>La aventura de Snoopy 3.0.2 — Mapas y poderes mejorados</title>
+  <style>
+    :root{color-scheme:light;--sun:#ffce48;--blue:#316be4;--ink:#263759}
+    *{box-sizing:border-box}
+    html,body{margin:0;min-height:100%;width:100%}
+    body{font-family:ui-monospace,"Cascadia Code",Consolas,monospace;color:var(--ink);padding:22px 12px 35px;background-color:#b9e6ff;background-image:linear-gradient(#ffffff7a 1px,transparent 1px),linear-gradient(90deg,#ffffff7a 1px,transparent 1px),linear-gradient(180deg,#89bfff,#d5f5ff 65%,#f6e3aa);background-size:32px 32px,32px 32px,auto}
+    .shell{width:min(860px,100%);margin:0 auto}
+    header{text-align:center;margin:0 auto 17px}
+    .eyebrow{text-transform:uppercase;letter-spacing:.19em;font-size:11px;font-weight:900;color:#2451a5}
+    h1{font-size:clamp(25px,4vw,42px);margin:10px 0 8px;line-height:1.15;color:#c73d2e;text-transform:uppercase;text-shadow:3px 3px 0 #fff,5px 5px 0 #2c4d94}
+    h1 .version{display:inline-block;background:#ffcf50;border:3px solid #24385f;box-shadow:3px 3px 0 #24385f;color:#24385f;padding:3px 8px;font-size:.5em;vertical-align:middle;text-shadow:none}
+    header p{margin:12px 0;color:#2b476e;font-size:12px;font-weight:700}
+    #mario-panel{background:#f8f1d3;padding:clamp(8px,2vw,17px);border:5px solid #223964;box-shadow:0 9px 0 #16263f,0 20px 30px #1c49773b;border-radius:10px}
+    .screen{border:5px solid #203252;background:#5db2ff;box-shadow:inset 0 0 0 2px #86cfff;overflow:hidden}
+    #mario-canvas{image-rendering:pixelated;display:block;width:100%;height:auto;aspect-ratio:16/9;image-rendering:pixelated;outline:none;touch-action:manipulation}
+    .actions{display:flex;justify-content:center;align-items:center;flex-wrap:wrap;gap:10px;margin:14px auto 8px}
+    button,select{font-family:inherit;cursor:pointer;touch-action:manipulation}
+    #mario-start{min-height:45px;padding:9px 24px;background:#e44835;color:#fff;font-size:14px;font-weight:900;text-transform:uppercase;border:3px solid #7b211c;box-shadow:3px 4px 0 #7b211c;border-radius:4px}
+    #mario-start:hover{background:#ff5844}
+    .hint{margin:12px auto;text-align:center;color:#495c78;font-size:11px;line-height:1.9}
+    #mario-ctrl{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:8px;width:100%;max-width:600px;margin:10px auto 0;touch-action:none}
+    #mario-ctrl button{min-width:0;min-height:52px;border:3px solid #1a4580;box-shadow:2px 3px 0 #17365c;border-radius:6px;background:#f7d669;color:#18376b;font-size:12px;font-weight:900;user-select:none;-webkit-user-select:none;touch-action:none}
+    #mario-ctrl button.is-active,#mario-ctrl button:active{transform:translateY(2px);box-shadow:none;background:#a6e7ff}
+    .foot,.extra{text-align:center;font-size:11px;color:#334b72;line-height:1.8;font-weight:650}
+    .tips{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:9px;margin:18px auto}
+    .tips span{padding:12px 8px;background:#fff8e6;border:2px solid #2c5486;box-shadow:3px 3px 0 #3463a2;border-radius:4px;text-align:center;font-weight:800;font-size:11px}
+    .tips b{font-size:15px;display:block;margin-bottom:5px}
+    @media(max-width:570px){body{padding:13px 7px 30px}#mario-panel{padding:7px;border-width:3px}.screen{border-width:2px}#mario-ctrl{gap:5px}#mario-ctrl button{font-size:10px;min-height:52px;border-width:2px}.tips{grid-template-columns:1fr}.tips span{font-size:11px}h1{text-shadow:2px 2px 0 #fff,3px 3px 0 #2c4d94}}
+  </style>
+</head>
+<body>
+  <main class="shell">
+    <header>
+      <div class="eyebrow">★ Aventura clásica de plataformas ★</div>
+      <h1>La aventura de Snoopy <span class="version">3.0.2</span></h1>
+      <p>15 recorridos jugables · Mapa renovado · Poderes mejor distribuidos · Cámara clásica · 5 jefes</p>
+    </header>
+    <section id="mario-panel" aria-label="Juego La aventura de Snoopy">
+      <div class="screen"><canvas id="mario-canvas" width="480" height="270"></canvas></div>
+      <div class="actions">
+        <button id="mario-start" type="button">Jugar / continuar</button>
+      </div>
+      <div class="hint">PC: ← → / A-D mover · Espacio saltar · Mantener Shift correr · Q dash · S deslizar / tubería · X poder · Z disparo · B tienda · G mapa · F dificultad · M música · Esc pausa</div>
+      <div id="mario-ctrl" aria-label="Controles táctiles">
+        <button type="button" data-dir="left" aria-label="Izquierda">◀</button>
+        <button type="button" data-dir="right" aria-label="Derecha">▶</button>
+        <button type="button" data-dir="jump" aria-label="Saltar">SALTAR</button>
+        <button type="button" data-dir="power" aria-label="Poder">PODER</button>
+        <button type="button" data-dir="shoot" aria-label="Disparo">DISPARO</button>
+      </div>
+    </section>
+    <div class="tips"><span><b>🐤 PÁJARO GUARDIÁN</b>Activa su poder temporal para que ataque a enemigos cercanos</span><span><b>⬇️ PISOTONES</b>Cae sobre los enemigos desde arriba para derrotarlos y rebotar</span><span><b>🟨 BLOQUES</b>Salta para golpearlos desde abajo</span><span><b>🟩 TUBERÍAS</b>Pulsa S junto a una tubería verde. En la zona bonus, pulsa S para regresar</span><span><b>⭐ TESOROS</b>Recoge monedas y estrellas secretas</span></div>
+    <p class="foot">Mapa de mundos con niveles y estrellas · Modo fácil por defecto (puedes activar Normal) · Guardado automático · 3 estrellas por nivel · Tienda permanente · Funciona sin internet. No modifica tu página principal.</p>
+  </main>
+  <script src="aventura.js"></script>
+</body>
+</html>

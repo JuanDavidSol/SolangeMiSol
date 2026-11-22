@@ -1,0 +1,92 @@
+[
+  {
+    "id": "u-mw7u9gwahcwr",
+    "key": "cuantos anos tienes",
+    "text": "cuantos años tienes",
+    "count": 1,
+    "first": 1794142738378,
+    "last": 1794142738378,
+    "src": "ollama"
+  },
+  {
+    "id": "u-mw7ua0im5ztm",
+    "key": "cuanto es 5 45",
+    "text": "cuanto es 5+45",
+    "count": 1,
+    "first": 1794142763806,
+    "last": 1794142763806,
+    "src": "ollama"
+  },
+  {
+    "id": "u-mw7ub82m5sv2",
+    "key": "explicame como es la programacion y dame un ejemplo",
+    "text": "explicame como es la programacion y dame un ejemplo",
+    "count": 2,
+    "first": 1794142820254,
+    "last": 1794143450422,
+    "src": "ollama"
+  },
+  {
+    "id": "u-mw7uuhg0mp89",
+    "key": "si con otro ejemplo",
+    "text": "si con otro ejemplo",
+    "count": 1,
+    "first": 1794143718864,
+    "last": 1794143718864,
+    "src": "gemini"
+  },
+  {
+    "id": "u-mw7uuwton6qc",
+    "key": "explicame con otro ejemplo mas divertido",
+    "text": "explicame con otro ejemplo mas divertido",
+    "count": 1,
+    "first": 1794143738796,
+    "last": 1794143738796,
+    "src": "gemini"
+  },
+  {
+    "id": "u-mw7uvcxwuz3e",
+    "key": "explicame con otro ejemplo mas divertido la programacion",
+    "text": "explicame con otro ejemplo mas divertido la programacion",
+    "count": 1,
+    "first": 1794143759684,
+    "last": 1794143759684,
+    "src": "gemini"
+  },
+  {
+    "id": "u-mw7uvm0aimsl",
+    "key": "explicame con otro ejemplo mas divertido dame un ejemplo",
+    "text": "explicame con otro ejemplo mas divertido dame un ejemplo",
+    "count": 1,
+    "first": 1794143771434,
+    "last": 1794143771434,
+    "src": "gemini"
+  },
+  {
+    "id": "u-mw7uw1jsfj4y",
+    "key": "algo mas complejo",
+    "text": "algo mas complejo",
+    "count": 1,
+    "first": 1794143791576,
+    "last": 1794143791576,
+    "src": "gemini"
+  },
+  {
+    "id": "u-mw7uwx3ods8m",
+    "key": "haz una imagen",
+    "text": "haz una imagen",
+    "count": 1,
+    "first": 1794143832468,
+    "last": 1794143832468,
+    "src": "gemini"
+  },
+  {
+    "id": "u-mwr8jt6y5wow",
+    "key": "como es la programaci on",
+    "text": "como es la programaci+on",
+    "count": 1,
+    "first": 1795315592842,
+    "last": 1795315592842,
+    "src": "ollama"
+  }
+]

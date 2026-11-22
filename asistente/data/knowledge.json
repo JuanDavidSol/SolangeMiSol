@@ -1,0 +1,445 @@
+[
+  {
+    "id": "seed-1",
+    "question": "¿Qué juegos hay?",
+    "answer": "Hay 14 juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura. Además tienes la Tienda de vales y tus Premios.",
+    "keywords": [
+      "lista",
+      "jugar",
+      "catalogo",
+      "pestañas",
+      "todos"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-2",
+    "question": "¿Cómo gano galletas?",
+    "answer": "Ganas galletas 🍪 al terminar cada juego, según tu resultado. También te dan galletas los premios que desbloqueas y el bono diario de la tienda.",
+    "keywords": [
+      "monedas",
+      "puntos",
+      "conseguir",
+      "consigo",
+      "ganar",
+      "gano",
+      "obtener"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-3",
+    "question": "¿Para qué sirven las galletas?",
+    "answer": "Las galletas se canjean por vales en la Tienda de vales 🛍️. Hay vales desde 10 galletas (un abrazo gigante) hasta 250 (una escapada juntos).",
+    "keywords": [
+      "moneda",
+      "tienda",
+      "canjear",
+      "vales",
+      "precio",
+      "cuesta"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-4",
+    "question": "¿Qué es el bono diario y la racha?",
+    "answer": "En la tienda puedes cobrar un bono una vez al día. Si entras días seguidos tu racha sube y el bono crece, hasta un máximo a los 7 días.",
+    "keywords": [
+      "bono",
+      "diario",
+      "racha",
+      "cada dia",
+      "regalo"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "shop",
+    "enabled": true
+  },
+  {
+    "id": "seed-5",
+    "question": "¿Cómo funciona el cofre sorpresa?",
+    "answer": "El cofre cuesta 25 galletas. A veces trae un vale gratis y otras veces trae entre 15 y 45 galletas.",
+    "keywords": [
+      "cofre",
+      "sorpresa",
+      "azar",
+      "premio"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "shop",
+    "enabled": true
+  },
+  {
+    "id": "seed-6",
+    "question": "¿Cómo uso o canjeo un vale?",
+    "answer": "Compra el vale en la tienda y aparecerá en \"Mis vales\". Pulsa \"Usar vale\" para marcarlo como usado y \"Avisar\" para enviar un mensaje por WhatsApp.",
+    "keywords": [
+      "usar",
+      "vale",
+      "whatsapp",
+      "avisar",
+      "cobrar",
+      "mis vales"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "shop",
+    "enabled": true
+  },
+  {
+    "id": "seed-7",
+    "question": "¿Qué son los premios?",
+    "answer": "Los premios son logros que desbloqueas al cumplir retos en los juegos, como ganar tu primera partida. Algunos traen un vale y todos te dan galletas. Los ves en la pestaña Premios 🏆.",
+    "keywords": [
+      "logros",
+      "medallas",
+      "retos",
+      "desbloquear"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "rewards",
+    "enabled": true
+  },
+  {
+    "id": "seed-8",
+    "question": "¿Dónde se guarda mi progreso?",
+    "answer": "Tus galletas, vales, premios y récords se guardan en el navegador de cada dispositivo. Si abres la página en otro móvil o navegador, empezarás de cero.",
+    "keywords": [
+      "guardar",
+      "progreso",
+      "perder",
+      "otro movil",
+      "datos",
+      "sincronizar"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-9",
+    "question": "¿Cómo borro mi progreso?",
+    "answer": "En la pestaña Premios hay un botón \"Borrar progreso\". Te pedirá confirmación porque no se puede deshacer.",
+    "keywords": [
+      "borrar",
+      "reiniciar",
+      "empezar de cero",
+      "resetear"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "rewards",
+    "enabled": true
+  },
+  {
+    "id": "seed-10",
+    "question": "¿Cómo silencio el sonido?",
+    "answer": "Pulsa el botón del altavoz 🔊 que está arriba a la derecha, junto a tus galletas.",
+    "keywords": [
+      "sonido",
+      "musica",
+      "silencio",
+      "volumen",
+      "mute"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-11",
+    "question": "¿Cómo se juega desde el móvil?",
+    "answer": "Todos los juegos funcionan con el dedo. Pac-Snoopy y la Aventura tienen botones táctiles, el 2048 y Pac-Snoopy se manejan deslizando, y en Dulces puedes arrastrar o tocar las fichas.",
+    "keywords": [
+      "movil",
+      "celular",
+      "tactil",
+      "dedo",
+      "controles",
+      "telefono"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-12",
+    "question": "¿Cómo se juega con el teclado?",
+    "answer": "Las flechas mueven a Snoopy en Corazones, Barón Rojo, Pac-Snoopy, 2048 y la Aventura (con espacio para saltar). Tres en raya acepta las teclas 1-9, Snoopy dice las teclas 1-4, Sudoku los números y el Ahorcado las letras.",
+    "keywords": [
+      "teclado",
+      "flechas",
+      "teclas",
+      "ordenador",
+      "pc"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "",
+    "enabled": true
+  },
+  {
+    "id": "seed-13",
+    "question": "¿Cómo se juega al Tres en raya?",
+    "answer": "Junta tres fichas en línea antes que tu rival. Puedes jugar contra Woodstock en fácil o difícil, o de dos jugadores. En difícil no se le puede ganar, ¡pero sí empatar!",
+    "keywords": [
+      "tres en raya",
+      "gato",
+      "ttt",
+      "woodstock"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "ttt",
+    "enabled": true
+  },
+  {
+    "id": "seed-14",
+    "question": "¿Cómo se juega al Sudoku?",
+    "answer": "Llena la cuadrícula con números del 1 al 9 sin repetir en filas, columnas ni cuadros de 3×3. Hay tres dificultades, un cronómetro con tu mejor tiempo y un botón de pista 💡.",
+    "keywords": [
+      "sudoku",
+      "numeros",
+      "cuadricula",
+      "pista",
+      "tiempo"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "sudoku",
+    "enabled": true
+  },
+  {
+    "id": "seed-15",
+    "question": "¿Cómo se juega al Memorama?",
+    "answer": "Voltea cartas de dos en dos para encontrar las parejas con el menor número de intentos. Tiene 4 niveles, desde 6 hasta 12 parejas.",
+    "keywords": [
+      "memorama",
+      "memoria",
+      "parejas",
+      "cartas"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "memo",
+    "enabled": true
+  },
+  {
+    "id": "seed-16",
+    "question": "¿Cómo se juega a Dulces?",
+    "answer": "Cambia dos fichas vecinas para juntar 3 o más iguales y llegar a los puntos de la meta. Juntar 4 crea una ficha que limpia una fila o columna, y juntar 5 crea una estrella ⭐. El botón Barajar cuesta 1 movimiento.",
+    "keywords": [
+      "dulces",
+      "fichas",
+      "combo",
+      "estrella",
+      "candy",
+      "match"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "m3",
+    "enabled": true
+  },
+  {
+    "id": "seed-17",
+    "question": "¿Cómo funcionan las pistas del Ahorcado?",
+    "answer": "Cada palabra trae una pista escrita arriba y su número de letras. Si fallas 3 veces aparece una pista extra: con qué letra empieza. También hay un botón de letra extra que cuesta un globo.",
+    "keywords": [
+      "ahorcado",
+      "pista",
+      "palabra",
+      "letras",
+      "globos"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": true,
+    "page": "hang",
+    "enabled": true
+  },
+  {
+    "id": "seed-18",
+    "question": "¿Cómo se juega a Snoopy dice?",
+    "answer": "Mira la secuencia de colores y sonidos y repítela en el mismo orden. Cada ronda añade un paso más y va más rápido. Si llegas a la ronda 8 ganas un premio.",
+    "keywords": [
+      "snoopy dice",
+      "simon",
+      "secuencia",
+      "colores",
+      "ronda"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "simon",
+    "enabled": true
+  },
+  {
+    "id": "seed-19",
+    "question": "¿Cómo se juega a Woodstock?",
+    "answer": "Toca a Woodstock 🐤 cuando aparezca en un agujero. La estrella ⭐ vale 3 puntos, pero si tocas a Snoopy 🐶 pierdes 2. Dura 30 segundos.",
+    "keywords": [
+      "woodstock",
+      "atrapa",
+      "agujeros",
+      "topos",
+      "reflejos"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "mole",
+    "enabled": true
+  },
+  {
+    "id": "seed-20",
+    "question": "¿Cómo se juega a Corazones?",
+    "answer": "Mueve a Snoopy para atrapar corazones ❤️ y galletas 🍪 (valen 2). Esquiva las tormentas 🌩️. Un globo 🎈 te da una vida extra. Empiezas con 3 vidas.",
+    "keywords": [
+      "corazones",
+      "lluvia",
+      "atrapar",
+      "tormentas",
+      "vidas"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "catch",
+    "enabled": true
+  },
+  {
+    "id": "seed-21",
+    "question": "¿Cómo se juega al Barón Rojo?",
+    "answer": "Mueve a Snoopy, que dispara solo. Derriba aviones, recoge galletas (triple disparo), corazones (vida extra) y estrellas (escudo). Cada 15 derribos aparece el jefe, el Barón Rojo.",
+    "keywords": [
+      "baron rojo",
+      "aviones",
+      "jefe",
+      "disparar",
+      "avion"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "ace",
+    "enabled": true
+  },
+  {
+    "id": "seed-22",
+    "question": "¿Cómo se juega a Conecta 4?",
+    "answer": "Suelta fichas en las columnas y junta 4 en línea, en horizontal, vertical o diagonal. Puedes jugar contra Woodstock en fácil o difícil, o de dos jugadores.",
+    "keywords": [
+      "conecta 4",
+      "cuatro en linea",
+      "columnas",
+      "fichas"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "c4",
+    "enabled": true
+  },
+  {
+    "id": "seed-23",
+    "question": "¿Cómo se juega al 2048?",
+    "answer": "Desliza el dedo o usa las flechas para juntar fichas iguales y sumarlas. Si llegas a la ficha 512 ganas un premio con vale, y a 2048 ganas un bono de galletas.",
+    "keywords": [
+      "2048",
+      "numeros",
+      "deslizar",
+      "sumar"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "g2048",
+    "enabled": true
+  },
+  {
+    "id": "seed-24",
+    "question": "¿Cómo se juega a Flappy Woodstock?",
+    "answer": "Toca la pantalla o pulsa espacio para que Woodstock aletee y pase entre los tubos sin chocar. Pasar 15 tubos da un premio.",
+    "keywords": [
+      "flappy",
+      "tubos",
+      "volar",
+      "aletear",
+      "pajaro"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "flap",
+    "enabled": true
+  },
+  {
+    "id": "seed-25",
+    "question": "¿Cómo se juega a Pac-Snoopy?",
+    "answer": "Come todas las bolitas del laberinto. Las galletas grandes 🍪 asustan a los fantasmas 8 segundos y puedes comértelos. Tienes 3 vidas y ganas una extra cada 150 puntos.",
+    "keywords": [
+      "pac",
+      "pacman",
+      "fantasmas",
+      "laberinto",
+      "bolitas"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "pac",
+    "enabled": true
+  },
+  {
+    "id": "seed-26",
+    "question": "¿Cómo se juega a la Aventura de Snoopy?",
+    "answer": "Corre y salta hasta la bandera 🏁. Aplasta a los bichos 🐢 saltándoles encima y recoge galletas: cada 20 te dan una vida. Tienes 5 vidas y ganas una más al superar cada nivel.",
+    "keywords": [
+      "aventura",
+      "mario",
+      "saltar",
+      "plataformas",
+      "bandera",
+      "bichos"
+    ],
+    "link": "juegos.html",
+    "linkText": "Ir a los juegos",
+    "faq": false,
+    "page": "mario",
+    "enabled": true
+  }
+]

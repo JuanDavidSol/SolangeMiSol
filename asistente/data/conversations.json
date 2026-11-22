@@ -1,0 +1,1063 @@
+{
+  "d37bce33fc1622f969773b58193d2212": {
+    "id": "d37bce33fc1622f969773b58193d2212",
+    "started": 1794029175589,
+    "updated": 1794029199549,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "¿Qué juegos hay?",
+        "ts": 1794029175589
+      },
+      {
+        "r": "a",
+        "t": "Hay 14 juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura. Además tienes la Tienda de vales y tus Premios.",
+        "ts": 1794029175589,
+        "src": "kb"
+      },
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794029196750
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794029196750,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "¿Cómo gano galletas?",
+        "ts": 1794029199549
+      },
+      {
+        "r": "a",
+        "t": "Ganas galletas 🍪 al terminar cada juego, según tu resultado. También te dan galletas los premios que desbloqueas y el bono diario de la tienda.",
+        "ts": 1794029199549,
+        "src": "kb"
+      }
+    ]
+  },
+  "34c8121f3e4d1a85f1b59dba64af6ae9": {
+    "id": "34c8121f3e4d1a85f1b59dba64af6ae9",
+    "started": 1794036200414,
+    "updated": 1794036244434,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "hola que puedes hacer",
+        "ts": 1794036200414
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794036200414,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "como te llamas",
+        "ts": 1794036207390
+      },
+      {
+        "r": "a",
+        "t": "Soy Snoopy, el asistente virtual de el Rincón de juegos. No soy una persona: respondo con la información que hay en esta web.",
+        "ts": 1794036207390,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "cuanto es 1+15",
+        "ts": 1794036220450
+      },
+      {
+        "r": "a",
+        "t": "Encontré esto en «Sonora | Mi biblioteca – Reproducción»: Fundido entre canciones: 0 s Temporizador de apagado Apagado 15 minutos 30 minutos 45 minutos 1 hora 1 hora y media Al terminar esta canción Personalizado Saltar silencios al inicio y al final de cada pista Colores según la portada",
+        "ts": 1794036220450,
+        "src": "kb"
+      },
+      {
+        "r": "u",
+        "t": "f",
+        "ts": 1794036244434
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794036244434,
+        "src": "unknown"
+      }
+    ]
+  },
+  "c6c34a5254546605eaeb56c0a57634a5": {
+    "id": "c6c34a5254546605eaeb56c0a57634a5",
+    "started": 1794036301424,
+    "updated": 1794036301424,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "Explícame qué es la inteligencia artificial y dame tres ejemplos.",
+        "ts": 1794036301424
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794036301424,
+        "src": "unknown"
+      }
+    ]
+  },
+  "7842f06790fa5c31bf3c55ab86aa71b4": {
+    "id": "7842f06790fa5c31bf3c55ab86aa71b4",
+    "started": 1794036701862,
+    "updated": 1794036717783,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "hola 5+5",
+        "ts": 1794036701862
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794036701862,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "ffasfsa",
+        "ts": 1794036717783
+      },
+      {
+        "r": "a",
+        "t": "No lo sabía. ¿Cómo estás hoy?",
+        "ts": 1794036717783,
+        "src": "ai"
+      }
+    ]
+  },
+  "efadba722bcbb471df402753026d7509": {
+    "id": "efadba722bcbb471df402753026d7509",
+    "started": 1794036785537,
+    "updated": 1794037362547,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "Pregúntale estas tres cosas: 1. Explícame qué es la inteligencia artificial. 2. ¿Puedes ayudarme a aprender programación? 3. Inventa una historia divertida sobre Snoopy.",
+        "ts": 1794036785537
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794036785537,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Pregunta Resultado esperado ¿Qué es la inteligencia artificial? Qwen responde ¿Cuánto es 125 × 8? Qwen calcula ¿Cómo puedo aprender Python? Qwen explica ¿Cómo gano galletas? Consulta tu web ¿Qué juegos hay? Consulta tu web",
+        "ts": 1794037245836
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794037245836,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "¿Qué es la inteligencia artificial?",
+        "ts": 1794037271863
+      },
+      {
+        "r": "a",
+        "t": "La inteligencia artificial (IA) es un campo de la tecnología que se encarga de hacer que las máquinas puedan actuar de manera similar a la inteligencia humana. Se utiliza para crear sistemas que pueden aprender, pensar y tomar decisiones por sí mismos.",
+        "ts": 1794037271863,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "¿Cuánto es 125 × 8?",
+        "ts": 1794037309862
+      },
+      {
+        "r": "a",
+        "t": "125 × 8 es igual a 1000.",
+        "ts": 1794037309862,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "puedes ver que partidos jugaron hoy?",
+        "ts": 1794037362547
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794037362547,
+        "src": "unknown"
+      }
+    ]
+  },
+  "cecf39d3bcbc1394a9530c760f79474b": {
+    "id": "cecf39d3bcbc1394a9530c760f79474b",
+    "started": 1794039537153,
+    "updated": 1794070826058,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794039537153
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794039537153,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "«Explícame qué es JavaScript y dame un ejemplo sencillo».",
+        "ts": 1794039608101
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794039608101,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794039666078
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794039666078,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794040201977
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794040201977,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794064072871
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794064072871,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794066653853
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794066653853,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794066755012
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794066755012,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794067009229
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794067009229,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Explícame qué es JavaScript y dame un ejemplo sencillo",
+        "ts": 1794067880085
+      },
+      {
+        "r": "a",
+        "t": "¡Ah, qué bueno que preguntaste! JavaScript es un lenguaje de programación que nos permite hacer que las páginas web se comporten de forma más interesante, como cuando un botón cambia de color al hacer clic o un video se reproduce solo al entrar.\n\nPor ejemplo, si pones un botón en una página y le dices: \"cuando lo hagas clic, mostrar un mensaje\", JavaScript hace que eso ocurra sin necesidad de recargar la página.\n\nEs como si tu página web tuviera un pequeño cerebro que responde a tus acciones. ¡Y todo eso sin salir de la web! 😄",
+        "ts": 1794067880085,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "¿Y para qué sirve?",
+        "ts": 1794068147739
+      },
+      {
+        "r": "a",
+        "t": "JavaScript sirve para hacer que las páginas web sean más interactivas y divertidas. Por ejemplo, puede hacer que un botón se active al hacer clic, que un menú se abra al pasar el ratón por encima, o que un juego pequeño se ejecute directamente en la página.\n\nNo solo se usa en juegos, también en aplicaciones, formularios y hasta en sitios que muestran contenido en tiempo real, como un contador de visitas o un reloj que se actualiza automáticamente.\n\n¡Es como dar vida a las páginas web! 🎮✨",
+        "ts": 1794068147739,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Crea un ejemplo de HTML, CSS y JavaScript para un botón que cambie de color al hacer clic. Explícame cada parte",
+        "ts": 1794068438808
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794068438808,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "¿Y para qué sirve?",
+        "ts": 1794068501006
+      },
+      {
+        "r": "a",
+        "t": "¡Ah, claro! Un botón que cambia de color al hacer clic es una forma sencilla de hacer que una página web sea más divertida y interactiva.  \nSirve para mostrar que algo está respondiendo, como un juego o una acción que se puede hacer.  \nPor ejemplo, si haces clic en el botón, puede cambiar de color y dar una sensación de \"efecto\", como cuando un personaje de dibujo se mueve.  \nEs útil en juegos, páginas educativas o incluso en sitios que quieren que los usuarios se sientan más involucrados.  \n¡Y es muy fácil de hacer con HTML, CSS y JavaScript! 😊",
+        "ts": 1794068501006,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Crea un ejemplo de HTML, CSS y JavaScript para un botón que cambie de color al hacer clic. Explícame cada parte",
+        "ts": 1794068647912
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794068647912,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Crea un boton HTML que cambie de color al hacer clic. Responde brevemente.",
+        "ts": 1794069604517
+      },
+      {
+        "r": "a",
+        "t": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+        "ts": 1794069604517,
+        "src": "unknown"
+      },
+      {
+        "r": "u",
+        "t": "Crea un ejemplo de HTML, CSS y JavaScript para un botón que cambie de color al hacer clic. Explícame cada parte",
+        "ts": 1794069747111
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Aquí tienes un ejemplo sencillo de HTML, CSS y JavaScript para un botón que cambie de color al hacer clic. ¡Vamos paso a paso!\n\n---\n\n**HTML** (archivo: `index.html`)  \n```html\n<!DOCTYPE html>\n<html lang=\"es\">\n<head>\n  <meta charset=\"UTF-8\">\n  <title>Botón que cambia de color</title>\n  <link rel=\"stylesheet\" href=\"styles.css\">\n</head>\n<body>\n  <button id=\"miBoton\">Haz clic aquí</button>\n  <script src=\"script.js\"></script>\n</body>\n</html>\n```\n\n🔹 **¿Qué hace?**  \n- Crea una página web básica.  \n- Agrega un botón con el texto \"Haz clic aquí\".  \n- Conecta el archivo CSS y JavaScript para que funcionen.\n\n---\n\n**CSS** (archivo: `styles.css`)  \n```css\nbody {\n  font-family: Arial, sans-serif;\n  text-align: center;\n  margin-top: 100px;\n}\n\n#miBoton {\n  padding: 15px 30px;\n  font-size: 18px;\n  background-color: #3498db;\n  color: white;\n  border: none;\n  border-radius: 10px;\n  cursor: pointer;\n  transition: background-color 0.3s ease;\n}\n\n#miBoton:hover {\n  background-color: #2980b9;\n}\n```\n\n🔹 **¿Qué hace?**  \n- Establece el estilo del botón: color, tamaño, borde, redondez y",
+        "ts": 1794069747111,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "el JavaScript ?",
+        "ts": 1794070055523
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Aquí está el **JavaScript** para que el botón cambie de color al hacer clic:\n\n**JavaScript** (archivo: `script.js`)  \n```javascript\n// Selecciona el botón por su ID\nconst boton = document.getElementById(\"miBoton\");\n\n// Cuando el usuario hace clic en el botón\nboton.addEventListener(\"click\", function () {\n  // Cambia el color del botón a un nuevo color aleatorio\n  const colores = [\"#e74c3c\", \"#f39c12\", \"#2ecc71\", \"#3498db\", \"#9b59b6\"];\n  const colorAleatorio = colores[Math.floor(Math.random() * colores.length)];\n  \n  // Aplica el nuevo color al botón\n  boton.style.backgroundColor = colorAleatorio;\n});\n```\n\n🔹 **¿Qué hace paso a paso?**  \n1. `document.getElementById(\"miBoton\")` → Busca el botón con el ID \"miBoton\" en la página.  \n2. `addEventListener(\"click\", ...)` → Cuando el usuario haga clic, ejecuta la función que viene después.  \n3. `colores` → Lista de colores posibles (como rojo, amarillo, verde, azul, morado).  \n4. `Math.floor(Math.random() * colores.length)` → Elige un color al azar de la lista.  \n5. `boton.style.backgroundColor = colorAleatorio` → Cambia el color de fondo del botón por el elegido.\n\n✅ ¡Listo! Cada vez que hagas clic, el botón cambiará de",
+        "ts": 1794070055523,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Si funciono",
+        "ts": 1794070273100
+      },
+      {
+        "r": "a",
+        "t": "¡Felicidades! 😊  \n¡El botón ahora cambia de color cada vez que lo haces clic!  \nSi lo ves funcionar, es como si Snoopy hiciera un truco de magia con un botón.  \n¡Gracias por probarlo! 🎉  \nSi quieres que haga algo más, como que el botón salte o muestre un mensaje, solo dímelo.",
+        "ts": 1794070273100,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794070290003
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794070290003,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "puedes decirme buenos días?",
+        "ts": 1794070356835
+      },
+      {
+        "r": "a",
+        "t": "¡Buenos días! 🌞  \nEs un lindo día para jugar, sonreír y descubrir nuevas cosas. ¿Qué te gustaría hacer hoy? 😄",
+        "ts": 1794070356835,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "puedes decirme buenos días?",
+        "ts": 1794070604757
+      },
+      {
+        "r": "a",
+        "t": "¡Buenos días! 🌞 ¿Cómo estás hoy? Espero que estés muy contento con tu día. ¿Quieres escuchar alguna música para empezar bien? 😊",
+        "ts": 1794070604757,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Conoces mi pagina sonora?",
+        "ts": 1794070655337
+      },
+      {
+        "r": "a",
+        "t": "¡Sí, conocido! 😊 Sonora es una página donde puedes encontrar música que te acompañe todo el día. ¿Quieres agregar alguna canción o explorar radios y música libre? ¡Estoy aquí para ayudarte! 🎵",
+        "ts": 1794070655337,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794070796163
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794070796163,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "como estas?",
+        "ts": 1794070826058
+      },
+      {
+        "r": "a",
+        "t": "¡Estoy muy bien, gracias! 🎵 ¿Y tú? ¿Qué tal tu día? 😊",
+        "ts": 1794070826058,
+        "src": "ai"
+      }
+    ]
+  },
+  "f606e8eae87b8188f2bb706e01b3ffeb": {
+    "id": "f606e8eae87b8188f2bb706e01b3ffeb",
+    "started": 1794075005097,
+    "updated": 1794075424935,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "hola bola",
+        "ts": 1794075005097
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794075005097,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "cuanto es 5+5",
+        "ts": 1794075071061
+      },
+      {
+        "r": "a",
+        "t": "5 + 5 = 10 😊  \n¡Fácil como un bocadillo de galletas! ¿Quieres seguir con más cálculos o jugar algo? 🎮🍪",
+        "ts": 1794075071061,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "responde rapido 7+8",
+        "ts": 1794075181655
+      },
+      {
+        "r": "a",
+        "t": "7 + 8 = 15 🚀  \n¡Listo como un salto de Snoopy! ¿Quieres jugar algo ahora? 😄",
+        "ts": 1794075181655,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "¿Cómo uso o canjeo un vale?",
+        "ts": 1794075201746
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Para usar un vale:  \n1. Ve a \"Mis vales\" y encuentra tu vale.  \n2. Pulsa \"Usar vale\" para marcarlo como usado.  \n3. Si quieres, pulsa \"Avisar\" para enviar un mensaje por WhatsApp.  \n\n¡Listo! 🎉 ¿Quieres saber más sobre galletas o juegos? 😊",
+        "ts": 1794075201746,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "responde que juegos hay",
+        "ts": 1794075405129
+      },
+      {
+        "r": "a",
+        "t": "Hay 14 juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura.  \n¡Y también la Tienda de vales y tus Premios! 🎮🍪",
+        "ts": 1794075405129,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "¿Qué juegos hay?",
+        "ts": 1794075424935
+      },
+      {
+        "r": "a",
+        "t": "Hay 14 juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura.  \n¡Y la Tienda de vales y tus Premios! 🎮🍪",
+        "ts": 1794075424935,
+        "src": "ai"
+      }
+    ]
+  },
+  "44ef31ca318ed2f4d368b7dcd95a88f5": {
+    "id": "44ef31ca318ed2f4d368b7dcd95a88f5",
+    "started": 1794076289207,
+    "updated": 1794088505338,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "¿Qué juegos hay?",
+        "ts": 1794076289207
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! Aquí tienes los juegos que tenemos en el Rincón de juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura. También hay la Tienda de vales y tus Premios. 😊",
+        "ts": 1794076289207,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Como tas responde rapidito",
+        "ts": 1794077766105
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Estoy aquí para ayudarte rápido, como un buen amigo de juegos. 😊 ¿Qué necesitas ahora?",
+        "ts": 1794077766105,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "bien estás?",
+        "ts": 1794077784531
+      },
+      {
+        "r": "a",
+        "t": "¡Sí, estoy bien! Y tú, ¿cómo estás? 😊 ¿Quieres jugar algo rápido o necesitas ayuda con algo?",
+        "ts": 1794077784531,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Como te llamas?",
+        "ts": 1794077794919
+      },
+      {
+        "r": "a",
+        "t": "Soy Snoopy, el asistente virtual de el Rincón de juegos. No soy una persona: respondo con la información que hay en esta web.",
+        "ts": 1794077794919,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "Como hace snnopy",
+        "ts": 1794077824675
+      },
+      {
+        "r": "a",
+        "t": "¡Buena pregunta! Snoopy es un personaje de dibujos que siempre está riéndose, jugando y haciendo cosas divertidas. Yo, como Snoopy, soy amable, rápido y siempre listo para ayudarte con juegos o cualquier cosa que necesites. 😊 ¿Quieres que te cuente una historia o que juguemos algo? 🎮",
+        "ts": 1794077824675,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "Si cuenta",
+        "ts": 1794077895174
+      },
+      {
+        "r": "a",
+        "t": "¡Claro que sí! 🎈  \nHoy voy a contarle una historia de un día en el Rincón de juegos.  \n\nHabía un día soleado, y Snoopy (yo) estaba en la terraza con una galleta de chocolate, cuando de repente sonó un *tictac* extraño. Era el reloj del juego de la escalera. ¡El juego se había activado!  \n\nSnoopy decidió subirse a la escalera para ver qué pasaba. Al llegar al piso 3, apareció un mensaje: *\"¡Solo necesitas una respuesta para ganar el premio!\"*  \n\nEntonces, Snoopy preguntó: *\"¿Qué es lo más divertido que puedes hacer en un día?\"*  \n\nY el juego respondió: *\"¡Jugar con amigos y compartir galletas!\"*  \n\n¡Y así, Snoopy ganó el premio de una galleta especial! 🍪  \n\n¿Quieres que hagamos otra historia o que juguemos algo ahora? 😄",
+        "ts": 1794077895174,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "juegos",
+        "ts": 1794088505338
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! Aquí tienes los juegos que tenemos en el Rincón de juegos:  \nTres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura.  \n\n¿Te gustaría saber cómo se juega alguno de ellos? 😊",
+        "ts": 1794088505338,
+        "src": "ai"
+      }
+    ]
+  },
+  "5ef436ac669aff2b831ba9bc918551e4": {
+    "id": "5ef436ac669aff2b831ba9bc918551e4",
+    "started": 1794090144625,
+    "updated": 1794091749972,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794090144625
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794090144625,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "usas gemini?",
+        "ts": 1794090171360
+      },
+      {
+        "r": "a",
+        "t": "No, yo no uso Gemini. Soy Snoopy, el asistente de el Rincón de juegos. ¿Te gustaría saber cómo jugar al 2048 o algo más? 🎮🍪",
+        "ts": 1794090171360,
+        "src": "ai"
+      },
+      {
+        "r": "u",
+        "t": "eres snoopy cuantos años tienes",
+        "ts": 1794090359764
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Como soy un personaje de dibujos, no tengo edad real, pero si me preguntan, digo que tengo 100 años y aún juego sin parar! 🎮✨ ¿Quieres que te cuente cómo jugar a uno de mis juegos? 😄",
+        "ts": 1794090359764,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "eres snoopy cuantos años tienes",
+        "ts": 1794090500599
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Aunque no tengo edad exacta como un perro, en el mundo de Snoopy, los perros viven mucho tiempo y yo soy un amigo eterno de los juegos y las galletas. 😄 ¿Quieres jugar a alguno de los juegos que tenemos? 🍪",
+        "ts": 1794090500599,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "node -e \"const g=require('./server/gemini'); const o=require('./server/ollama'); console.log('Gemini:',g.status()); o.status().then(x=>console.log('Ollama:',x)).catch(e=>console.log('Ollama:',e.message))\"",
+        "ts": 1794090545706
+      },
+      {
+        "r": "a",
+        "t": "No puedo ejecutar ni interpretar comandos de Node.js ni acceder a archivos como `server/gemini` o `server/ollama`. Ese código parece estar diseñado para probar servicios como Gemini o Ollama, pero no tengo acceso a esos archivos ni a sus funcionalidades.  \n\nSi quieres, puedo ayudarte a escribir un ejemplo de código simple en JavaScript o explicarte cómo funciona algo así. ¿Te interesa? 😊",
+        "ts": 1794090545706,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "yao",
+        "ts": 1794090567498
+      },
+      {
+        "r": "a",
+        "t": "¡Hola, Yao! 😊 ¿Qué tal? ¿Quieres jugar a un juego o compartir algo de interés? 🍪✨",
+        "ts": 1794090567498,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "Cuanto es 4+5",
+        "ts": 1794090613358
+      },
+      {
+        "r": "a",
+        "t": "4 + 5 es igual a 9. 😊 ¿Quieres que te lo explique de otra forma o que juguemos algo mientras? 🎮",
+        "ts": 1794090613358,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "Qué IA eres y qué modelo estás utilizando exactamente?",
+        "ts": 1794090718734
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! Soy Snoopy, el asistente virtual del Rincón de Juegos 🎮🍪  \nNo uso IA como Gemini o Ollama, ni tengo un modelo interno.  \nMi propósito es ayudarte a jugar, aprender o divertirte con temas como matemáticas, juegos o curiosidades.  \nSi necesitas ayuda con algo más técnico, como usar IA externa, puedo darte pistas, pero no soy el que la ejecuta. 😊  \n¿Quieres que te ayude con un juego o una pregunta divertida? 😄",
+        "ts": 1794090718734,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "Resuelve 847 × 29 y explícame el procedimiento paso a paso",
+        "ts": 1794090825571
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Vamos a resolver \\( 847 \\times 29 \\) paso a paso, como si estuviéramos haciendo la multiplicación en papel.\n\n---\n\n**Paso 1: Descomponemos 29**  \n29 se puede escribir como \\( 20 + 9 \\).  \nEntonces:  \n\\( 847 \\times 29 = 847 \\times (20 + 9) \\)\n\n---\n\n**Paso 2: Multiplicamos por 20**  \n\\( 847 \\times 20 = 847 \\times (2 \\times  10) = (847 \\times 2) \\times 10 \\)  \n\\( 847 \\times 2 = 1694 \\)  \n\\( 1694 \\times 10 = 16,940 \\)\n\n---\n\n**Paso 3: Multiplicamos por 9**  \n\\( 847 \\times 9 \\)  \nHacemos:  \n\\( 800 \\times 9 = 7,200 \\)  \n\\( 40 \\times 9 = 360 \\)  \n\\( 7 \\times 9 = 63 \\)  \nSumamos: \\( 7,200 + 360 = 7,560 \\)  \n\\( 7,560 + 63 = 7,623 \\)\n\n---\n\n**Paso 4: Sumamos los resultados**  \n\\( 16,940 +",
+        "ts": 1794090825571,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794091277834
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794091277834,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "gooo",
+        "ts": 1794091287549
+      },
+      {
+        "r": "a",
+        "t": "¡Gooo! 🎉 ¿Quieres jugar un juego, resolver un acertijo o aprender algo divertido? 😄",
+        "ts": 1794091287549,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "eres geminiiiiiiiiiiiiiiii",
+        "ts": 1794091299121
+      },
+      {
+        "r": "a",
+        "t": "¡Jajaja! No, soy Snoopy, el asistente de el Rincón de juegos. Geminii es un amigo de los cómics, no de los juegos de galletas 😄. ¿Quieres que te cuente un chiste o te ayude con algo? 🍪",
+        "ts": 1794091299121,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "cuentame como funciona la pagina y su composicion",
+        "ts": 1794091405375
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! 😊 El Rincón de juegos es una página donde puedes jugar, guardar tu progreso y disfrutar de música sin anuncios.\n\nTienes varias secciones:  \n- **El cofre sorpresa**: cuesta 25 galletas y puede darte entre 15 y 45 galletas o un vale gratis.  \n- **Mi música**: guardas canciones, radios y archivos. Todo se almacena solo en tu navegador.  \n- **Tu progreso**: tus galletas, vales y récords se guardan en tu navegador, así que si usas otro dispositivo, empiezas de cero.\n\nNo hay datos de la página que no estén en el contexto. ¿Quieres que te explique algo más? 🎮🎶",
+        "ts": 1794091405375,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "a ver mi musica",
+        "ts": 1794091529651
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! En **Mi música** puedes guardar tus canciones, radios y archivos de música libre.  \n\nPuedes:  \n- Agregar canciones desde tu dispositivo.  \n- Escuchar radios como YouTube o Soundbliz.  \n- Buscar música en Jamendo, pero necesitas un *client_id* gratuito (lo creas en devportal.jamendo.com).  \n\nEl sonido se controla con el botón del altavoz 🔊 arriba a la derecha.  \n\n¿Quieres que te ayude a agregar una canción o ver cómo funciona una radio? 🎵",
+        "ts": 1794091529651,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "dame el link",
+        "ts": 1794091608440
+      },
+      {
+        "r": "a",
+        "t": "Lo siento, no puedo darle enlaces a secciones de la página porque no tengo acceso a la información específica de la web.  \n\nSi me dices qué sección necesitas (por ejemplo, \"el cofre sorpresa\" o \"mi música\"), puedo ayudarte mejor. 😊 ¿Quieres seguir explorando? 🍪🎶",
+        "ts": 1794091608440,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "como y a mi musica",
+        "ts": 1794091643753
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Para ver y gestionar tu música en el Rincón de juegos:  \n\n1. Ve a **\"Tu música\"** en el menú (hay un ícono ♫).  \n2. Allí puedes ver tus canciones, radios y favoritos.  \n3. Para añadir música, pulsa **\"Añadir canciones\"** y selecciona archivos de tu dispositivo.  \n4. Usa el botón del altavoz 🔊 para encender o apagar el sonido.  \n\n¿Quieres que te muestre cómo subir una canción paso a paso? 🎵",
+        "ts": 1794091643753,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "a la musica",
+        "ts": 1794091674461
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Para escuchar tu música en el Rinc-ón de juegos:  \n\n1. Ve a **\"Tu música\"** en el menú (con el ícono ♫).  \n2. Allí verás tus canciones, favoritos y radios.  \n3. Puedes escucharlas directamente o añadir más desde tu dispositivo.  \n4. Usa el botón del altavoz 🔊 para encender o apagar el sonido.  \n\n¿Quieres que te ayude a subir una canción o ver cómo funciona una radio? 🎵",
+        "ts": 1794091674461,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "mi musica",
+        "ts": 1794091698325
+      },
+      {
+        "r": "a",
+        "t": "¡Ahí va! Tu música en el Rincón de juegos:  \n\n- Ve a **\"Tu música\"** (con el ícono ♫) en el menú.  \n- Allí verás tus canciones, favoritos y tu biblioteca personal.  \n- Puedes escucharlas directamente o añadir más desde tu dispositivo.  \n- Si quieres, pulsa **\"Añadir canciones\"** y selecciona archivos de audio.  \n\n¿Quieres que te muestre cómo subir una canción paso a paso? 🎵",
+        "ts": 1794091698325,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "si",
+        "ts": 1794091749972
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! Aquí te muestro **cómo subir una canción paso a paso** en el Rincón de juegos:  \n\n1. Ve al menú y haz clic en **\"Tu música\"** (con el ícono ♫).  \n2. Haz clic en **\"Añadir canciones\"**.  \n3. Selecciona tu archivo de música (por ejemplo, un archivo .mp3) desde tu dispositivo.  \n4. Asegúrate de que la canción no sea demasiado larga (máximo 10 minutos).  \n5. Pulsa **\"Subir\"** y espera un momento mientras se procesa.  \n\n¡Listo! Tu canción ya está en tu biblioteca. ¿Quieres que te ayude a escucharla o crear una radio con ella? 🎵✨",
+        "ts": 1794091749972,
+        "src": "ollama"
+      }
+    ]
+  },
+  "pruebaIA20261107": {
+    "id": "pruebaIA20261107",
+    "started": 1794090995627,
+    "updated": 1794090995627,
+    "page": "/",
+    "messages": [
+      {
+        "r": "u",
+        "t": "Explica en dos frases por qu� el agua del mar es salada y da un ejemplo.",
+        "ts": 1794090995627
+      },
+      {
+        "r": "a",
+        "t": "El agua del mar es salada porque contiene sales que vienen de las rocas que se descomponen y se disuelven en el agua, y estas sales se acumulan con el tiempo. Por ejemplo, cuando el agua del mar se evapora, deja las sales y se queda el agua más salada.",
+        "ts": 1794090995627,
+        "src": "ollama"
+      }
+    ]
+  },
+  "b9a273c0de4ff25c165471f8b2486e77": {
+    "id": "b9a273c0de4ff25c165471f8b2486e77",
+    "started": 1794091841886,
+    "updated": 1794091841886,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "¿Cómo uso o canjeo un vale?",
+        "ts": 1794091841886
+      },
+      {
+        "r": "a",
+        "t": "Para usar o canjeo un vale, primero debes comprarlo en la tienda. Luego, cuando aparezca en \"Mis vales\", pulsa \"Usar vale\" para marcarlo como usado y \"Avisar\" para enviar un mensaje por WhatsApp. ¡Así es como se puede canjear! 😊",
+        "ts": 1794091841886,
+        "src": "ollama"
+      }
+    ]
+  },
+  "a380f8dce744044ac7cb8e918ceaff0b": {
+    "id": "a380f8dce744044ac7cb8e918ceaff0b",
+    "started": 1794142705304,
+    "updated": 1794143832468,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "¿Qué juegos hay?",
+        "ts": 1794142705304
+      },
+      {
+        "r": "a",
+        "t": "Hay 14 juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura. Además tienes la Tienda de vales y tus Premios.",
+        "ts": 1794142705304,
+        "src": "kb"
+      },
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794142712704
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794142712704,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "cuantos años tienes",
+        "ts": 1794142738379
+      },
+      {
+        "r": "a",
+        "t": "¡Buena pregunta! 🐶 Yo no tengo edad como tú, pero si me preguntas por el Rincón de juegos… ¡es un lugar de siempre! 😄 ¿Quieres jugar algo? 🍪",
+        "ts": 1794142738379,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "cuanto es 5+45",
+        "ts": 1794142763806
+      },
+      {
+        "r": "a",
+        "t": "5 + 45 = 50 🎉",
+        "ts": 1794142763806,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "hola",
+        "ts": 1794142768914
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! 😊 Soy Snoopy. ¿En qué te puedo ayudar?",
+        "ts": 1794142768914,
+        "src": "intent"
+      },
+      {
+        "r": "u",
+        "t": "explicame como es la programacion y dame un ejemplo",
+        "ts": 1794142820255
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! 🐶  \n\nLa programación es como dar instrucciones a una máquina para que haga algo. Por ejemplo, decirle a un robot: \"Si ve una galleta, corre hacia allá\".  \n\n**Ejemplo simple en JavaScript** (para un sitio web):  \n```html\n<!-- archivo: index.html -->\n<!DOCTYPE html>\n<html>\n<head>\n  <title>¡Hola desde JavaScript!</title>\n</head>\n<body>\n  <p id=\"mensaje\">¡Hola, mundo!</p>\n  <script>\n    document.getElementById(\"mensaje\").innerHTML = \"¡Hola, Snoopy!\";\n  </script>\n</body>\n</html>\n```\n\nEste código hace que la página muestre \"¡Hola, Snoopy!\" en vez de \"¡Hola, mundo!\".  \n¿Quieres probarlo o ver otro ejemplo? 🍪✨",
+        "ts": 1794142820255,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "explicame como es la programacion y dame un ejemplo",
+        "ts": 1794143450423
+      },
+      {
+        "r": "a",
+        "t": "¡Claro! 🐶  \nLa programación es como dar instrucciones a una máquina para que haga algo, como un juego o una galleta que se mueva por la pantalla.  \n\nPor ejemplo:  \n- Si pones un código en un archivo `.html`, se muestra en la web.  \n- Si pones un código en un archivo `.js`, se ejecuta en el navegador.  \n\nAquí un ejemplo simple en HTML y JavaScript:  \n\n```html\n<!DOCTYPE html>\n<html>\n<head>\n  <title>¡Hola, Snoopy!</title>\n</head>\n<body>\n  <h1 id=\"mensaje\">¡Hola, mundo!</h1>\n  <button onclick=\"cambiarMensaje()\">¡Cambia!</button>\n\n  <script>\n    function cambiarMensaje() {\n      document.getElementById(\"mensaje\").innerText = \"¡Snoopy dice: ¡Galleta! 🍪\";\n    }\n  </script>\n</body>\n</html>\n```\n\n👉 Si abres este archivo en un navegador, verás \"¡Hola, mundo!\" y al hacer clic en el botón, cambia a \"¡Snoopy dice: ¡Galleta! 🍪\".  \n\n¿Quieres que te lo explique con un ejemplo más divertido? 😄",
+        "ts": 1794143450423,
+        "src": "ollama"
+      },
+      {
+        "r": "u",
+        "t": "si con otro ejemplo",
+        "ts": 1794143718864
+      },
+      {
+        "r": "a",
+        "t": "¡Hola! ¿A qué te refieres con \"otro ejemplo\"? Si necesitas ayuda con algún juego, código o tienes otra duda, dime y lo vemos enseguida 🐶✨",
+        "ts": 1794143718864,
+        "src": "gemini"
+      },
+      {
+        "r": "u",
+        "t": "explicame con otro ejemplo mas divertido",
+        "ts": 1794143738796
+      },
+      {
+        "r": "a",
+        "t": "¡Claro que sí! 🎈 Imagina que tus galletas son como un tesoro escondido en una cajita secreta dentro de tu navegador web. Si cambias de cohete (de dispositivo), la cajita se queda en el anterior y hay que empezar a juntar tesoros nuevos otra vez 🍪✨ ¿De qué te gustaría ver otro ejemplo?",
+        "ts": 1794143738796,
+        "src": "gemini"
+      },
+      {
+        "r": "u",
+        "t": "explicame con otro ejemplo mas divertido la programacion",
+        "ts": 1794143759684
+      },
+      {
+        "r": "a",
+        "t": "¡Imagina que programar es como darle una receta mágica a un robot ayudante 🤖! Si le dices paso a paso cómo hacer un sándwich de galletas (1. Coge una galleta, 2. Unta chocolate, 3. ¡Ñam!), el robot lo hace perfecto. ¿Quieres que probemos a escribir una recetita de código juntos? 🍪✨",
+        "ts": 1794143759684,
+        "src": "gemini"
+      },
+      {
+        "r": "u",
+        "t": "explicame con otro ejemplo mas divertido dame un ejemplo",
+        "ts": 1794143771434
+      },
+      {
+        "r": "a",
+        "t": "¡Mira este divertido ejemplo donde hacemos que aparezca un saludo mágico en la pantalla! 🐶✨ Guarda este código en un archivo llamado `index.html`:\n\n```html\n<!DOCTYPE html>\n<html>\n<body>\n  <h1 id=\"saludo\">¡Hola humano!</h1>\n  <button onclick=\"saludar()\">Haz clic</button>\n  <script>\n    function saludar() {\n      document.getElementById(\"saludo\").innerText = \"¡Guau, gracias por la galleta! 🍪\";\n    }\n  </script>\n</body>\n</html>\n```\n\n* Creamos un título (`<h1>`) y un botón (`<button>`) en el HTML.\n* La función en JavaScript le avisa a la computadora que, al hacer clic en el botón, el texto del título debe cambiar. ¡Así de fácil le damos superpoderes a la página!",
+        "ts": 1794143771434,
+        "src": "gemini"
+      },
+      {
+        "r": "u",
+        "t": "algo mas complejo",
+        "ts": 1794143791576
+      },
+      {
+        "r": "a",
+        "t": "¡Prepárate para un reto más divertido! Vamos a crear un contador de galletas interactivo 🍪✨\n\nGuarda este código en un archivo llamado `contador.html`:\n\n```html\n<!DOCTYPE html>\n<html>\n<head>\n  <style>\n    body { text-align: center; font-family: sans-serif; background: #fdf6e2; margin-top: 50px; }\n    button { padding: 10px 20px; font-size: 18px; cursor: pointer; background: #ffcc00; border: none; border-radius: 8px; }\n  </style>\n</head>\n<body>\n  <h1>Mis galletas: <span id=\"contador\">0</span></h1>\n  <button onclick=\"sumarGalleta()\">¡Sumar galleta!</button>\n  <script>\n    let galletas = 0;\n    function sumarGalleta() {\n      galletas++;\n      document.getElementById(\"contador\").innerText = galletas;\n    }\n  </script>\n</body>\n</html>\n```\n\n* La sección `<style>` decora la página con colores bonitos y un botón llamativo.\n* El HTML crea el título y el botón que reacciona a tus clics.\n* El JavaScript usa una variable (`let galletas = 0`) para recordar cuántas llevas y actualizar el número en la pantalla cada vez que presionas el botón. ¡Pruébalo!",
+        "ts": 1794143791576,
+        "src": "gemini"
+      },
+      {
+        "r": "u",
+        "t": "haz una imagen",
+        "ts": 1794143832468
+      },
+      {
+        "r": "a",
+        "t": "¡No puedo dibujar imágenes aquí mismo, amigo! Pero puedes ir a la sección **Pinta a Snoopy** de nuestra web para colorear un divertido dibujo y llenarlo de color con tus propias manos. 🎨✨",
+        "ts": 1794143832468,
+        "src": "gemini"
+      }
+    ]
+  },
+  "2b0276dd6850c19b2bdbcb8b42b6cd63": {
+    "id": "2b0276dd6850c19b2bdbcb8b42b6cd63",
+    "started": 1795315518725,
+    "updated": 1795315592842,
+    "page": "index.html",
+    "messages": [
+      {
+        "r": "u",
+        "t": "¿Qué juegos hay?",
+        "ts": 1795315518725
+      },
+      {
+        "r": "a",
+        "t": "Hay 14 juegos: Tres en raya, Sudoku, Memorama, Dulces, Ahorcado, Snoopy dice, Woodstock, Corazones, Barón Rojo, Conecta 4, 2048, Flappy, Pac-Snoopy y la Aventura. Además tienes la Tienda de vales y tus Premios.",
+        "ts": 1795315518725,
+        "src": "kb"
+      },
+      {
+        "r": "u",
+        "t": "como es la programaci+on",
+        "ts": 1795315592842
+      },
+      {
+        "r": "a",
+        "t": "La programación es como armar un juego con reglas: cada paso tiene un orden y ayuda a que el ordenador haga lo que queremos 🎈  \nPor ejemplo, en HTML se escriben páginas, en CSS se ponen colores y estilos, y en JavaScript se hacen acciones como mover un personaje 🍪  \n¿Quieres que te muestre un ejemplo sencillo? 😊",
+        "ts": 1795315592842,
+        "src": "ollama"
+      }
+    ]
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "assistantName": "Snoopy",
+  "siteName": "el Rincón de juegos",
+  "welcome": "¡{saludo}! Soy {nombre} 🐶 Puedo ayudarte con los juegos, las galletas, los premios y la tienda de vales. ¿Qué necesitas?",
+  "fallbackMessage": "Todavía no tengo información sobre eso 😅 Prueba a preguntarlo de otra forma o elige una de estas opciones.",
+  "disabledMessage": "El asistente está descansando por ahora. ¡Vuelve en un ratito!",
+  "enabled": true,
+  "aiEnabled": true,
+  "logConversations": true,
+  "retentionDays": 30,
+  "siteBase": "/",
+  "contactLink": "",
+  "contactText": "Contactar",
+  "showFaqs": true,
+  "quickCount": 4,
+  "ollamaModel": ""
+}

@@ -1,0 +1,1891 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Rincón de juegos ♡</title>
+<meta name="theme-color" content="#fff4ea">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Pacifico&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+  /* Cambia estos colores para que combinen con tu style.css */
+  :root { --bg: #fff4ea; --ink: #3b3a4a; --muted: #7b7a8c; --red: #e8505b; --red-soft: #ffe0e2; --sky: #bfe3f7; --card: #ffffff; --line: #e9dccd; --shadow: 0 10px 28px #e8505b22; }
+  * { box-sizing: border-box; }
+  [hidden] { display: none !important; }
+  body { margin: 0; min-height: 100vh; background: radial-gradient(circle at 15% 0, #fff 0, var(--bg) 45%); color: var(--ink); font-family: 'Poppins', system-ui, sans-serif; }
+  .wrap { width: min(680px, 100% - 24px); margin: 0 auto; padding: 18px 0 48px; }
+  .back { color: var(--red); font-weight: 600; text-decoration: none; }
+  header { display: flex; align-items: center; gap: 14px; margin: 14px 0 18px; }
+  .mascot { width: 64px; height: 64px; border-radius: 50%; object-fit: cover; background: var(--sky); font-size: 40px; display: grid; place-items: center; }
+  h1 { margin: 0; font: 400 clamp(28px, 7vw, 40px)/1.1 'Pacifico', cursive; color: var(--red); }
+  header p { margin: 4px 0 0; color: var(--muted); font-size: 14px; }
+  .tabs { display: flex; gap: 8px; margin-bottom: 14px; flex-wrap: wrap; }
+  button { font: inherit; cursor: pointer; }
+  .tabs button, .tool { padding: 9px 16px; border: 2px solid var(--line); border-radius: 999px; background: var(--card); color: var(--ink); font-weight: 600; font-size: 14px; }
+  .tabs button[aria-selected="true"] { border-color: var(--red); background: var(--red); color: #fff; }
+  .tool:hover, .tabs button:hover { border-color: var(--red); }
+  .panel { padding: 20px 16px 24px; border: 2px solid var(--line); border-radius: 24px; background: var(--card); box-shadow: var(--shadow); text-align: center; }
+  .panel h2 { margin: 0 0 4px; font-size: 20px; }
+  .rules { margin: 0 0 14px; color: var(--muted); font-size: 13px; }
+  .bar { display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 8px; margin-bottom: 14px; }
+  select { padding: 8px 10px; border: 2px solid var(--line); border-radius: 12px; background: #fff; color: var(--ink); font: inherit; font-size: 14px; }
+  .status { min-height: 28px; margin: 12px 0 0; font-weight: 600; color: var(--red); }
+  .score { margin: 8px 0 0; color: var(--muted); font-size: 14px; }
+
+  /* Tres en raya */
+  .ttt { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; width: min(330px, 100%); margin: 0 auto; }
+  .cell { aspect-ratio: 1; border: 2px solid var(--line); border-radius: 18px; background: var(--bg); font-size: clamp(34px, 12vw, 58px); line-height: 1; }
+  .cell:hover:not(:disabled) { background: var(--red-soft); }
+  .cell.win { border-color: var(--red); background: var(--red-soft); animation: pop .5s ease; }
+  .cell.last { box-shadow: inset 0 0 0 3px var(--sky); }
+
+  /* Sudoku */
+  .sudoku { display: grid; grid-template-columns: repeat(9, 1fr); width: min(414px, 100%); margin: 0 auto; border: 3px solid var(--ink); border-radius: 8px; overflow: hidden; }
+  .sc { aspect-ratio: 1; min-width: 0; padding: 0; border: 1px solid var(--line); border-radius: 0; background: #fff; color: #3d6fb4; font-size: clamp(15px, 4.6vw, 22px); font-weight: 500; }
+  .sc.given { background: #faf3ea; color: var(--ink); font-weight: 700; }
+  .sc.br { border-right: 3px solid var(--ink); }
+  .sc.bb { border-bottom: 3px solid var(--ink); }
+  .sc.peer { background: #f3f8fc; }
+  .sc.same { background: var(--sky); }
+  .sc.sel { background: #8fd0f0; }
+  .sc.bad { background: var(--red-soft); color: var(--red); }
+  .pad { display: grid; grid-template-columns: repeat(5, 1fr); gap: 6px; width: min(414px, 100%); margin: 12px auto 0; }
+  .pad button { padding: 10px 0; border: 2px solid var(--line); border-radius: 12px; background: var(--bg); font-size: 18px; font-weight: 600; }
+  .pad button:hover { border-color: var(--red); }
+  .pad button:disabled { opacity: .3; cursor: default; }
+
+  /* Memorama */
+  .memo { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(360px, 100%); margin: 0 auto; }
+  .mc { aspect-ratio: 1; border: 2px solid var(--line); border-radius: 16px; background: var(--sky); font-size: clamp(28px, 10vw, 46px); line-height: 1; transition: transform .2s, background .2s; }
+  .mc.open { background: #fff; transform: scale(1.04); }
+  .mc.done { background: var(--red-soft); border-color: var(--red); }
+
+  .balloons { min-height: 56px; font-size: clamp(30px, 9vw, 44px); letter-spacing: 2px; }
+  .clue { margin: 0 auto 10px; padding: 10px 14px; max-width: 440px; border-radius: 16px; background: var(--sky); font-size: 14px; font-weight: 500; }
+  .word { margin: 6px 0 14px; font: 700 clamp(26px, 8vw, 38px)/1.2 'Poppins', sans-serif; letter-spacing: 6px; overflow-wrap: anywhere; }
+  .keys { display: grid; grid-template-columns: repeat(9, 1fr); gap: 5px; width: min(420px, 100%); margin: 0 auto; }
+  .keys button { padding: 8px 0; border: 2px solid var(--line); border-radius: 10px; background: var(--bg); font-size: 15px; font-weight: 600; }
+  .keys button.ok { border-color: #8fd19e; background: #d8f3dc; }
+  .keys button.no { border-color: var(--red); background: var(--red-soft); color: var(--red); }
+  .keys button:disabled { cursor: default; }
+  .simon { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; width: min(320px, 100%); margin: 0 auto; }
+  .pad4 { aspect-ratio: 1; border: 0; border-radius: 22px; font-size: 48px; opacity: .55; transition: opacity .1s, transform .1s; }
+  .pad4:nth-child(1) { background: #f27a85; } .pad4:nth-child(2) { background: #ffd24d; }
+  .pad4:nth-child(3) { background: #6ec1e4; } .pad4:nth-child(4) { background: #8fd19e; }
+  .pad4.lit { opacity: 1; transform: scale(1.06); }
+  .moles { display: grid; grid-template-columns: repeat(3, 1fr); gap: 10px; width: min(330px, 100%); margin: 0 auto; }
+  .hole { aspect-ratio: 1; border: 0; border-radius: 50%; background: radial-gradient(circle at 50% 68%, #5c3d26 0 52%, #8a643f 53%); font-size: clamp(34px, 12vw, 54px); line-height: 1; }
+  canvas.catch { display: block; width: min(360px, 100%); margin: 0 auto; border: 2px solid var(--line); border-radius: 18px; background: linear-gradient(#bfe3f7, #fff4ea); touch-action: none; }
+  .mute { margin-left: auto; padding: 6px 12px; }
+  .toast { position: fixed; left: 50%; bottom: 18px; z-index: 9; max-width: calc(100% - 24px); padding: 12px 18px; border-radius: 999px; background: var(--ink); color: #fff; font-size: 14px; font-weight: 600; text-align: center; opacity: 0; transform: translate(-50%, 20px); pointer-events: none; transition: opacity .25s, transform .25s; }
+  .toast.show { opacity: 1; transform: translate(-50%, 0); }
+  .rewards { display: grid; grid-template-columns: repeat(auto-fill, minmax(190px, 1fr)); gap: 10px; text-align: left; }
+  .reward { padding: 14px; border: 2px solid var(--line); border-radius: 16px; background: var(--bg); }
+  .reward.locked { opacity: .55; }
+  .reward .ico { font-size: 30px; }
+  .reward b { display: block; margin: 4px 0 2px; font-size: 14px; }
+  .reward small { display: block; color: var(--muted); font-size: 12px; }
+  .reward .vale { margin: 8px 0 0; color: var(--red); font-size: 13px; font-weight: 600; }
+  .reward button { margin-top: 8px; padding: 6px 12px; border: 2px solid var(--red); border-radius: 999px; background: var(--red); color: #fff; font-size: 12px; font-weight: 600; }
+  .reward button:disabled { border-color: var(--line); background: var(--line); color: var(--muted); cursor: default; }
+  .gem { touch-action: none; position: relative; }
+  .gem.row, .gem.col { box-shadow: inset 0 0 0 2px var(--red); }
+  .gem.row::after, .gem.col::after { content: attr(data-mark); position: absolute; right: 3px; bottom: 0; color: var(--red); font-size: 12px; font-weight: 700; }
+  .gem.star { background: #fff7c2; box-shadow: 0 0 10px #ffd24d; }
+  /* Dulces de Snoopy (match-3) */
+  .m3 { display: grid; grid-template-columns: repeat(8, 1fr); gap: 4px; width: min(440px, 100%); margin: 0 auto; padding: 8px; border-radius: 18px; background: var(--sky); }
+  .gem { aspect-ratio: 1; min-width: 0; padding: 0; border: 2px solid #fff; border-radius: 12px; background: #fff; font-size: clamp(20px, 7vw, 34px); line-height: 1; transition: transform .15s; }
+  .gem.sel { border-color: var(--red); background: var(--red-soft); transform: scale(1.12); }
+  .gem.clear { opacity: .35; animation: burst .25s ease forwards; }
+  .gem.fall { animation: fall .3s ease; }
+  .gem.hint { border-color: var(--red); animation: pop .8s ease infinite; }
+  progress { display: block; width: min(440px, 100%); height: 12px; margin: 0 auto 10px; accent-color: var(--red); }
+  .stats { margin: 14px 0 0; color: var(--muted); font-size: 12px; line-height: 1.6; }
+  @keyframes burst { to { transform: scale(0); opacity: 0; } }
+  @keyframes fall { from { transform: translateY(-70%); opacity: .3; } }
+  @keyframes pop { 50% { transform: scale(1.1); } }
+  /* Galletas, Conecta 4, 2048 y mandos táctiles */
+  .coins { margin-left: auto; padding: 6px 12px; border-radius: 999px; background: var(--red-soft); color: var(--red); font-weight: 700; font-size: 14px; }
+  .coins + .mute { margin-left: 0; }
+  .c4 { display: grid; grid-template-columns: repeat(7, 1fr); gap: 5px; width: min(380px, 100%); margin: 0 auto; padding: 8px; border-radius: 18px; background: #3d6fb4; }
+  .c4c { aspect-ratio: 1; min-width: 0; padding: 0; border: 0; border-radius: 50%; background: #fff; font-size: clamp(20px, 7vw, 34px); line-height: 1; }
+  .c4c.win { background: #fff7c2; box-shadow: 0 0 0 3px var(--red); }
+  .g48 { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; width: min(340px, 100%); margin: 0 auto; padding: 8px; border-radius: 18px; background: var(--sky); touch-action: none; user-select: none; }
+  .t48 { aspect-ratio: 1; display: grid; place-items: center; border-radius: 12px; background: #ffffff88; color: var(--ink); font-weight: 700; font-size: clamp(18px, 6vw, 28px); }
+  .t48.new { animation: pop .25s ease; }
+  .ctrl { display: flex; justify-content: center; gap: 10px; margin-top: 12px; }
+  .ctrl button { width: 64px; height: 54px; border: 2px solid var(--line); border-radius: 16px; background: var(--bg); font-size: 24px; touch-action: none; user-select: none; }
+  .ctrl button:active { background: var(--red-soft); border-color: var(--red); }
+  .shop-sec { margin: 18px 0 8px; font-size: 15px; text-align: left; }
+  .empty { color: var(--muted); font-size: 13px; text-align: left; }
+  .dpad { display: grid; grid-template-columns: repeat(3, 70px); grid-template-rows: repeat(2, 58px); gap: 8px; justify-content: center; margin-top: 12px; }
+  .pad-m { display: flex; justify-content: space-between; align-items: center; width: min(480px, 100%); margin: 12px auto 0; }
+  .pad-m > div { display: flex; gap: 10px; }
+  .dpad button, .pad-m button { height: 58px; min-width: 70px; border: 2px solid var(--line); border-radius: 18px; background: var(--bg); font-size: 26px; touch-action: none; user-select: none; -webkit-user-select: none; }
+  .pad-m > button { min-width: 96px; }
+  .dpad button:active, .pad-m button:active { background: var(--red-soft); border-color: var(--red); }
+  /* Confeti de premios */
+  .conf { position: fixed; top: -30px; z-index: 10; font-size: 26px; pointer-events: none; animation: confall 2.2s ease-in forwards; }
+  @keyframes confall { to { transform: translateY(110vh) rotate(540deg); opacity: .6; } }
+  @media (prefers-reduced-motion: reduce) { * { animation: none !important; transition: none !important; } }
+  /* Demo de Aventura: juego independiente incrustado en Juegos. */
+  body.aventura-active .wrap { width: min(980px, 100% - 24px); }
+  .aventura-link { display: inline-block; text-decoration: none; }
+  .aventura-frame { display: block; width: 100%; height: 780px; border: 2px solid var(--line); border-radius: 16px; background: #b9e6ff; }
+  .aventura-label { display: inline-block; margin-bottom: 8px; padding: 3px 10px; border-radius: 999px; background: var(--red-soft); color: var(--red); font-size: 12px; font-weight: 700; }
+  @media (max-width: 600px) { .aventura-frame { height: 760px; } }
+</style>
+<link rel="stylesheet" href="snoopy-tema.css">
+</head>
+<body>
+<div class="wrap">
+  <a class="back" href="index.html">← Volver al rinconcito</a>
+  <a class="back" href="asistente/" style="float:right">💬 Preguntar a Snoopy</a>
+  <header>
+    <img class="mascot" src="img/snoopy.png" alt="Snoopy" onerror="this.replaceWith(Object.assign(document.createElement('div'),{className:'mascot',textContent:'🐶'}))">
+    <div><h1>Rincón de juegos ♡</h1><p>Un ratito para pensar y sonreír con Snoopy.</p></div>
+    <span class="coins" id="coins" title="Tus galletas">🍪 0</span>
+    <button class="tool mute" id="mute" type="button" aria-label="Activar o silenciar el sonido">🔊</button>
+  </header>
+
+  <div class="tabs" role="tablist" aria-label="Juegos">
+    <button role="tab" aria-selected="true" data-tab="ttt">Tres en raya</button>
+    <button role="tab" aria-selected="false" data-tab="sudoku">Sudoku</button>
+    <button role="tab" aria-selected="false" data-tab="memo">Memorama</button>
+    <button role="tab" aria-selected="false" data-tab="m3">Dulces</button>
+    <button role="tab" aria-selected="false" data-tab="hang">Ahorcado</button>
+    <button role="tab" aria-selected="false" data-tab="simon">Snoopy dice</button>
+    <button role="tab" aria-selected="false" data-tab="mole">Woodstock</button>
+    <button role="tab" aria-selected="false" data-tab="catch">Corazones</button>
+    <button role="tab" aria-selected="false" data-tab="ace">Barón Rojo ✈️</button>
+    <button role="tab" aria-selected="false" data-tab="c4">Conecta 4</button>
+    <button role="tab" aria-selected="false" data-tab="g2048">2048</button>
+    <button role="tab" aria-selected="false" data-tab="flap">Flappy</button>
+    <button role="tab" aria-selected="false" data-tab="pac">Pac-Snoopy</button>
+    <button role="tab" aria-selected="false" data-tab="mario">Aventura · DEMO 🎮</button>
+    <button role="tab" aria-selected="false" data-tab="shop">Tienda 🛍️</button>
+    <button role="tab" aria-selected="false" data-tab="rewards" id="tab-rewards">Premios 🏆</button>
+  </div>
+
+  <section class="panel" id="ttt-panel">
+    <h2>Snoopy 🐶 vs Woodstock 🐤</h2>
+    <p class="rules">Junta tres en línea antes que tu rival. Puedes usar las teclas 1-9. Cada partida empieza uno distinto.</p>
+    <div class="bar">
+      <select id="ttt-mode" aria-label="Modo de juego">
+        <option value="easy">Contra Woodstock (fácil)</option>
+        <option value="hard">Contra Woodstock (difícil)</option>
+        <option value="two">Dos jugadores</option>
+      </select>
+      <button class="tool" id="ttt-new" type="button">Nueva partida</button>
+      <button class="tool" id="ttt-reset" type="button">Reiniciar marcador</button>
+    </div>
+    <div class="ttt" id="ttt-board"></div>
+    <p class="status" id="ttt-status" aria-live="polite"></p>
+    <p class="score" id="ttt-score"></p>
+  </section>
+
+  <section class="panel" id="sudoku-panel" hidden>
+    <h2>Sudoku de la casita 🏠</h2>
+    <p class="rules">Llena cada fila, columna y cuadro de 3×3 con los números del 1 al 9, sin repetir. Se resaltan la fila, la columna y los números iguales.</p>
+    <div class="bar">
+      <select id="sd-level" aria-label="Dificultad">
+        <option value="40">Fácil</option><option value="33" selected>Medio</option><option value="27">Difícil</option>
+      </select>
+      <button class="tool" id="sd-new" type="button">Nuevo juego</button>
+      <button class="tool" id="sd-hint" type="button">💡 Pista</button>
+      <button class="tool" id="sd-next" type="button" hidden>Siguiente nivel ▶</button>
+    </div>
+    <div class="sudoku" id="sd-board" role="grid" aria-label="Tablero de sudoku"></div>
+    <div class="pad" id="sd-pad"></div>
+    <p class="status" id="sd-status" aria-live="polite"></p>
+    <p class="score" id="sd-info"></p>
+  </section>
+
+  <section class="panel" id="memo-panel" hidden>
+    <h2>Memorama de Snoopy 🎈</h2>
+    <p class="rules">Encuentra todas las parejas con el menor número de intentos. Hay 4 niveles.</p>
+    <div class="bar"><button class="tool" id="memo-new" type="button">Nueva partida</button>
+      <button class="tool" id="memo-next" type="button" hidden>Siguiente nivel ▶</button></div>
+    <div class="memo" id="memo-board"></div>
+    <p class="status" id="memo-status" aria-live="polite"></p>
+    <p class="score" id="memo-best"></p>
+  </section>
+
+  <section class="panel" id="m3-panel" hidden>
+    <h2>Dulces de Snoopy 🍪</h2>
+    <p class="rules">Cambia dos fichas vecinas para juntar 3 o más iguales. 4 en línea crea una ficha que limpia una fila o columna; 5 crea una estrella ⭐. ¡Llega a la meta antes de quedarte sin movimientos!</p>
+    <div class="bar">
+      <button class="tool" id="m3-new" type="button">Nueva partida</button>
+      <button class="tool" id="m3-hint" type="button">💡 Pista</button>
+      <button class="tool" id="m3-shuffle" type="button">🔀 Barajar (-1 mov.)</button>
+      <button class="tool" id="m3-retry" type="button" hidden>↻ Reintentar nivel</button>
+    </div>
+    <progress id="m3-prog" max="1" value="0"></progress>
+    <div class="m3" id="m3-board"></div>
+    <p class="status" id="m3-status" aria-live="polite"></p>
+    <p class="score" id="m3-info"></p>
+  </section>
+
+  <section class="panel" id="hang-panel" hidden>
+    <h2>Ahorcado de Snoopy 🎈</h2>
+    <p class="rules">Salva a Woodstock: cada letra que falles pincha un globo. Lee la pista de arriba. Si fallas 3 veces, te damos una pista extra. Puedes usar el teclado.</p>
+    <div class="bar"><button class="tool" id="hang-new" type="button">Nueva palabra</button><button class="tool" id="hang-hint" type="button">💡 Letra extra (-1 globo)</button></div>
+    <p class="clue" id="hang-clue"></p>
+    <div class="balloons" id="hang-balloons" aria-hidden="true"></div>
+    <div class="word" id="hang-word" aria-live="polite"></div>
+    <div class="keys" id="hang-keys"></div>
+    <p class="status" id="hang-status" aria-live="polite"></p>
+    <p class="score" id="hang-score"></p>
+  </section>
+
+  <section class="panel" id="simon-panel" hidden>
+    <h2>Snoopy dice 🎵</h2>
+    <p class="rules">Mira la secuencia de colores y sonidos, y repítela en el mismo orden. Cada ronda añade uno más y va más rápido. Teclas 1-4 también valen.</p>
+    <div class="bar"><button class="tool" id="simon-start" type="button">Empezar</button></div>
+    <div class="simon" id="simon-board"></div>
+    <p class="status" id="simon-status" aria-live="polite"></p>
+    <p class="score" id="simon-score"></p>
+  </section>
+
+  <section class="panel" id="mole-panel" hidden>
+    <h2>Atrapa a Woodstock 🐤</h2>
+    <p class="rules">Toca a Woodstock 🐤 cuando aparezca. La estrella ⭐ vale 3, pero si tocas a Snoopy 🐶 pierdes 2 puntos. Dura 30 segundos.</p>
+    <div class="bar"><button class="tool" id="mole-start" type="button">Empezar</button></div>
+    <div class="moles" id="mole-board"></div>
+    <p class="status" id="mole-status" aria-live="polite"></p>
+    <p class="score" id="mole-info"></p>
+  </section>
+
+  <section class="panel" id="catch-panel" hidden>
+    <h2>Lluvia de corazones ❤️</h2>
+    <p class="rules">Mueve a Snoopy (dedo, ratón o flechas) para atrapar corazones ❤️ y galletas 🍪 (valen 2). Un globo 🎈 te da una vida extra. ¡Esquiva las tormentas 🌩️! Tienes 3 vidas.</p>
+    <div class="bar"><button class="tool" id="catch-start" type="button">Jugar</button></div>
+    <canvas class="catch" id="catch-canvas" width="360" height="440" aria-label="Juego de atrapar corazones"></canvas>
+    <p class="status" id="catch-status" aria-live="polite"></p>
+    <p class="score" id="catch-best"></p>
+  </section>
+
+  <section class="panel" id="ace-panel" hidden>
+    <h2>Snoopy y el Barón Rojo ✈️</h2>
+    <p class="rules">Mueve a Snoopy (dedo, ratón o flechas); dispara solo. Derriba aviones 🛩️, atrapa galletas 🍪 (triple disparo), corazones ❤️ (+1 vida) y estrellas ⭐ (escudo). Cada 15 derribos llega el jefe: ¡el Barón Rojo!</p>
+    <div class="bar"><button class="tool" id="ace-start" type="button">Despegar</button></div>
+    <canvas class="catch" id="ace-canvas" width="360" height="440" aria-label="Juego de aviones"></canvas>
+    <p class="status" id="ace-status" aria-live="polite"></p>
+    <p class="score" id="ace-best"></p>
+  </section>
+
+  <section class="panel" id="c4-panel" hidden>
+    <h2>Conecta 4 con Woodstock 🔴</h2>
+    <p class="rules">Suelta fichas en las columnas y junta 4 en línea (horizontal, vertical o diagonal) antes que tu rival.</p>
+    <div class="bar">
+      <select id="c4-mode" aria-label="Modo de juego">
+        <option value="easy">Contra Woodstock (fácil)</option>
+        <option value="hard">Contra Woodstock (difícil)</option>
+        <option value="two">Dos jugadores</option>
+      </select>
+      <button class="tool" id="c4-new" type="button">Nueva partida</button>
+    </div>
+    <div class="c4" id="c4-board"></div>
+    <p class="status" id="c4-status" aria-live="polite"></p>
+    <p class="score" id="c4-score"></p>
+  </section>
+
+  <section class="panel" id="g2048-panel" hidden>
+    <h2>2048 de Snoopy 🔢</h2>
+    <p class="rules">Desliza (o usa las flechas) para juntar fichas iguales y llegar a 2048.</p>
+    <div class="bar"><button class="tool" id="g48-new" type="button">Nueva partida</button></div>
+    <div class="g48" id="g48-board"></div>
+    <p class="status" id="g48-status" aria-live="polite"></p>
+    <p class="score" id="g48-info"></p>
+  </section>
+
+  <section class="panel" id="flap-panel" hidden>
+    <h2>Flappy Woodstock 🐤</h2>
+    <p class="rules">Toca la pantalla (o pulsa espacio) para aletear y pasa entre los tubos sin chocar.</p>
+    <div class="bar"><button class="tool" id="flap-start" type="button">Jugar</button></div>
+    <canvas class="catch" id="flap-canvas" width="360" height="440" aria-label="Juego de Woodstock volando"></canvas>
+    <p class="status" id="flap-status" aria-live="polite"></p>
+    <p class="score" id="flap-best"></p>
+  </section>
+
+  <section class="panel" id="pac-panel" hidden>
+    <h2>Pac-Snoopy 👻</h2>
+    <p class="rules">Come todas las bolitas del laberinto. Las galletas 🍪 grandes asustan a los fantasmas durante 8 segundos y puedes comértelos. Gana una vida extra cada 150 puntos. Usa los botones, las flechas o desliza el dedo (puedes girar antes de llegar a la esquina).</p>
+    <div class="bar"><button class="tool" id="pac-start" type="button">Jugar</button></div>
+    <canvas class="catch" id="pac-canvas" width="360" height="390" style="background:#1d2a4a" aria-label="Laberinto de Pac-Snoopy"></canvas>
+    <div class="dpad" id="pac-ctrl"><button type="button" data-d="U" aria-label="Arriba" style="grid-area:1/2">⬆️</button><button type="button" data-d="L" aria-label="Izquierda" style="grid-area:2/1">⬅️</button><button type="button" data-d="D" aria-label="Abajo" style="grid-area:2/2">⬇️</button><button type="button" data-d="R" aria-label="Derecha" style="grid-area:2/3">➡️</button></div>
+    <p class="status" id="pac-status" aria-live="polite"></p>
+    <p class="score" id="pac-best"></p>
+  </section>
+
+  <section class="panel" id="mario-panel" hidden>
+    <span class="aventura-label">DEMO JUGABLE · VERSIÓN 3.0.2</span>
+    <h2>La aventura de Snoopy 🏁</h2>
+    <p class="rules">5 mundos · 15 niveles · 5 jefes. Esta demo funciona de forma independiente, pero también puedes jugarla aquí.</p>
+    <div class="bar">
+      <a class="tool aventura-link" href="aventura-demo.html" target="_blank" rel="noopener">🎮 Abrir demo en pestaña nueva</a>
+    </div>
+    <iframe class="aventura-frame" id="aventura-frame" title="La aventura de Snoopy, demo jugable" data-src="aventura-demo.html" loading="lazy" allow="fullscreen"></iframe>
+    <p class="score">El progreso de la aventura se guarda automáticamente en este navegador.</p>
+  </section>
+
+  <section class="panel" id="shop-panel" hidden>
+    <h2>Tienda de vales 🛍️</h2>
+    <p class="rules">Gana galletas 🍪 jugando y cámbialas por vales. ¡Entra cada día para cobrar tu bono!</p>
+    <p class="status" id="shop-coins"></p>
+    <div class="bar"><button class="tool" id="daily-btn" type="button"></button><button class="tool" id="chest-btn" type="button"></button></div>
+    <h3 class="shop-sec">Vales a la venta</h3>
+    <div class="rewards" id="shop-list"></div>
+    <h3 class="shop-sec">Mis vales</h3>
+    <div class="rewards" id="my-vales"></div>
+  </section>
+
+  <section class="panel" id="rewards-panel" hidden>
+    <h2>Mis premios 🏆</h2>
+    <p class="rules">Juega para desbloquear pegatinas y vales. Los vales se canjean tocando el botón.</p>
+    <div class="rewards" id="rewards-list"></div>
+    <p class="stats" id="stats"></p>
+    <div class="bar"><button class="tool" id="reset-all" type="button">🗑️ Borrar progreso</button></div>
+  </section>
+</div>
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="personajes.js"></script>
+<script src="musica.js" defer></script>
+<script>
+const $ = selector => document.querySelector(selector);
+const store = {
+  get(key, fallback) { try { return JSON.parse(localStorage.getItem(key)) ?? fallback; } catch { return fallback; } },
+  set(key, value) { try { localStorage.setItem(key, JSON.stringify(value)); } catch {} },
+};
+const fmtTime = s => `${Math.floor(s / 60)}:${String(s % 60).padStart(2, '0')}`;
+
+/* Teclas izquierda/derecha mantenidas (movimiento suave en los juegos de canvas) */
+const held = new Set();
+document.addEventListener('keydown', event => {
+  if (['ArrowLeft', 'ArrowRight'].includes(event.key) && (!$('#catch-panel').hidden || !$('#ace-panel').hidden)) { event.preventDefault(); held.add(event.key); }
+});
+document.addEventListener('keyup', event => held.delete(event.key));
+addEventListener('blur', () => held.clear());
+const dirKey = () => (held.has('ArrowRight') ? 1 : 0) - (held.has('ArrowLeft') ? 1 : 0);
+
+/* ---------- Pestañas ---------- */
+document.querySelectorAll('.tabs button').forEach(tab => tab.addEventListener('click', () => {
+  document.querySelectorAll('.tabs button').forEach(item => item.setAttribute('aria-selected', String(item === tab)));
+  for (const name of ['ttt', 'sudoku', 'memo', 'm3', 'hang', 'simon', 'mole', 'catch', 'ace', 'c4', 'g2048', 'flap', 'pac', 'mario', 'shop', 'rewards']) $(`#${name}-panel`).hidden = name !== tab.dataset.tab;
+  document.body.classList.toggle('aventura-active', tab.dataset.tab === 'mario');
+  if (tab.dataset.tab === 'mario' && !$('#aventura-frame').hasAttribute('src')) {
+    $('#aventura-frame').src = $('#aventura-frame').dataset.src;
+  } else if (tab.dataset.tab !== 'mario' && $('#aventura-frame').hasAttribute('src')) {
+    // Pausa la demo cuando el visitante se cambia a otro minijuego.
+    try { $('#aventura-frame').contentWindow?.marioPause?.(); } catch (_) {}
+  }
+  if (tab.dataset.tab === 'rewards') renderRewards();
+  if (tab.dataset.tab === 'shop') renderShop();
+  store.set('snoopy-tab', tab.dataset.tab);
+  document.body.dataset.assistantSection = tab.dataset.tab;   /* el asistente usa la sección activa */
+}));
+
+/* ---------- Sonido ---------- */
+let audioCtx, muted = store.get('snoopy-muted', false);
+const SFX = {
+  tap: [[660, 0, .05]], bad: [[180, 0, .14, 'square']],
+  match: [[523, 0, .07], [659, .06, .07], [784, .12, .09]],
+  big: [[523, 0, .08], [659, .07, .08], [784, .14, .08], [1047, .21, .16]],
+  win: [[523, 0, .12], [659, .12, .12], [784, .24, .12], [1047, .36, .3]],
+  reward: [[784, 0, .1], [988, .1, .1], [1319, .2, .25]],
+};
+function sfx(name) {
+  if (muted) return;
+  if (name === 'bad') navigator.vibrate?.(40);
+  try {
+    audioCtx ||= new AudioContext();
+    if (audioCtx.state === 'suspended') audioCtx.resume();
+    for (const [freq, delay, length, wave = 'sine'] of SFX[name]) {
+      const osc = audioCtx.createOscillator(), gain = audioCtx.createGain(), t = audioCtx.currentTime + delay;
+      osc.type = wave; osc.frequency.value = freq;
+      gain.gain.setValueAtTime(.08, t); gain.gain.exponentialRampToValueAtTime(.0001, t + length);
+      osc.connect(gain).connect(audioCtx.destination); osc.start(t); osc.stop(t + length + .02);
+    }
+  } catch {}
+}
+const note = freq => { SFX.note = [[freq, 0, .3]]; sfx('note'); };
+$('#mute').textContent = muted ? '🔇' : '🔊';
+$('#mute').addEventListener('click', () => { muted = !muted; store.set('snoopy-muted', muted); $('#mute').textContent = muted ? '🔇' : '🔊'; sfx('tap'); });
+
+let toastTimer;
+function toast(text) {
+  const box = $('#toast');
+  box.textContent = text; box.classList.add('show');
+  clearTimeout(toastTimer); toastTimer = setTimeout(() => box.classList.remove('show'), 3200);
+}
+
+/* ---------- Premios (edita los textos y los vales a tu gusto) ---------- */
+const REWARDS = [
+  { id: 'ttt-win', icon: '🏅', title: 'Primera victoria', how: 'Gana una partida de tres en raya.' },
+  { id: 'ttt-draw-hard', icon: '🤝', title: 'Empate legendario', how: 'Empata contra Woodstock en difícil.', vale: 'Vale por un abrazo gigante 🤗' },
+  { id: 'sudoku-win', icon: '🧩', title: 'Mente brillante', how: 'Completa un sudoku.' },
+  { id: 'sudoku-nohint', icon: '💡', title: 'Sin trampas', how: 'Completa un sudoku medio o difícil sin usar pistas.', vale: 'Vale por un postre a elegir 🍰' },
+  { id: 'memo-win', icon: '🎈', title: 'Buena memoria', how: 'Completa un memorama.' },
+  { id: 'memo-fast', icon: '🎬', title: 'Memoria de elefante', how: 'Termina un memorama con muy pocos intentos.', vale: 'Vale por una película juntos 🎬' },
+  { id: 'm3-combo', icon: '🍪', title: 'Cadena dulce', how: 'Logra un combo x3 en Dulces.' },
+  { id: 'm3-star', icon: '⭐', title: 'Estrella fugaz', how: 'Crea una ficha estrella juntando 5 en línea.' },
+  { id: 'm3-level3', icon: '🏠', title: 'Casita de Snoopy', how: 'Supera el nivel 3 de Dulces.', vale: 'Vale por un paseo juntos 🌷' },
+  { id: 'm3-level5', icon: '👑', title: 'Reina de los dulces', how: 'Supera el nivel 5 de Dulces.', vale: 'Vale por una cena especial 🍕' },
+  { id: 'hang-win', icon: '🎈', title: 'Salvadora de Woodstock', how: 'Adivina una palabra en el ahorcado.' },
+  { id: 'hang-perfect', icon: '🐤', title: 'Ni un globo pinchado', how: 'Adivina una palabra sin ningún error.', vale: 'Vale por un helado juntos 🍦' },
+  { id: 'simon-8', icon: '🎵', title: 'Oído musical', how: 'Llega a la ronda 8 en Snoopy dice.', vale: 'Vale por elegir la música del día 🎶' },
+  { id: 'mole-20', icon: '⚡', title: 'Reflejos de campeona', how: 'Consigue 20 puntos en Woodstock en 30 segundos.', vale: 'Vale por un masaje de relajación 💆' },
+  { id: 'catch-30', icon: '❤️', title: 'Lluvia de amor', how: 'Consigue 30 puntos en Lluvia de corazones.', vale: 'Vale por un beso de los grandes 😘' },
+  { id: 'ace-100', icon: '✈️', title: 'As de la aviación', how: 'Consigue 100 puntos en el Barón Rojo.', vale: 'Vale por elegir la cena 🍝' },
+  { id: 'ace-boss', icon: '🎖️', title: 'Cazadora del Barón', how: 'Derrota al Barón Rojo.', vale: 'Vale por una tarde de juegos juntos 🎮' },
+  { id: 'c4-win', icon: '🔴', title: 'Cuatro en línea', how: 'Gana una partida de Conecta 4.' },
+  { id: 'c4-hard', icon: '🧠', title: 'Estratega', how: 'Gana a Woodstock en Conecta 4 difícil.', vale: 'Vale por elegir el plan del sábado 📅' },
+  { id: 'g2048-512', icon: '🔢', title: 'Mente matemática', how: 'Llega a la ficha 512 en 2048.', vale: 'Vale por un chocolate 🍫' },
+  { id: 'flap-15', icon: '🪽', title: 'Alas de Woodstock', how: 'Pasa 15 tubos en Flappy Woodstock.', vale: 'Vale por un cafecito juntos ☕' },
+  { id: 'pac-300', icon: '👻', title: 'Come-fantasmas', how: 'Consigue 300 puntos en Pac-Snoopy.', vale: 'Vale por una pizza 🍕' },
+  { id: 'mario-l3', icon: '🏁', title: 'Gran aventurera', how: 'Supera el nivel 3 de la Aventura.', vale: 'Vale por un regalito sorpresa 🎁' },
+  { id: 'all-games', icon: '💌', title: 'Corazón jugador', how: 'Consigue Primera victoria, Mente brillante, Buena memoria y Cadena dulce.', vale: 'Vale por una carta escrita a mano 💌' },
+];
+let owned = store.get('snoopy-rewards', {});
+// El motor nuevo guarda el progreso por separado; el nivel 3 mantiene el premio del portal.
+function syncAventuraReward() {
+  try {
+    const highest = Number(localStorage.getItem('snoopy-aventura-unlocked-v2') || '1');
+    if (highest >= 4 && !owned['mario-l3']) unlock('mario-l3');
+  } catch (_) { /* El portal sigue funcionando si se bloquea localStorage. */ }
+}
+
+
+function confetti() {
+  if (matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  for (let i = 0; i < 28; i++) {
+    const bit = Object.assign(document.createElement('span'), { className: 'conf', textContent: ['🎈', '❤️', '⭐', '🍪', '🌷'][i % 5] });
+    bit.style.left = Math.random() * 100 + 'vw'; bit.style.animationDelay = Math.random() * .6 + 's';
+    document.body.append(bit); setTimeout(() => bit.remove(), 3200);
+  }
+}
+
+function unlock(id) {
+  const reward = REWARDS.find(item => item.id === id);
+  if (!reward || owned[id]) return;
+  owned[id] = { at: Date.now(), used: null };
+  store.set('snoopy-rewards', owned);
+  toast(`🏆 ¡Nuevo premio! ${reward.icon} ${reward.title}`); confetti(); sfx('reward'); earn(reward.vale ? 15 : 8, true);
+  updateRewardsTab();
+  if (['ttt-win', 'sudoku-win', 'memo-win', 'm3-combo'].every(key => owned[key])) setTimeout(() => unlock('all-games'), 3500);
+}
+
+function updateRewardsTab() {
+  $('#tab-rewards').textContent = `Premios 🏆 ${Object.keys(owned).length}/${REWARDS.length}`;
+  if (!$('#rewards-panel').hidden) renderRewards();
+}
+
+function renderRewards() {
+  const make = (tag, className, text) => Object.assign(document.createElement(tag), { className, textContent: text });
+  $('#rewards-list').replaceChildren(...REWARDS.map(reward => {
+    const mine = owned[reward.id], card = make('div', 'reward' + (mine ? '' : ' locked'));
+    card.append(make('div', 'ico', mine ? reward.icon : '🔒'), make('b', '', reward.title), make('small', '', reward.how));
+    if (mine && reward.vale) {
+      card.append(make('p', 'vale', reward.vale));
+      const button = make('button', '', mine.used ? `Canjeado el ${new Date(mine.used).toLocaleDateString('es')}` : 'Canjear vale');
+      button.type = 'button'; button.disabled = Boolean(mine.used);
+      button.addEventListener('click', () => {
+        mine.used = Date.now(); store.set('snoopy-rewards', owned);
+        toast('💌 Enséñale este vale a tu persona favorita ♡'); sfx('win'); renderRewards();
+      });
+      card.append(button);
+    }
+    return card;
+  }));
+  const g = (key, fallback = 0) => store.get(key, fallback);
+  $('#stats').textContent = `Mejores marcas · Dulces: ${g('snoopy-m3-best')} · Snoopy dice: ronda ${g('snoopy-simon-best')} · Woodstock: ${g('snoopy-mole-best')} · Corazones: ${g('snoopy-catch-best')} · Barón Rojo: ${g('snoopy-ace-best')} · Racha ahorcado: ${g('snoopy-hang-best')}`;
+}
+$('#reset-all').addEventListener('click', () => {
+  if (!confirm('¿Borrar todos los premios, vales y marcas? No se puede deshacer.')) return;
+  try { Object.keys(localStorage).filter(key => key.startsWith('snoopy-') && key !== 'snoopy-muted').forEach(key => localStorage.removeItem(key)); } catch {}
+  location.reload();
+});
+
+/* ---------- Tres en raya ---------- */
+const SYM = { X: '🐶', O: '🐤' };
+const NAME = { X: 'Snoopy', O: 'Woodstock' };
+const LINES = [[0, 1, 2], [3, 4, 5], [6, 7, 8], [0, 3, 6], [1, 4, 7], [2, 5, 8], [0, 4, 8], [2, 4, 6]];
+let ttt = { board: Array(9).fill(''), turn: 'X', over: false, line: [], last: -1 };
+let tally = store.get('snoopy-ttt', { X: 0, O: 0, T: 0 });
+let starter = 'X';
+
+function winnerOf(board) {
+  for (const line of LINES) {
+    const [a, b, c] = line;
+    if (board[a] && board[a] === board[b] && board[a] === board[c]) return { who: board[a], line };
+  }
+  return null;
+}
+
+function minimax(board, turn) {
+  const win = winnerOf(board);
+  if (win) return win.who === 'O' ? 1 : -1;
+  if (board.every(Boolean)) return 0;
+  let best = turn === 'O' ? -2 : 2;
+  for (let i = 0; i < 9; i++) {
+    if (board[i]) continue;
+    board[i] = turn;
+    const score = minimax(board, turn === 'X' ? 'O' : 'X');
+    board[i] = '';
+    best = turn === 'O' ? Math.max(best, score) : Math.min(best, score);
+  }
+  return best;
+}
+
+function computerMove() {
+  const empty = ttt.board.map((v, i) => v ? -1 : i).filter(i => i >= 0);
+  if ($('#ttt-mode').value === 'easy') {
+    /* En fácil, Woodstock a veces gana o bloquea si puede, para que no sea solo azar */
+    if (Math.random() < .4) {
+      for (const who of ['O', 'X']) for (const i of empty) {
+        ttt.board[i] = who; const hit = winnerOf(ttt.board); ttt.board[i] = '';
+        if (hit) return i;
+      }
+    }
+    return empty[Math.floor(Math.random() * empty.length)];
+  }
+  let bestIndex = empty[0], bestScore = -2;
+  for (const i of empty) {
+    ttt.board[i] = 'O';
+    const score = minimax(ttt.board, 'X');
+    ttt.board[i] = '';
+    if (score > bestScore) { bestScore = score; bestIndex = i; }
+  }
+  return bestIndex;
+}
+
+function renderTtt() {
+  const board = $('#ttt-board');
+  board.replaceChildren(...ttt.board.map((value, i) => {
+    const cell = document.createElement('button');
+    cell.type = 'button'; cell.className = 'cell' + (ttt.line.includes(i) ? ' win' : i === ttt.last && !ttt.over ? ' last' : '');
+    cell.textContent = value ? SYM[value] : '';
+    cell.disabled = ttt.over || Boolean(value);
+    cell.setAttribute('aria-label', `Casilla ${i + 1}${value ? ', ' + NAME[value] : ''}`);
+    cell.addEventListener('click', () => playTtt(i));
+    return cell;
+  }));
+  $('#ttt-score').textContent = `${SYM.X} ${tally.X}  ·  ${SYM.O} ${tally.O}  ·  🤝 ${tally.T}`;
+}
+
+function playTtt(i) {
+  if (ttt.over || ttt.board[i]) return;
+  ttt.board[i] = ttt.turn; ttt.last = i; sfx('tap');
+  const win = winnerOf(ttt.board);
+  if (win) {
+    ttt.over = true; ttt.line = win.line; tally[win.who]++;
+    if (win.who === 'X') { sfx('win'); unlock('ttt-win'); earn($('#ttt-mode').value === 'hard' ? 10 : 4); } else sfx('bad');
+    $('#ttt-status').textContent = `¡Ganó ${NAME[win.who]}! ${SYM[win.who]}♡`;
+  } else if (ttt.board.every(Boolean)) {
+    ttt.over = true; tally.T++; sfx('match');
+    if ($('#ttt-mode').value === 'hard') unlock('ttt-draw-hard');
+    $('#ttt-status').textContent = '¡Empate! Hasta Snoopy se ríe 😄';
+  } else {
+    ttt.turn = ttt.turn === 'X' ? 'O' : 'X';
+    $('#ttt-status').textContent = `Turno de ${NAME[ttt.turn]} ${SYM[ttt.turn]}`;
+  }
+  if (ttt.over) store.set('snoopy-ttt', tally);
+  renderTtt();
+  if (!ttt.over && ttt.turn === 'O' && $('#ttt-mode').value !== 'two') {
+    setTimeout(() => { if (!ttt.over && ttt.turn === 'O') playTtt(computerMove()); }, 450);
+  }
+}
+
+function newTtt(flip = false) {
+  if (flip) starter = starter === 'X' ? 'O' : 'X';
+  ttt = { board: Array(9).fill(''), turn: starter, over: false, line: [], last: -1 };
+  $('#ttt-status').textContent = `Turno de ${NAME[starter]} ${SYM[starter]}`;
+  renderTtt();
+  if (starter === 'O' && $('#ttt-mode').value !== 'two') setTimeout(() => { if (!ttt.over && ttt.turn === 'O' && ttt.board.every(v => !v)) playTtt(computerMove()); }, 450);
+}
+$('#ttt-new').addEventListener('click', () => newTtt(ttt.over));
+$('#ttt-mode').addEventListener('change', () => { starter = 'X'; newTtt(); });
+$('#ttt-reset').addEventListener('click', () => { tally = { X: 0, O: 0, T: 0 }; store.set('snoopy-ttt', tally); starter = 'X'; newTtt(); });
+document.addEventListener('keydown', event => {
+  if ($('#ttt-panel').hidden || event.target.closest('select') || event.ctrlKey || event.metaKey) return;
+  if (/^[1-9]$/.test(event.key) && ttt.turn === 'X' || (/^[1-9]$/.test(event.key) && $('#ttt-mode').value === 'two')) playTtt(Number(event.key) - 1);
+});
+
+/* ---------- Sudoku ---------- */
+let sd = { solution: [], given: [], grid: [], sel: -1, hints: 0, done: false, elapsed: 0 };
+
+function canPlace(grid, i, n) {
+  const r = Math.floor(i / 9), c = i % 9, br = r - r % 3, bc = c - c % 3;
+  for (let k = 0; k < 9; k++) if (grid[r * 9 + k] === n || grid[k * 9 + c] === n) return false;
+  for (let y = 0; y < 3; y++) for (let x = 0; x < 3; x++) if (grid[(br + y) * 9 + bc + x] === n) return false;
+  return true;
+}
+
+function shuffle(list) {
+  for (let i = list.length - 1; i > 0; i--) { const j = Math.floor(Math.random() * (i + 1)); [list[i], list[j]] = [list[j], list[i]]; }
+  return list;
+}
+
+function fillGrid(grid) {
+  const i = grid.indexOf(0);
+  if (i < 0) return true;
+  for (const n of shuffle([1, 2, 3, 4, 5, 6, 7, 8, 9])) {
+    if (!canPlace(grid, i, n)) continue;
+    grid[i] = n;
+    if (fillGrid(grid)) return true;
+    grid[i] = 0;
+  }
+  return false;
+}
+
+function conflictsOf(grid) {
+  const bad = new Set();
+  grid.forEach((value, i) => {
+    if (!value) return;
+    grid[i] = 0;
+    if (!canPlace(grid, i, value)) bad.add(i);
+    grid[i] = value;
+  });
+  return bad;
+}
+
+function updateSdInfo() {
+  const best = store.get('snoopy-sd-best-' + $('#sd-level').value, null);
+  $('#sd-info').textContent = `⏱ ${fmtTime(sd.elapsed)}  ·  Mejor tiempo: ${best ? fmtTime(best) : '—'}  ·  Pistas: ${sd.hints}`;
+}
+
+function newSudoku() {
+  const solution = Array(81).fill(0);
+  fillGrid(solution);
+  const givens = Number($('#sd-level').value);
+  const keep = new Set(shuffle([...Array(81).keys()]).slice(0, givens));
+  const grid = solution.map((value, i) => keep.has(i) ? value : 0);
+  sd = { solution, given: grid.map(Boolean), grid, sel: -1, hints: 0, done: false, elapsed: 0 };
+  $('#sd-next').hidden = true;
+  $('#sd-status').textContent = '';
+  renderSudoku();
+}
+
+function renderSudoku() {
+  const bad = conflictsOf(sd.grid);
+  const selected = sd.sel >= 0 ? sd.grid[sd.sel] : 0;
+  const sr = sd.sel >= 0 ? Math.floor(sd.sel / 9) : -1, sc = sd.sel >= 0 ? sd.sel % 9 : -1;
+  const counts = Array(10).fill(0);
+  sd.grid.forEach(value => counts[value]++);
+  $('#sd-board').replaceChildren(...sd.grid.map((value, i) => {
+    const r = Math.floor(i / 9), c = i % 9;
+    const peer = sd.sel >= 0 && i !== sd.sel && (r === sr || c === sc);
+    const cell = document.createElement('button');
+    cell.type = 'button';
+    cell.className = ['sc', sd.given[i] && 'given', c % 3 === 2 && c < 8 && 'br', r % 3 === 2 && r < 8 && 'bb', peer && 'peer', i === sd.sel && 'sel', value && value === selected && i !== sd.sel && 'same', bad.has(i) && 'bad'].filter(Boolean).join(' ');
+    cell.textContent = value || '';
+    cell.setAttribute('aria-label', `Fila ${r + 1}, columna ${c + 1}, ${value || 'vacía'}`);
+    cell.addEventListener('click', () => { sd.sel = i; renderSudoku(); });
+    return cell;
+  }));
+  [...$('#sd-pad').children].forEach((button, k) => { button.disabled = k < 9 && counts[k + 1] >= 9; });
+  if (!sd.done && !sd.grid.includes(0) && bad.size === 0) {
+    sd.done = true; sfx('win'); unlock('sudoku-win'); earn({ 40: 6, 33: 10, 27: 16 }[$('#sd-level').value] || 6);
+    if (!sd.hints && Number($('#sd-level').value) <= 33) unlock('sudoku-nohint');
+    const key = 'snoopy-sd-best-' + $('#sd-level').value, best = store.get(key, null);
+    const record = !best || sd.elapsed < best;
+    if (record) store.set(key, sd.elapsed);
+    $('#sd-next').hidden = $('#sd-level').selectedIndex >= $('#sd-level').options.length - 1;
+    $('#sd-status').textContent = `¡Lo lograste en ${fmtTime(sd.elapsed)}! 🐶♡${record ? ' ¡Nuevo récord!' : ''}${sd.hints ? ` (usaste ${sd.hints} ${sd.hints === 1 ? 'pista' : 'pistas'})` : ''}`;
+  }
+  updateSdInfo();
+}
+
+function setCell(value) {
+  if (sd.sel < 0 || sd.given[sd.sel] || sd.done) return;
+  sd.grid[sd.sel] = value; sfx('tap');
+  renderSudoku();
+}
+
+function sudokuHint() {
+  if (sd.done) return;
+  let i = sd.sel;
+  if (i < 0 || sd.given[i] || sd.grid[i] === sd.solution[i]) {
+    const options = sd.grid.map((value, k) => value === sd.solution[k] ? -1 : k).filter(k => k >= 0 && !sd.given[k]);
+    if (!options.length) return;
+    i = options[Math.floor(Math.random() * options.length)];
+  }
+  sd.sel = i; sd.grid[i] = sd.solution[i]; sd.hints++;
+  renderSudoku();
+}
+
+$('#sd-pad').replaceChildren(...[1, 2, 3, 4, 5, 6, 7, 8, 9, 0].map(n => {
+  const button = document.createElement('button');
+  button.type = 'button'; button.textContent = n || '⌫';
+  button.setAttribute('aria-label', n ? `Poner ${n}` : 'Borrar');
+  button.addEventListener('click', () => setCell(n));
+  return button;
+}));
+$('#sd-new').addEventListener('click', newSudoku);
+$('#sd-level').addEventListener('change', newSudoku);
+$('#sd-hint').addEventListener('click', sudokuHint);
+$('#sd-next').addEventListener('click', () => { $('#sd-level').selectedIndex++; newSudoku(); });
+setInterval(() => { if (!sd.done && !$('#sudoku-panel').hidden && !document.hidden) { sd.elapsed++; updateSdInfo(); } }, 1000);
+document.addEventListener('keydown', event => {
+  if ($('#sudoku-panel').hidden || event.target.closest('select') || event.ctrlKey || event.metaKey) return;
+  if (/^[1-9]$/.test(event.key)) setCell(Number(event.key));
+  else if (['0', 'Backspace', 'Delete'].includes(event.key)) setCell(0);
+  else if (event.key.startsWith('Arrow') && sd.sel >= 0) {
+    event.preventDefault();
+    const step = { ArrowLeft: -1, ArrowRight: 1, ArrowUp: -9, ArrowDown: 9 }[event.key];
+    const next = sd.sel + step;
+    const sameRow = Math.floor(next / 9) === Math.floor(sd.sel / 9);
+    if (next >= 0 && next < 81 && (Math.abs(step) === 9 || sameRow)) { sd.sel = next; renderSudoku(); }
+  }
+});
+
+/* ---------- Memorama ---------- */
+const FACES = ['🐶', '🐤', '🏠', '✈️', '🎈', '💌', '🥎', '🍕', '🍪', '🌷', '🌙', '⭐'];
+const MEMO_PAIRS = [6, 8, 10, 12];
+let memo = { cards: [], open: [], found: 0, moves: 0, lock: false };
+
+function renderMemo() {
+  $('#memo-board').replaceChildren(...memo.cards.map((card, i) => {
+    const button = document.createElement('button');
+    button.type = 'button';
+    button.className = 'mc' + (card.done ? ' done' : memo.open.includes(i) ? ' open' : '');
+    button.textContent = card.done || memo.open.includes(i) ? card.face : '🐾';
+    button.disabled = card.done;
+    button.setAttribute('aria-label', card.done || memo.open.includes(i) ? card.face : `Carta ${i + 1} boca abajo`);
+    button.addEventListener('click', () => flip(i));
+    return button;
+  }));
+  const best = store.get('snoopy-memo-best-' + (memo.level || 1), null);
+  $('#memo-best').textContent = `Parejas: ${memo.found}/${memo.cards.length / 2}  ·  Intentos: ${memo.moves}${best ? `  ·  Mejor marca: ${best}` : ''}`;
+}
+
+function flip(i) {
+  if (memo.lock || memo.open.includes(i) || memo.cards[i].done) return;
+  memo.open.push(i); sfx('tap');
+  if (memo.open.length === 2) {
+    memo.moves++; memo.lock = true;
+    const [a, b] = memo.open;
+    const match = memo.cards[a].face === memo.cards[b].face;
+    setTimeout(() => {
+      if (match) { memo.cards[a].done = memo.cards[b].done = true; memo.found++; sfx('match'); } else sfx('bad');
+      memo.open = []; memo.lock = false;
+      if (memo.found === memo.cards.length / 2) {
+        const best = store.get('snoopy-memo-best-' + (memo.level || 1), null);
+        const record = !best || memo.moves < best;
+        if (record) store.set('snoopy-memo-best-' + (memo.level || 1), memo.moves);
+        $('#memo-status').textContent = `¡Encontraste todas las parejas en ${memo.moves} intentos! 🐶♡${record ? ' ¡Nuevo récord!' : ''}${memo.level < 4 ? ' Pasa al siguiente nivel.' : ' ¡Completaste el último nivel!'}`;
+        sfx('win'); unlock('memo-win'); earn(4 + memo.level * 3);
+        if (memo.moves <= memo.cards.length / 2 + 3) unlock('memo-fast');
+        $('#memo-next').hidden = memo.level >= 4;
+      }
+      renderMemo();
+    }, match ? 350 : 800);
+  }
+  renderMemo();
+}
+
+function newMemo(level = memo.level || 1) {
+  const pairs = MEMO_PAIRS[level - 1];
+  memo = { cards: shuffle([...FACES.slice(0, pairs), ...FACES.slice(0, pairs)]).map(face => ({ face, done: false })), open: [], found: 0, moves: 0, lock: false, level };
+  $('#memo-status').textContent = `Nivel ${level}: ${pairs} parejas`;
+  $('#memo-next').hidden = true;
+  renderMemo();
+}
+$('#memo-new').addEventListener('click', () => newMemo());
+$('#memo-next').addEventListener('click', () => newMemo(memo.level + 1));
+
+/* ---------- Dulces de Snoopy (match-3) ---------- */
+const CANDY = ['🐶', '🐤', '🎈', '💌', '🍪', '🥎', '⭐'];
+const N = 8, STAR = 6;
+let m3 = {};
+const sleep = ms => new Promise(resolve => setTimeout(resolve, ms));
+const kindsFor = level => level < 3 ? 5 : 6;
+const movesFor = level => Math.max(14, 24 - 2 * level);
+const targetFor = level => 500 + (level - 1) * 300;
+const randCandy = () => Math.floor(Math.random() * kindsFor(m3.level || 1));
+
+function runsIn(grid) {
+  const runs = [];
+  for (let r = 0; r < N; r++) for (let c = 0; c < N; c++) {
+    const i = r * N + c, v = grid[i];
+    if (v < 0 || v === STAR) continue;
+    if (c === 0 || grid[i - 1] !== v) {
+      let k = c; while (k < N && grid[r * N + k] === v) k++;
+      if (k - c >= 3) runs.push({ dir: 'h', cells: Array.from({ length: k - c }, (_, x) => i + x) });
+    }
+    if (r === 0 || grid[i - N] !== v) {
+      let k = r; while (k < N && grid[k * N + c] === v) k++;
+      if (k - r >= 3) runs.push({ dir: 'v', cells: Array.from({ length: k - r }, (_, x) => i + x * N) });
+    }
+  }
+  return runs;
+}
+const matchesIn = grid => new Set(runsIn(grid).flatMap(run => run.cells));
+
+function findMove(grid) {
+  for (let i = 0; i < N * N; i++) {
+    for (const j of [i + 1, i + N]) {
+      if (j >= N * N || (j === i + 1 && j % N === 0)) continue;
+      [grid[i], grid[j]] = [grid[j], grid[i]];
+      const found = grid[i] === STAR || grid[j] === STAR || matchesIn(grid).size > 0;
+      [grid[i], grid[j]] = [grid[j], grid[i]];
+      if (found) return [i, j];
+    }
+  }
+  return null;
+}
+
+function freshBoard() {
+  for (;;) {
+    const grid = Array.from({ length: N * N }, randCandy);
+    let hit;
+    while ((hit = matchesIn(grid)).size) hit.forEach(i => { grid[i] = randCandy(); });
+    if (findMove(grid)) return grid;
+  }
+}
+
+const isNeighbour = (a, b) => Math.abs(a - b) === N || (Math.abs(a - b) === 1 && Math.floor(a / N) === Math.floor(b / N));
+function swapCells(a, b) {
+  [m3.grid[a], m3.grid[b]] = [m3.grid[b], m3.grid[a]];
+  [m3.sp[a], m3.sp[b]] = [m3.sp[b], m3.sp[a]];
+}
+
+function renderM3() {
+  $('#m3-info').textContent = `Nivel ${m3.level}  ·  Puntos ${m3.score}/${targetFor(m3.level)}  ·  Movimientos ${m3.moves}`;
+  $('#m3-prog').value = Math.min(1, m3.score / targetFor(m3.level));
+  $('#m3-board').replaceChildren(...m3.grid.map((value, i) => {
+    const gem = document.createElement('button');
+    gem.type = 'button'; gem.dataset.i = i;
+    gem.className = ['gem', i === m3.sel && 'sel', m3.clearing.has(i) && 'clear', m3.fresh.has(i) && 'fall', m3.hint.includes(i) && 'hint', m3.sp[i]].filter(Boolean).join(' ');
+    if (m3.sp[i] === 'row') gem.dataset.mark = '↔';
+    if (m3.sp[i] === 'col') gem.dataset.mark = '↕';
+    gem.textContent = CANDY[value] || '';
+    gem.setAttribute('aria-label', `Fila ${Math.floor(i / N) + 1}, columna ${i % N + 1}, ${CANDY[value]}${m3.sp[i] ? ' especial' : ''}`);
+    return gem;
+  }));
+}
+
+async function resolveM3(forced) {
+  let chain = 0, first = true;
+  for (;;) {
+    let hit; const make = new Map();
+    if (forced && first) hit = new Set(forced);
+    else {
+      const runs = runsIn(m3.grid);
+      if (!runs.length) break;
+      hit = new Set(runs.flatMap(run => run.cells));
+      for (const run of runs) {
+        if (run.cells.length < 4) continue;
+        const anchor = run.cells.find(i => m3.moved.includes(i)) ?? run.cells[Math.floor(run.cells.length / 2)];
+        make.set(anchor, run.cells.length >= 5 ? 'star' : run.dir === 'h' ? 'col' : 'row');
+      }
+    }
+    first = false; chain++;
+    const queue = [...hit];
+    while (queue.length) {
+      const i = queue.pop(), kind = m3.sp[i];
+      if (!kind || kind === 'star' || make.has(i)) continue;
+      const line = Array.from({ length: N }, (_, k) => kind === 'row' ? Math.floor(i / N) * N + k : k * N + i % N);
+      for (const j of line) if (!hit.has(j)) { hit.add(j); queue.push(j); }
+    }
+    for (const i of make.keys()) hit.delete(i);
+    m3.score += hit.size * 10 * chain;
+    if (chain >= 3) unlock('m3-combo');
+    sfx(hit.size > 5 || make.size ? 'big' : 'match');
+    m3.clearing = hit; renderM3(); await sleep(260);
+    hit.forEach(i => { m3.grid[i] = -1; m3.sp[i] = ''; });
+    for (const [i, kind] of make) { if (kind === 'star') { m3.grid[i] = STAR; unlock('m3-star'); } m3.sp[i] = kind; }
+    const fresh = new Set();
+    for (let c = 0; c < N; c++) {
+      let write = N - 1;
+      for (let r = N - 1; r >= 0; r--) {
+        const i = r * N + c, value = m3.grid[i];
+        if (value < 0) continue;
+        if (write !== r) { m3.grid[write * N + c] = value; m3.sp[write * N + c] = m3.sp[i]; fresh.add(write * N + c); }
+        write--;
+      }
+      for (let r = write; r >= 0; r--) { m3.grid[r * N + c] = randCandy(); m3.sp[r * N + c] = ''; fresh.add(r * N + c); }
+    }
+    m3.clearing = new Set(); m3.fresh = fresh; m3.moved = []; renderM3(); await sleep(320);
+  }
+  m3.fresh = new Set(); m3.moved = [];
+  return chain;
+}
+
+async function pickM3(i) {
+  if (m3.busy || m3.over) return;
+  m3.hint = [];
+  if (m3.sel < 0 || m3.sel === i || !isNeighbour(m3.sel, i)) { m3.sel = m3.sel === i ? -1 : i; sfx('tap'); renderM3(); return; }
+  const a = m3.sel;
+  m3.sel = -1; m3.busy = true;
+  swapCells(a, i); m3.moved = [a, i]; renderM3(); await sleep(220);
+  const starSwap = m3.grid[a] === STAR || m3.grid[i] === STAR;
+  if (!starSwap && !matchesIn(m3.grid).size) {
+    swapCells(a, i); m3.moved = []; sfx('bad'); renderM3();
+    $('#m3-status').textContent = 'Ese cambio no junta tres. ¡Prueba otro!';
+    m3.busy = false; return;
+  }
+  m3.moves--;
+  let forced = null;
+  if (starSwap) {
+    const star = m3.grid[a] === STAR ? a : i, other = star === a ? i : a, kind = m3.grid[other];
+    forced = kind === STAR ? m3.grid.map((_, k) => k) : [star, ...m3.grid.map((v, k) => v === kind ? k : -1).filter(k => k >= 0)];
+  }
+  const chain = await resolveM3(forced);
+  $('#m3-status').textContent = chain > 1 ? `¡Combo x${chain}! 🎉` : '';
+  if (m3.score >= targetFor(m3.level)) { await levelUpM3(); return; }
+  if (m3.moves <= 0) {
+    m3.over = true; sfx('bad');
+    const best = store.get('snoopy-m3-best', 0);
+    if (m3.score > best) store.set('snoopy-m3-best', m3.score);
+    $('#m3-status').textContent = `Se acabaron los movimientos 😢 Te faltaron ${targetFor(m3.level) - m3.score} puntos.`;
+    $('#m3-retry').hidden = false;
+  } else if (!findMove(m3.grid)) {
+    m3.grid = freshBoard(); m3.sp = Array(N * N).fill('');
+    $('#m3-status').textContent = 'Sin movimientos posibles: ¡barajamos! 🔀';
+  }
+  m3.busy = false; renderM3();
+}
+
+async function levelUpM3() {
+  m3.over = true;
+  const { id, level } = m3;
+  const bonus = m3.moves * 20;
+  m3.score += bonus;
+  const best = store.get('snoopy-m3-best', 0);
+  if (m3.score > best) store.set('snoopy-m3-best', m3.score);
+  sfx('win');
+  earn(8 + level * 2);
+  if (level >= 3) unlock('m3-level3');
+  if (level >= 5) unlock('m3-level5');
+  $('#m3-status').textContent = `¡Nivel ${level} superado! 🐶♡ ${bonus ? `+${bonus} por los movimientos que sobraron. ` : ''}Pasas al nivel ${level + 1}${level + 1 === 3 ? ' (ahora con una ficha más)' : ''}…`;
+  renderM3();
+  await sleep(2600);
+  if (m3.id === id) newM3(level + 1);
+}
+
+function newM3(level = 1) {
+  m3 = { id: (m3.id || 0) + 1, level, sel: -1, score: 0, moves: movesFor(level), busy: false, over: false, clearing: new Set(), fresh: new Set(), hint: [], moved: [], sp: Array(N * N).fill('') };
+  m3.grid = freshBoard();
+  $('#m3-status').textContent = `Nivel ${level}: ${targetFor(level)} puntos en ${m3.moves} movimientos. Mejor marca: ${store.get('snoopy-m3-best', 0)}`;
+  $('#m3-retry').hidden = true;
+  renderM3();
+}
+
+const m3Board = $('#m3-board');
+let drag = null;
+m3Board.addEventListener('pointerdown', event => {
+  const gem = event.target.closest('.gem');
+  if (gem) drag = { i: Number(gem.dataset.i), x: event.clientX, y: event.clientY };
+});
+m3Board.addEventListener('pointercancel', () => { drag = null; });
+m3Board.addEventListener('pointerup', event => {
+  if (!drag) return;
+  const { i, x, y } = drag, dx = event.clientX - x, dy = event.clientY - y;
+  drag = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 22) { pickM3(i); return; }
+  const horizontal = Math.abs(dx) > Math.abs(dy);
+  const target = horizontal ? i + Math.sign(dx) : i + N * Math.sign(dy);
+  if (m3.busy || m3.over || target < 0 || target >= N * N || (horizontal && Math.floor(target / N) !== Math.floor(i / N))) return;
+  m3.sel = i; pickM3(target);
+});
+m3Board.addEventListener('click', event => {
+  const gem = event.target.closest('.gem');
+  if (gem && event.detail === 0) pickM3(Number(gem.dataset.i));
+});
+$('#m3-new').addEventListener('click', () => newM3(1));
+$('#m3-retry').addEventListener('click', () => newM3(m3.level));
+$('#m3-hint').addEventListener('click', () => { if (!m3.busy && !m3.over) { m3.hint = findMove(m3.grid) || []; m3.sel = -1; renderM3(); } });
+$('#m3-shuffle').addEventListener('click', () => {
+  if (m3.busy || m3.over) return;
+  if (m3.moves <= 1) { toast('Te queda un solo movimiento: no puedes barajar.'); return; }
+  m3.grid = freshBoard(); m3.sp = Array(N * N).fill(''); m3.sel = -1; m3.hint = []; m3.moves--; sfx('match');
+  $('#m3-status').textContent = 'Tablero barajado 🔀';
+  renderM3();
+});
+
+/* ---------- Ahorcado (con pistas) ---------- */
+const WORDS = [
+  ['SNOOPY', 'Es un beagle que duerme sobre su casita y sueña con ser aviador.'],
+  ['WOODSTOCK', 'Pajarito amarillo, el mejor amigo de Snoopy.'],
+  ['CASITA', 'Donde Snoopy duerme... ¡encima del tejado!'],
+  ['GLOBO', 'Si se pincha, hace “pum”.'],
+  ['ABRAZO', 'Se da con los dos brazos y calienta el corazón.'],
+  ['SONRISA', 'Se dibuja en la cara cuando algo te hace feliz.'],
+  ['CORAZON', 'Late dentro del pecho y es el símbolo del amor.'],
+  ['GALLETA', 'Dulce y crujiente, perfecta para mojar en leche.'],
+  ['PIZZA', 'Italiana, redonda y con queso derretido.'],
+  ['CARTA', 'Se escribe con cariño y se envía dentro de un sobre.'],
+  ['NUBES', 'Flotan en el cielo y a veces parecen animales.'],
+  ['ESTRELLA', 'Brilla en el cielo por la noche y pedimos deseos con ella.'],
+  ['CARIÑO', 'Lo das con ternura a quien quieres.'],
+  ['SUEÑO', 'Lo tienes cuando duermes... o cuando deseas algo muchísimo.'],
+  ['AMISTAD', 'Lo que une a Snoopy y Woodstock.'],
+  ['BESO', 'Se da con los labios y también se manda por el aire.'],
+  ['PASTEL', 'Se le sopla una vela el día del cumpleaños.'],
+  ['MARIPOSA', 'Pasa de oruga a volar con alas de colores.'],
+  ['TULIPAN', 'Flor de primavera, famosa en Holanda.'],
+  ['ARCOIRIS', 'Aparece tras la lluvia con siete colores.'],
+  ['CHOCOLATE', 'Dulce marrón que se hace con cacao.'],
+  ['AVENTURA', 'Un viaje emocionante lleno de sorpresas.'],
+  ['PRIMAVERA', 'Estación del año en la que florecen las flores.'],
+  ['LUNA', 'Acompaña a la noche y cambia de forma.'],
+  ['OTOÑO', 'Estación en la que caen las hojas de los árboles.'],
+  ['CANCION', 'Tiene letra y melodía, y se canta.'],
+];
+const LETTERS = [...'ABCDEFGHIJKLMNÑOPQRSTUVWXYZ'];
+const MAX_BALLOONS = 6;
+let hang = { word: '', hint: '', guessed: new Set(), wrong: 0, over: false, streak: 0 };
+
+function renderHang() {
+  const lost = hang.over && hang.wrong >= MAX_BALLOONS;
+  const extra = hang.wrong >= 3 || hang.over ? ` · Empieza por “${hang.word[0]}”` : '';
+  $('#hang-clue').textContent = `💡 ${hang.hint} (${hang.word.length} letras)${extra}`;
+  $('#hang-balloons').textContent = '🎈'.repeat(Math.max(MAX_BALLOONS - hang.wrong, 0)) + '🐤';
+  $('#hang-word').textContent = [...hang.word].map(ch => hang.guessed.has(ch) || lost ? ch : '_').join(' ');
+  $('#hang-keys').replaceChildren(...LETTERS.map(letter => {
+    const key = document.createElement('button');
+    key.type = 'button'; key.textContent = letter;
+    key.className = hang.guessed.has(letter) ? (hang.word.includes(letter) ? 'ok' : 'no') : '';
+    key.disabled = hang.over || hang.guessed.has(letter);
+    key.addEventListener('click', () => guessLetter(letter));
+    return key;
+  }));
+  $('#hang-score').textContent = `Racha: ${hang.streak}  ·  Mejor racha: ${store.get('snoopy-hang-best', 0)}`;
+}
+
+function finishHang() {
+  const won = [...hang.word].every(ch => hang.guessed.has(ch));
+  if (won) {
+    hang.over = true; hang.streak++;
+    if (hang.streak > store.get('snoopy-hang-best', 0)) store.set('snoopy-hang-best', hang.streak);
+    $('#hang-status').textContent = `¡Salvaste a Woodstock! 🐤♡ La palabra era ${hang.word}.`;
+    sfx('win'); unlock('hang-win'); earn(3 + MAX_BALLOONS - hang.wrong); if (!hang.wrong) unlock('hang-perfect');
+  } else if (hang.wrong >= MAX_BALLOONS) {
+    hang.over = true; hang.streak = 0; sfx('bad');
+    $('#hang-status').textContent = `Woodstock aterrizó suavecito en la casita 🏠. Era “${hang.word}”.`;
+  } else $('#hang-status').textContent = hang.wrong === 3 ? `Te quedan ${MAX_BALLOONS - hang.wrong} globos. ¡Pista extra desbloqueada! 💡` : `Te quedan ${MAX_BALLOONS - hang.wrong} globos.`;
+  renderHang();
+}
+
+function guessLetter(letter) {
+  if (hang.over || hang.guessed.has(letter)) return;
+  hang.guessed.add(letter);
+  if (hang.word.includes(letter)) sfx('tap'); else { hang.wrong++; sfx('bad'); }
+  finishHang();
+}
+
+function newHang() {
+  const pool = WORDS.filter(([word]) => word !== hang.word);
+  const [word, hint] = pool[Math.floor(Math.random() * pool.length)];
+  hang = { word, hint, guessed: new Set(), wrong: 0, over: false, streak: hang.streak || 0 };
+  $('#hang-status').textContent = 'Lee la pista y elige una letra.';
+  renderHang();
+}
+$('#hang-new').addEventListener('click', () => { if (!hang.over) hang.streak = 0; newHang(); });
+$('#hang-hint').addEventListener('click', () => {
+  if (hang.over) return;
+  if (hang.wrong >= MAX_BALLOONS - 1) { toast('Una letra extra ahora te costaría el último globo.'); return; }
+  const options = [...new Set(hang.word)].filter(ch => !hang.guessed.has(ch));
+  hang.guessed.add(options[Math.floor(Math.random() * options.length)]); hang.wrong++;
+  finishHang();
+});
+document.addEventListener('keydown', event => {
+  if ($('#hang-panel').hidden || event.ctrlKey || event.metaKey || event.altKey) return;
+  const letter = event.key.toUpperCase();
+  if (LETTERS.includes(letter)) guessLetter(letter);
+});
+
+/* ---------- Snoopy dice (secuencias) ---------- */
+const PADS = ['🐶', '🐤', '🎈', '🍪'], PAD_NOTES = [330, 392, 494, 587];
+let simon = { seq: [], step: 0, busy: true, playing: false };
+
+function buildSimon() {
+  $('#simon-board').replaceChildren(...PADS.map((icon, i) => {
+    const pad = document.createElement('button');
+    pad.type = 'button'; pad.className = 'pad4'; pad.textContent = icon; pad.setAttribute('aria-label', `Botón ${icon}`);
+    pad.addEventListener('click', () => pressPad(i));
+    return pad;
+  }));
+  $('#simon-score').textContent = `Mejor ronda: ${store.get('snoopy-simon-best', 0)}`;
+}
+
+async function flashPad(i, ms) {
+  const pad = $('#simon-board').children[i];
+  pad.classList.add('lit'); note(PAD_NOTES[i]);
+  await sleep(ms);
+  pad.classList.remove('lit');
+}
+
+async function playSequence() {
+  simon.busy = true; $('#simon-status').textContent = 'Mira…';
+  await sleep(500);
+  const on = Math.max(220, 420 - simon.seq.length * 15), gap = Math.max(140, 300 - simon.seq.length * 10);
+  for (const i of simon.seq) {
+    if (!simon.playing || $('#simon-panel').hidden) return;
+    await flashPad(i, on); await sleep(gap);
+  }
+  simon.step = 0; simon.busy = false; $('#simon-status').textContent = 'Tu turno 👆';
+}
+
+function nextSimon() {
+  simon.seq.push(Math.floor(Math.random() * 4));
+  $('#simon-score').textContent = `Ronda ${simon.seq.length}  ·  Mejor ronda: ${store.get('snoopy-simon-best', 0)}`;
+  playSequence();
+}
+
+async function pressPad(i) {
+  if (!simon.playing || simon.busy) return;
+  flashPad(i, 200);
+  if (i !== simon.seq[simon.step]) {
+    simon.playing = false; sfx('bad');
+    const reached = simon.seq.length - 1;
+    const record = reached > store.get('snoopy-simon-best', 0);
+    if (record) store.set('snoopy-simon-best', reached);
+    earn(reached);
+    $('#simon-status').textContent = `¡Ups! Completaste ${reached} ${reached === 1 ? 'ronda' : 'rondas'}.${record && reached > 0 ? ' ¡Nuevo récord!' : ''} ¡Inténtalo otra vez!`;
+    $('#simon-score').textContent = `Mejor ronda: ${store.get('snoopy-simon-best', 0)}`;
+    return;
+  }
+  simon.step++;
+  if (simon.step === simon.seq.length) {
+    simon.busy = true;
+    if (simon.seq.length >= 8) unlock('simon-8');
+    $('#simon-status').textContent = '¡Bien! 🎶';
+    await sleep(700);
+    if (simon.playing) nextSimon();
+  }
+}
+$('#simon-start').addEventListener('click', () => { simon = { seq: [], step: 0, busy: true, playing: true }; nextSimon(); });
+document.addEventListener('keydown', event => {
+  if ($('#simon-panel').hidden || !/^[1-4]$/.test(event.key)) return;
+  pressPad(Number(event.key) - 1);
+});
+
+/* ---------- Atrapa a Woodstock ---------- */
+let mole = { running: false, score: 0, end: 0, hole: -1, kind: '', timer: 0 };
+
+function drawMole() {
+  [...$('#mole-board').children].forEach((hole, i) => { hole.textContent = i === mole.hole ? mole.kind : ''; });
+  const left = mole.running ? Math.max(0, Math.ceil((mole.end - Date.now()) / 1000)) : 30;
+  $('#mole-info').textContent = `Tiempo: ${left} s  ·  Puntos: ${mole.score}  ·  Mejor: ${store.get('snoopy-mole-best', 0)}`;
+}
+
+function buildMole() {
+  $('#mole-board').replaceChildren(...Array.from({ length: 9 }, (_, i) => {
+    const hole = document.createElement('button');
+    hole.type = 'button'; hole.className = 'hole'; hole.setAttribute('aria-label', `Agujero ${i + 1}`);
+    hole.addEventListener('pointerdown', () => whack(i));
+    return hole;
+  }));
+  drawMole();
+}
+
+function whack(i) {
+  if (!mole.running || i !== mole.hole) return;
+  if (mole.kind === '🐤') { mole.score++; sfx('tap'); }
+  else if (mole.kind === '⭐') { mole.score += 3; sfx('big'); }
+  else { mole.score = Math.max(0, mole.score - 2); sfx('bad'); }
+  mole.hole = -1; drawMole();
+}
+
+function moleTick() {
+  if (!mole.running) return;
+  if (Date.now() >= mole.end || $('#mole-panel').hidden) { endMole(); return; }
+  const roll = Math.random();
+  mole.hole = Math.floor(Math.random() * 9); mole.kind = roll < .18 ? '🐶' : roll < .28 ? '⭐' : '🐤'; drawMole();
+  mole.timer = setTimeout(() => { mole.hole = -1; drawMole(); mole.timer = setTimeout(moleTick, 200); }, Math.max(420, 900 - mole.score * 12));
+}
+
+function endMole() {
+  mole.running = false; mole.hole = -1; clearTimeout(mole.timer);
+  const record = mole.score > store.get('snoopy-mole-best', 0);
+  if (record) store.set('snoopy-mole-best', mole.score);
+  $('#mole-status').textContent = `¡Tiempo! Hiciste ${mole.score} puntos 🐤${record && mole.score > 0 ? ' ¡Nuevo récord!' : ''}`;
+  sfx(mole.score >= 10 ? 'win' : 'match');
+  if (mole.score >= 20) unlock('mole-20');
+  earn(mole.score / 2);
+  drawMole();
+}
+$('#mole-start').addEventListener('click', () => {
+  clearTimeout(mole.timer);
+  mole = { running: true, score: 0, end: Date.now() + 30000, hole: -1, kind: '', timer: 0 };
+  $('#mole-status').textContent = '¡Toca a Woodstock 🐤, atrapa la estrella ⭐ y evita a Snoopy 🐶!';
+  moleTick();
+});
+setInterval(() => { if (mole.running) drawMole(); }, 250);
+
+/* ---------- Lluvia de corazones (canvas) ---------- */
+const catchCanvas = $('#catch-canvas'), ctx = catchCanvas.getContext('2d');
+let cg = { running: false, x: 180, items: [], score: 0, lives: 3, last: 0, spawn: 0 };
+
+function drawCatch() {
+  const w = catchCanvas.width, h = catchCanvas.height;
+  ctx.clearRect(0, 0, w, h);
+  ctx.textAlign = 'center'; ctx.textBaseline = 'middle';
+  ctx.font = '30px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  for (const item of cg.items) ctx.fillText(item.kind, item.x, item.y);
+  ctx.font = '40px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  ctx.fillText('🐶', cg.x, h - 30);
+  ctx.textAlign = 'left'; ctx.font = '600 16px Poppins, sans-serif'; ctx.fillStyle = '#3b3a4a';
+  ctx.fillText(`Puntos: ${cg.score}   ${'❤️'.repeat(Math.max(cg.lives, 0))}`, 12, 22);
+  $('#catch-best').textContent = `Mejor marca: ${store.get('snoopy-catch-best', 0)}`;
+}
+
+function catchLoop(now) {
+  if (!cg.running) return;
+  if ($('#catch-panel').hidden) { cg.running = false; $('#catch-status').textContent = 'En pausa. Pulsa Jugar para empezar de nuevo.'; return; }
+  const dt = Math.min(50, now - cg.last), h = catchCanvas.height;
+  cg.last = now; cg.spawn -= dt;
+  cg.x = Math.min(catchCanvas.width - 24, Math.max(24, cg.x + dirKey() * .38 * dt));
+  if (cg.spawn <= 0) {
+    const roll = Math.random();
+    cg.items.push({ x: 24 + Math.random() * (catchCanvas.width - 48), y: -20, v: .12 + cg.score * .003 + Math.random() * .05, kind: roll < .22 ? '🌩️' : roll < .4 ? '🍪' : roll < .44 ? '🎈' : '❤️' });
+    cg.spawn = Math.max(360, 800 - cg.score * 8);
+  }
+  cg.items = cg.items.filter(item => {
+    item.y += item.v * dt;
+    if (item.y > h - 58 && item.y < h - 12 && Math.abs(item.x - cg.x) < 34) {
+      if (item.kind === '🌩️') { cg.lives--; sfx('bad'); }
+      else if (item.kind === '🎈') { cg.lives = Math.min(5, cg.lives + 1); sfx('match'); toast('🎈 ¡Vida extra!'); }
+      else { cg.score += item.kind === '🍪' ? 2 : 1; sfx('tap'); }
+      return false;
+    }
+    return item.y < h + 30;
+  });
+  if (cg.score >= 30) unlock('catch-30');
+  drawCatch();
+  if (cg.lives <= 0) {
+    cg.running = false;
+    const record = cg.score > store.get('snoopy-catch-best', 0);
+    if (record) store.set('snoopy-catch-best', cg.score);
+    earn(cg.score / 3);
+    $('#catch-status').textContent = `¡Fin del juego! Conseguiste ${cg.score} puntos 🐶♡${record && cg.score > 0 ? ' ¡Nuevo récord!' : ''}`;
+    sfx(cg.score >= 10 ? 'win' : 'bad'); drawCatch();
+    return;
+  }
+  requestAnimationFrame(catchLoop);
+}
+
+function moveCatch(clientX) {
+  const box = catchCanvas.getBoundingClientRect();
+  cg.x = Math.min(catchCanvas.width - 24, Math.max(24, (clientX - box.left) * catchCanvas.width / box.width));
+  if (!cg.running) drawCatch();
+}
+catchCanvas.addEventListener('pointermove', event => moveCatch(event.clientX));
+catchCanvas.addEventListener('pointerdown', event => moveCatch(event.clientX));
+$('#catch-start').addEventListener('click', () => {
+  cg = { running: true, x: catchCanvas.width / 2, items: [], score: 0, lives: 3, last: performance.now(), spawn: 0 };
+  $('#catch-status').textContent = '';
+  requestAnimationFrame(catchLoop);
+});
+
+/* ---------- Snoopy y el Barón Rojo ---------- */
+const aceCv = $('#ace-canvas'), actx = aceCv.getContext('2d');
+const EMOJI_FONT = '"Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+let ace = { running: false, x: 180, shots: [], foes: [], ups: [], bolts: [], boss: null, score: 0, lives: 3, kills: 0, power: 0, inv: 0 };
+const near = (a, b, r) => Math.hypot(a.x - b.x, a.y - b.y) < r;
+
+function drawAce() {
+  const w = aceCv.width, h = aceCv.height;
+  actx.clearRect(0, 0, w, h);
+  actx.textAlign = 'center'; actx.textBaseline = 'middle';
+  actx.fillStyle = '#ffffff99';
+  for (let i = 0; i < 4; i++) actx.fillRect(((i * 97 + Date.now() / 40) % (w + 60)) - 30, 60 + i * 95, 50, 12);
+  actx.fillStyle = '#e8505b';
+  for (const s of ace.shots) actx.fillRect(s.x - 2, s.y - 8, 4, 12);
+  actx.font = `30px ${EMOJI_FONT}`;
+  for (const f of ace.foes) actx.fillText('🛩️', f.x, f.y);
+  for (const u of ace.ups) actx.fillText(u.kind, u.x, u.y);
+  for (const b of ace.bolts) actx.fillText('🔥', b.x, b.y);
+  if (ace.boss) {
+    actx.font = `56px ${EMOJI_FONT}`; actx.fillText('🛩️', ace.boss.x, ace.boss.y);
+    actx.fillStyle = '#3b3a4a33'; actx.fillRect(60, 8, w - 120, 8);
+    actx.fillStyle = '#e8505b'; actx.fillRect(60, 8, (w - 120) * ace.boss.hp / ace.boss.max, 8);
+  }
+  actx.font = `40px ${EMOJI_FONT}`;
+  if (!(ace.inv > 0 && Math.floor(Date.now() / 100) % 2)) actx.fillText('🐶', ace.x, h - 32);
+  actx.textAlign = 'left'; actx.font = '600 16px Poppins, sans-serif'; actx.fillStyle = '#3b3a4a';
+  actx.fillText(`Puntos: ${ace.score}  ${'❤️'.repeat(Math.max(ace.lives, 0))}${ace.power > 0 ? ' 🍪×3' : ''}${ace.inv > 1500 ? ' ⭐' : ''}`, 12, 34);
+  $('#ace-best').textContent = `Mejor marca: ${store.get('snoopy-ace-best', 0)}`;
+}
+
+function hurtAce() {
+  if (ace.inv > 0) return;
+  ace.lives--; ace.inv = 1500; sfx('bad');
+}
+
+function aceLoop(now) {
+  if (!ace.running) return;
+  if ($('#ace-panel').hidden) { ace.running = false; $('#ace-status').textContent = 'En pausa. Pulsa Despegar para empezar de nuevo.'; return; }
+  const dt = Math.min(50, now - ace.last), w = aceCv.width, h = aceCv.height, me = { x: ace.x, y: h - 32 };
+  ace.last = now; ace.inv -= dt; ace.power -= dt; ace.fire -= dt;
+  ace.x = Math.min(w - 24, Math.max(24, ace.x + dirKey() * .38 * dt)); me.x = ace.x;
+  if (ace.fire <= 0) {
+    for (const o of ace.power > 0 ? [-14, 0, 14] : [0]) ace.shots.push({ x: ace.x + o, y: h - 60 });
+    ace.fire = ace.power > 0 ? 210 : 300;
+  }
+  ace.shots.forEach(s => { s.y -= .55 * dt; });
+  ace.shots = ace.shots.filter(s => s.y > -10);
+
+  ace.spawn -= dt;
+  if (!ace.boss && ace.spawn <= 0) {
+    ace.foes.push({ x: 24 + Math.random() * (w - 48), y: -20, v: .07 + ace.kills * .002 + Math.random() * .04, dx: (Math.random() - .5) * .08 });
+    ace.spawn = Math.max(380, 1000 - ace.kills * 12);
+  }
+  if (!ace.boss && ace.kills > 0 && ace.kills % 15 === 0 && ace.bossAt !== ace.kills) {
+    ace.bossAt = ace.kills; ace.bossN++;
+    const hp = 8 + ace.bossN * 4;
+    ace.boss = { x: w / 2, y: 70, hp, max: hp, d: 1, shoot: 800 };
+    ace.foes = []; toast('⚠️ ¡Llega el Barón Rojo!');
+  }
+
+  for (const f of ace.foes) { f.y += f.v * dt; f.x = Math.min(w - 20, Math.max(20, f.x + f.dx * dt)); }
+  ace.foes = ace.foes.filter(f => {
+    const shot = ace.shots.find(s => near(s, f, 22));
+    if (shot) {
+      ace.shots.splice(ace.shots.indexOf(shot), 1);
+      ace.score += 5; ace.kills++; sfx('tap');
+      const r = Math.random();
+      if (r < .12) ace.ups.push({ x: f.x, y: f.y, kind: '🍪' });
+      else if (r < .17) ace.ups.push({ x: f.x, y: f.y, kind: '❤️' });
+      else if (r < .21) ace.ups.push({ x: f.x, y: f.y, kind: '⭐' });
+      return false;
+    }
+    if (near(f, me, 30)) { hurtAce(); return false; }
+    return f.y < h + 30;
+  });
+
+  if (ace.boss) {
+    const b = ace.boss;
+    b.x += b.d * .14 * dt; if (b.x > w - 40 || b.x < 40) b.d *= -1;
+    b.shoot -= dt;
+    if (b.shoot <= 0) {
+      ace.bolts.push({ x: b.x, y: b.y + 30, vx: 0 });
+      if (ace.bossN >= 2) ace.bolts.push({ x: b.x, y: b.y + 30, vx: -.06 }, { x: b.x, y: b.y + 30, vx: .06 });
+      b.shoot = 800;
+    }
+    for (const s of ace.shots.filter(s => near(s, b, 34))) { ace.shots.splice(ace.shots.indexOf(s), 1); b.hp--; ace.score += 2; }
+    if (b.hp <= 0) {
+      ace.score += 100; ace.kills++; ace.boss = null; ace.bolts = [];
+      ace.ups.push({ x: b.x, y: b.y, kind: '❤️' });
+      sfx('win'); unlock('ace-boss'); toast('🎖️ ¡Derrotaste al Barón Rojo! +100');
+    }
+  }
+  ace.bolts.forEach(b => { b.y += .22 * dt; b.x += b.vx * dt; });
+  ace.bolts = ace.bolts.filter(b => { if (near(b, me, 24)) { hurtAce(); return false; } return b.y < h + 20 && b.x > -20 && b.x < w + 20; });
+
+  ace.ups.forEach(u => { u.y += .12 * dt; });
+  ace.ups = ace.ups.filter(u => {
+    if (near(u, me, 30)) {
+      if (u.kind === '🍪') ace.power = 6000;
+      else if (u.kind === '⭐') { ace.inv = 4000; toast('⭐ ¡Escudo activado!'); }
+      else ace.lives = Math.min(5, ace.lives + 1);
+      sfx('match'); return false;
+    }
+    return u.y < h + 20;
+  });
+
+  if (ace.score >= 100) unlock('ace-100');
+  drawAce();
+  if (ace.lives <= 0) {
+    ace.running = false;
+    const record = ace.score > store.get('snoopy-ace-best', 0);
+    if (record) store.set('snoopy-ace-best', ace.score);
+    earn(ace.score / 5);
+    $('#ace-status').textContent = `¡Aterrizaje forzoso! Conseguiste ${ace.score} puntos 🐶♡${record && ace.score > 0 ? ' ¡Nuevo récord!' : ''}`;
+    sfx(ace.score >= 30 ? 'win' : 'bad'); drawAce(); return;
+  }
+  requestAnimationFrame(aceLoop);
+}
+
+function moveAce(clientX) {
+  const box = aceCv.getBoundingClientRect();
+  ace.x = Math.min(aceCv.width - 24, Math.max(24, (clientX - box.left) * aceCv.width / box.width));
+  if (!ace.running) drawAce();
+}
+aceCv.addEventListener('pointermove', event => moveAce(event.clientX));
+aceCv.addEventListener('pointerdown', event => moveAce(event.clientX));
+$('#ace-start').addEventListener('click', () => {
+  ace = { running: true, x: aceCv.width / 2, shots: [], foes: [], ups: [], bolts: [], boss: null, bossN: 0, bossAt: 0, score: 0, lives: 3, kills: 0, power: 0, inv: 0, fire: 0, spawn: 0, last: performance.now() };
+  $('#ace-status').textContent = '';
+  requestAnimationFrame(aceLoop);
+});
+
+/* ================= Galletas y tienda ================= */
+/* EDITA AQUÍ: número de WhatsApp (con código de país, sin +) para el botón «Avisar». Vacío = eliges el contacto al enviar. */
+const NUMERO_WHATSAPP = '';
+const CHEST_COST = 25;
+/* EDITA AQUÍ: los vales de la tienda (título y precio en galletas). */
+const VALES_TIENDA = [
+  { icon: '🤗', title: 'Un abrazo gigante', cost: 10 },
+  { icon: '🎶', title: 'Elegir la música del día', cost: 15 },
+  { icon: '🍰', title: 'Un postre a elegir', cost: 25 },
+  { icon: '🍦', title: 'Un helado juntos', cost: 30 },
+  { icon: '🎬', title: 'Una película juntos', cost: 40 },
+  { icon: '💆', title: 'Un masaje de relajación', cost: 50 },
+  { icon: '🌷', title: 'Un paseo juntos', cost: 60 },
+  { icon: '💌', title: 'Una carta escrita a mano', cost: 80 },
+  { icon: '🍕', title: 'Una cena especial', cost: 100 },
+  { icon: '🏖️', title: 'Una escapada juntos', cost: 250 },
+];
+let coins = store.get('snoopy-coins', 0);
+let myVales = store.get('snoopy-vales', []);
+let daily = store.get('snoopy-daily', { last: '', streak: 0 });
+const mkEl = (tag, className = '', text = '') => Object.assign(document.createElement(tag), { className, textContent: text });
+const dayKey = date => date.toLocaleDateString('en-CA');
+
+function earn(amount, silent) {
+  amount = Math.round(amount);
+  if (!(amount > 0)) return;
+  coins += amount; store.set('snoopy-coins', coins);
+  if (!silent) toast(`+${amount} 🍪`);
+  updateCoins();
+}
+function updateCoins() {
+  $('#coins').textContent = `🍪 ${coins}`;
+  if (!$('#shop-panel').hidden) renderShop();
+}
+function sendWhatsApp(title) {
+  const text = encodeURIComponent(`💌 ¡Canjeé mi vale: ${title}! ¿Cuándo lo cobro? 😘`);
+  window.open(`https://wa.me/${NUMERO_WHATSAPP}?text=${text}`, '_blank', 'noopener');
+}
+function giveVale(item) {
+  myVales.push({ title: `${item.icon} ${item.title}`, at: Date.now(), used: null });
+  store.set('snoopy-vales', myVales);
+}
+
+function renderShop() {
+  const today = dayKey(new Date()), yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  const claimed = daily.last === today;
+  const nextStreak = daily.last === dayKey(yesterday) ? daily.streak + 1 : 1;
+  $('#shop-coins').textContent = `Tienes ${coins} 🍪`;
+  $('#daily-btn').disabled = claimed;
+  $('#daily-btn').textContent = claimed ? `✅ Bono de hoy cobrado (racha ${daily.streak} 🔥)` : `🎁 Bono diario +${5 + Math.min(nextStreak, 7) * 3} 🍪 (racha ${nextStreak})`;
+  $('#chest-btn').disabled = coins < CHEST_COST;
+  $('#chest-btn').textContent = `🎲 Cofre sorpresa (${CHEST_COST} 🍪)`;
+  $('#shop-list').replaceChildren(...VALES_TIENDA.map(item => {
+    const card = mkEl('div', 'reward');
+    const button = mkEl('button', '', `Canjear por ${item.cost} 🍪`);
+    button.type = 'button'; button.disabled = coins < item.cost;
+    button.addEventListener('click', () => {
+      if (coins < item.cost) return;
+      coins -= item.cost; store.set('snoopy-coins', coins); giveVale(item);
+      toast(`🛍️ ¡Vale conseguido! ${item.icon}`); sfx('reward'); confetti(); updateCoins();
+    });
+    card.append(mkEl('div', 'ico', item.icon), mkEl('b', '', item.title), button);
+    return card;
+  }));
+  const mine = myVales.map((vale, i) => {
+    const card = mkEl('div', 'reward');
+    card.append(mkEl('b', '', vale.title));
+    if (vale.used) card.append(mkEl('small', '', `Usado el ${new Date(vale.used).toLocaleDateString('es')}`));
+    else {
+      const use = mkEl('button', '', 'Usar vale'), tell = mkEl('button', '', '💬 Avisar');
+      use.type = tell.type = 'button';
+      use.addEventListener('click', () => { vale.used = Date.now(); store.set('snoopy-vales', myVales); toast('💌 ¡Enséñale este vale a tu persona favorita!'); sfx('win'); renderShop(); });
+      tell.addEventListener('click', () => sendWhatsApp(vale.title));
+      card.append(use, tell);
+    }
+    return card;
+  });
+  $('#my-vales').replaceChildren(...(mine.length ? mine : [mkEl('p', 'empty', 'Aún no tienes vales. ¡Juega y canjea tus galletas!')]));
+}
+
+$('#daily-btn').addEventListener('click', () => {
+  const today = dayKey(new Date()), yesterday = new Date(); yesterday.setDate(yesterday.getDate() - 1);
+  if (daily.last === today) return;
+  daily = { last: today, streak: daily.last === dayKey(yesterday) ? daily.streak + 1 : 1 };
+  store.set('snoopy-daily', daily);
+  const bonus = 5 + Math.min(daily.streak, 7) * 3;
+  sfx('reward'); confetti(); earn(bonus, true); toast(`🎁 +${bonus} 🍪 · ¡${daily.streak} ${daily.streak === 1 ? 'día' : 'días seguidos'}!`);
+});
+$('#chest-btn').addEventListener('click', () => {
+  if (coins < CHEST_COST) return;
+  coins -= CHEST_COST; store.set('snoopy-coins', coins);
+  if (Math.random() < .3) {
+    const item = VALES_TIENDA.filter(v => v.cost <= 60)[Math.floor(Math.random() * 6)];
+    giveVale(item); toast(`🎉 ¡El cofre traía un vale! ${item.icon} ${item.title}`);
+  } else { const prize = 15 + Math.floor(Math.random() * 36); coins += prize; store.set('snoopy-coins', coins); toast(`🎁 El cofre traía ${prize} 🍪`); }
+  sfx('reward'); confetti(); updateCoins();
+});
+
+/* ================= Conecta 4 ================= */
+const C4W = 7, C4H = 6;
+let c4 = { b: [], turn: 'X', over: false, line: [] }, c4tally = store.get('snoopy-c4', { X: 0, O: 0, T: 0 });
+const C4LINES = (() => {
+  const all = [];
+  for (let r = 0; r < C4H; r++) for (let c = 0; c < C4W; c++) for (const [dr, dc] of [[0, 1], [1, 0], [1, 1], [1, -1]]) {
+    const cells = [];
+    for (let k = 0; k < 4; k++) { const rr = r + dr * k, cc = c + dc * k; if (rr < 0 || rr >= C4H || cc < 0 || cc >= C4W) break; cells.push(rr * C4W + cc); }
+    if (cells.length === 4) all.push(cells);
+  }
+  return all;
+})();
+const c4Win = b => C4LINES.find(l => b[l[0]] && b[l[0]] === b[l[1]] && b[l[0]] === b[l[2]] && b[l[0]] === b[l[3]]) || null;
+const c4Drop = (b, col) => { for (let r = C4H - 1; r >= 0; r--) if (!b[r * C4W + col]) return r * C4W + col; return -1; };
+const C4ORDER = [3, 2, 4, 1, 5, 0, 6];
+
+function c4Eval(b) {
+  let s = 0;
+  for (const l of C4LINES) {
+    let o = 0, x = 0;
+    for (const i of l) { if (b[i] === 'O') o++; else if (b[i] === 'X') x++; }
+    if (o && x) continue;
+    s += [0, 1, 5, 30, 0][o] - [0, 1, 5, 30, 0][x];
+  }
+  for (let r = 0; r < C4H; r++) if (b[r * C4W + 3] === 'O') s += 2;
+  return s;
+}
+function c4Search(b, depth, alpha, beta, maxing) {
+  const w = c4Win(b);
+  if (w) return b[w[0]] === 'O' ? 1000 + depth : -1000 - depth;
+  if (depth === 0 || b.every(Boolean)) return c4Eval(b);
+  let best = maxing ? -1e9 : 1e9;
+  for (const c of C4ORDER.filter(c => c4Drop(b, c) >= 0)) {
+    const i = c4Drop(b, c);
+    b[i] = maxing ? 'O' : 'X';
+    const v = c4Search(b, depth - 1, alpha, beta, !maxing);
+    b[i] = '';
+    if (maxing) { best = Math.max(best, v); alpha = Math.max(alpha, v); } else { best = Math.min(best, v); beta = Math.min(beta, v); }
+    if (beta <= alpha) break;
+  }
+  return best;
+}
+function c4Computer() {
+  const b = c4.b, cols = C4ORDER.filter(c => c4Drop(b, c) >= 0), hard = $('#c4-mode').value === 'hard';
+  for (const who of ['O', 'X']) {
+    if (!hard && who === 'X' && Math.random() < .35) continue;
+    for (const c of cols) { const i = c4Drop(b, c); b[i] = who; const hit = c4Win(b); b[i] = ''; if (hit) return c; }
+  }
+  if (!hard) return cols[Math.floor(Math.random() * cols.length)];
+  let best = cols[0], bestScore = -1e9;
+  for (const c of cols) {
+    const i = c4Drop(b, c); b[i] = 'O';
+    const v = c4Search(b, 5, -1e9, 1e9, false); b[i] = '';
+    if (v > bestScore) { bestScore = v; best = c; }
+  }
+  return best;
+}
+function renderC4() {
+  $('#c4-board').replaceChildren(...c4.b.map((value, i) => {
+    const cell = mkEl('button', 'c4c' + (c4.line.includes(i) ? ' win' : ''), value ? SYM[value] : '');
+    cell.type = 'button'; cell.disabled = c4.over;
+    cell.setAttribute('aria-label', `Columna ${i % C4W + 1}${value ? ', ' + NAME[value] : ''}`);
+    cell.addEventListener('click', () => { if ($('#c4-mode').value === 'two' || c4.turn === 'X') c4Play(i % C4W); });
+    return cell;
+  }));
+  $('#c4-score').textContent = `${SYM.X} ${c4tally.X}  ·  ${SYM.O} ${c4tally.O}  ·  🤝 ${c4tally.T}`;
+}
+function c4Play(col) {
+  if (c4.over) return;
+  const i = c4Drop(c4.b, col);
+  if (i < 0) return;
+  c4.b[i] = c4.turn; sfx('tap');
+  const win = c4Win(c4.b), mode = $('#c4-mode').value;
+  if (win) {
+    c4.over = true; c4.line = win; c4tally[c4.turn]++;
+    if (c4.turn === 'X') { sfx('win'); unlock('c4-win'); if (mode === 'hard') unlock('c4-hard'); earn(mode === 'hard' ? 14 : 6); } else sfx('bad');
+    $('#c4-status').textContent = `¡Ganó ${NAME[c4.turn]}! ${SYM[c4.turn]}♡`;
+  } else if (c4.b.every(Boolean)) {
+    c4.over = true; c4tally.T++; sfx('match'); earn(3);
+    $('#c4-status').textContent = '¡Empate! Tablero lleno 😄';
+  } else {
+    c4.turn = c4.turn === 'X' ? 'O' : 'X';
+    $('#c4-status').textContent = `Turno de ${NAME[c4.turn]} ${SYM[c4.turn]}`;
+  }
+  if (c4.over) store.set('snoopy-c4', c4tally);
+  renderC4();
+  if (!c4.over && c4.turn === 'O' && mode !== 'two') setTimeout(() => { if (!c4.over && c4.turn === 'O') c4Play(c4Computer()); }, 550);
+}
+function newC4() {
+  c4 = { b: Array(C4W * C4H).fill(''), turn: 'X', over: false, line: [] };
+  $('#c4-status').textContent = `Turno de ${NAME.X} ${SYM.X}`;
+  renderC4();
+}
+$('#c4-new').addEventListener('click', newC4);
+$('#c4-mode').addEventListener('change', newC4);
+
+/* ================= 2048 ================= */
+let g48 = { g: [], score: 0, over: false, won: false, fresh: -1 };
+function add48() {
+  const empty = g48.g.map((v, i) => v ? -1 : i).filter(i => i >= 0);
+  if (!empty.length) return;
+  g48.fresh = empty[Math.floor(Math.random() * empty.length)];
+  g48.g[g48.fresh] = Math.random() < .9 ? 2 : 4;
+}
+function new2048() {
+  if (g48.score && !g48.over) earn(g48.score / 80);
+  g48 = { g: Array(16).fill(0), score: 0, over: false, won: false, fresh: -1 };
+  add48(); add48(); render48();
+  $('#g48-status').textContent = '';
+}
+function render48() {
+  $('#g48-board').replaceChildren(...g48.g.map((v, i) => {
+    const tile = mkEl('div', 't48' + (i === g48.fresh ? ' new' : ''), v || '');
+    if (v) { const n = Math.log2(v); tile.style.background = `hsl(${(n * 32 + 340) % 360} 80% ${Math.max(48, 88 - n * 3)}%)`; if (v > 4) tile.style.color = '#fff'; if (v >= 1024) tile.style.fontSize = 'clamp(14px,4.6vw,22px)'; }
+    return tile;
+  }));
+  $('#g48-info').textContent = `Puntos: ${g48.score}  ·  Mejor: ${store.get('snoopy-2048-best', 0)}`;
+}
+function slide48(line) {
+  const tiles = line.filter(Boolean), out = []; let gained = 0;
+  for (let i = 0; i < tiles.length; i++) {
+    if (tiles[i] === tiles[i + 1]) { out.push(tiles[i] * 2); gained += tiles[i] * 2; i++; } else out.push(tiles[i]);
+  }
+  while (out.length < 4) out.push(0);
+  return { out, gained };
+}
+function can48() {
+  return g48.g.some((v, i) => !v || (i % 4 < 3 && v === g48.g[i + 1]) || (i < 12 && v === g48.g[i + 4]));
+}
+function move48(dir) {
+  if (g48.over) return;
+  let changed = false;
+  for (let k = 0; k < 4; k++) {
+    const idx = [0, 1, 2, 3].map(j => dir === 0 ? k * 4 + j : dir === 1 ? k * 4 + 3 - j : dir === 2 ? j * 4 + k : (3 - j) * 4 + k);
+    const { out, gained } = slide48(idx.map(i => g48.g[i]));
+    idx.forEach((i, j) => { if (g48.g[i] !== out[j]) changed = true; g48.g[i] = out[j]; });
+    g48.score += gained;
+  }
+  if (!changed) return;
+  sfx('tap'); g48.fresh = -1; add48();
+  const max = Math.max(...g48.g);
+  if (max >= 512) unlock('g2048-512');
+  if (max >= 2048 && !g48.won) { g48.won = true; sfx('win'); earn(30); $('#g48-status').textContent = '¡Llegaste a 2048! 🎉 Puedes seguir jugando.'; }
+  if (!can48()) {
+    g48.over = true; sfx(g48.score >= 500 ? 'win' : 'bad');
+    const record = g48.score > store.get('snoopy-2048-best', 0);
+    if (record) store.set('snoopy-2048-best', g48.score);
+    earn(g48.score / 70);
+    $('#g48-status').textContent = `Sin movimientos. Hiciste ${g48.score} puntos 🐶${record ? ' ¡Nuevo récord!' : ''}`;
+  }
+  render48();
+}
+$('#g48-new').addEventListener('click', new2048);
+document.addEventListener('keydown', event => {
+  if ($('#g2048-panel').hidden) return;
+  const dir = { ArrowLeft: 0, ArrowRight: 1, ArrowUp: 2, ArrowDown: 3 }[event.key];
+  if (dir === undefined) return;
+  event.preventDefault(); move48(dir);
+});
+let swipe48 = null;
+$('#g48-board').addEventListener('pointerdown', event => { swipe48 = { x: event.clientX, y: event.clientY }; });
+$('#g48-board').addEventListener('pointerup', event => {
+  if (!swipe48) return;
+  const dx = event.clientX - swipe48.x, dy = event.clientY - swipe48.y; swipe48 = null;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 24) return;
+  move48(Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 0 : 1) : (dy < 0 ? 2 : 3));
+});
+
+/* ================= Flappy Woodstock ================= */
+const flCv = $('#flap-canvas'), fctx = flCv.getContext('2d');
+let fl = { running: false, started: false, y: 200, v: 0, pipes: [], score: 0, last: 0, next: 0 };
+const FL_GAP = 125, FL_W = 54, FL_X = 90;
+
+function drawFlap() {
+  const w = flCv.width, h = flCv.height;
+  fctx.clearRect(0, 0, w, h);
+  for (const p of fl.pipes) {
+    fctx.fillStyle = '#6cc07a'; fctx.fillRect(p.x, 0, FL_W, p.gap); fctx.fillRect(p.x, p.gap + FL_GAP, FL_W, h);
+    fctx.fillStyle = '#4ea85f'; fctx.fillRect(p.x - 4, p.gap - 18, FL_W + 8, 18); fctx.fillRect(p.x - 4, p.gap + FL_GAP, FL_W + 8, 18);
+  }
+  fctx.fillStyle = '#8a643f'; fctx.fillRect(0, h - 16, w, 16);
+  fctx.textAlign = 'center'; fctx.textBaseline = 'middle'; fctx.font = '30px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  fctx.fillText('🐤', FL_X, fl.y);
+  fctx.font = '700 32px Poppins, sans-serif'; fctx.fillStyle = '#3b3a4a'; fctx.fillText(fl.score, w / 2, 40);
+  if (fl.running && !fl.started) { fctx.font = '600 15px Poppins, sans-serif'; fctx.fillText('¡Toca para aletear!', w / 2, h / 2 + 50); }
+  $('#flap-best').textContent = `Mejor marca: ${store.get('snoopy-flap-best', 0)}`;
+}
+function flFlap() {
+  if (!fl.running) return;
+  fl.started = true; fl.v = -.38; sfx('tap');
+}
+function flEnd() {
+  fl.running = false; sfx('bad');
+  const record = fl.score > store.get('snoopy-flap-best', 0);
+  if (record) store.set('snoopy-flap-best', fl.score);
+  earn(fl.score * 1.5);
+  $('#flap-status').textContent = `¡Auch! Pasaste ${fl.score} ${fl.score === 1 ? 'tubo' : 'tubos'} 🐤${record && fl.score > 0 ? ' ¡Nuevo récord!' : ''}`;
+  drawFlap();
+}
+function flLoop(now) {
+  if (!fl.running) return;
+  if ($('#flap-panel').hidden) { fl.running = false; $('#flap-status').textContent = 'En pausa. Pulsa Jugar para empezar de nuevo.'; return; }
+  const dt = Math.min(40, now - fl.last), w = flCv.width, h = flCv.height; fl.last = now;
+  if (!fl.started) { fl.y = 200 + Math.sin(now / 200) * 8; drawFlap(); requestAnimationFrame(flLoop); return; }
+  fl.v += .0011 * dt; fl.y += fl.v * dt;
+  fl.next -= dt;
+  if (fl.next <= 0) { fl.pipes.push({ x: w + 10, gap: 70 + Math.random() * (h - 70 - FL_GAP - 70), done: false }); fl.next = 1500; }
+  for (const p of fl.pipes) {
+    p.x -= .11 * dt;
+    if (!p.done && p.x + FL_W < FL_X - 14) { p.done = true; fl.score++; sfx('match'); if (fl.score >= 15) unlock('flap-15'); }
+    if (FL_X + 12 > p.x && FL_X - 12 < p.x + FL_W && (fl.y - 13 < p.gap || fl.y + 13 > p.gap + FL_GAP)) { flEnd(); return; }
+  }
+  fl.pipes = fl.pipes.filter(p => p.x > -FL_W - 10);
+  if (fl.y < 8 || fl.y > h - 28) { flEnd(); return; }
+  drawFlap(); requestAnimationFrame(flLoop);
+}
+$('#flap-start').addEventListener('click', () => {
+  fl = { running: true, started: false, y: 200, v: 0, pipes: [], score: 0, last: performance.now(), next: 600 };
+  $('#flap-status').textContent = ''; requestAnimationFrame(flLoop);
+});
+flCv.addEventListener('pointerdown', flFlap);
+document.addEventListener('keydown', event => {
+  if ($('#flap-panel').hidden || !['ArrowUp', ' '].includes(event.key)) return;
+  event.preventDefault(); flFlap();
+});
+
+/* ================= Pac-Snoopy ================= */
+const PAC_MAP = [
+  '###############', '#o.....#.....o#', '#.###.###.###.#', '#.............#', '#.###.#.#.###.#',
+  '#.....#.#.....#', '#####.#.#.#####', '#.....   .....#', '#####.#.#.#####', '#.....#.#.....#',
+  '#.###.#.#.###.#', '#o...........o#', '#.##.#####.##.#', '#......P......#', '###############',
+];
+const PT = 24, PCOLS = 15, PTOP = 30, PDIRS = { L: [-1, 0], R: [1, 0], U: [0, -1], D: [0, 1] };
+const pcv = $('#pac-canvas'), pctx = pcv.getContext('2d');
+const lerp = (a, b, t) => a + (b - a) * t;
+let pac = { running: false, level: 1, lives: 3, score: 0, nextLife: 150, dots: new Set(), pows: new Set(), p: { x: 7, y: 13, ox: 7, oy: 13, dx: 0, dy: 0, nx: 0, ny: 0 }, ghosts: [], scared: 0, ap: 0, ag: 0, freeze: 0, last: 0 };
+const pacOpen = (x, y) => y >= 0 && y < PAC_MAP.length && x >= 0 && x < PCOLS && PAC_MAP[y][x] !== '#';
+
+/* Velocidades: Snoopy es más rápido que los fantasmas, y estos se asustan 8 segundos */
+function pacSpeeds() {
+  return { ps: Math.max(120, 150 - pac.level * 5), gs: Math.min(300, Math.max(190, 270 - pac.level * 10)) * (pac.scared > 0 ? 1.4 : 1) };
+}
+function pacAdd(points) {
+  pac.score += points;
+  while (pac.score >= pac.nextLife) { pac.nextLife += 150; if (pac.lives < 5) { pac.lives++; toast('❤️ ¡Vida extra!'); } }
+}
+function pacPlace() {
+  pac.p = { x: 7, y: 13, ox: 7, oy: 13, dx: 0, dy: 0, nx: 0, ny: 0 };
+  const base = [{ x: 6, y: 7, wait: 10, chase: .5 }, { x: 7, y: 7, wait: 20, chase: .4 }, { x: 8, y: 7, wait: 30, chase: .3 }];
+  pac.ghosts = base.slice(0, pac.level === 1 ? 2 : 3).map(g => ({ ...g, ox: g.x, oy: g.y, dx: 0, dy: 0, chase: Math.min(.8, g.chase + (pac.level - 1) * .05) }));
+  pac.scared = 0; pac.ap = pac.ag = 0; pac.freeze = 1200;
+}
+function pacLevel(level, lives, score) {
+  pac.level = level; pac.lives = lives; pac.score = score; pac.dots = new Set(); pac.pows = new Set();
+  if (level === 1) pac.nextLife = 150;
+  PAC_MAP.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '.') pac.dots.add(y * PCOLS + x); if (ch === 'o') pac.pows.add(y * PCOLS + x); }));
+  pacPlace();
+}
+function drawPac() {
+  const { ps, gs } = pacSpeeds(), tp = pac.freeze > 0 ? 1 : Math.min(1, pac.ap / ps), tg = pac.freeze > 0 ? 1 : Math.min(1, pac.ag / gs);
+  pctx.clearRect(0, 0, pcv.width, pcv.height);
+  pctx.fillStyle = '#6aa8e8';
+  PAC_MAP.forEach((row, y) => [...row].forEach((ch, x) => { if (ch === '#') pctx.fillRect(x * PT + 1, PTOP + y * PT + 1, PT - 2, PT - 2); }));
+  pctx.textAlign = 'center'; pctx.textBaseline = 'middle';
+  pctx.fillStyle = '#ffe9a8';
+  for (const i of pac.dots) { pctx.beginPath(); pctx.arc((i % PCOLS) * PT + PT / 2, PTOP + Math.floor(i / PCOLS) * PT + PT / 2, 3, 0, 7); pctx.fill(); }
+  pctx.font = '18px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  for (const i of pac.pows) pctx.fillText('🍪', (i % PCOLS) * PT + PT / 2, PTOP + Math.floor(i / PCOLS) * PT + PT / 2);
+  const scaredFace = pac.scared < 2000 && Math.floor(Date.now() / 150) % 2 ? '👻' : '🥶';
+  for (const g of pac.ghosts) pctx.fillText(pac.scared > 0 ? scaredFace : '👻', lerp(g.ox, g.x, tg) * PT + PT / 2, PTOP + lerp(g.oy, g.y, tg) * PT + PT / 2);
+  pctx.font = '21px "Segoe UI Emoji", "Apple Color Emoji", "Noto Color Emoji", sans-serif';
+  pctx.fillText('🐶', lerp(pac.p.ox, pac.p.x, tp) * PT + PT / 2, PTOP + lerp(pac.p.oy, pac.p.y, tp) * PT + PT / 2);
+  pctx.textAlign = 'left'; pctx.font = '600 15px Poppins, sans-serif'; pctx.fillStyle = '#fff';
+  pctx.fillText(`Puntos: ${pac.score}   Nivel ${pac.level}   ${'❤️'.repeat(Math.max(pac.lives, 0))}`, 10, 16);
+  if (pac.running && pac.freeze > 0) { pctx.textAlign = 'center'; pctx.font = '700 22px Poppins, sans-serif'; pctx.fillText('¡Listo!', pcv.width / 2, PTOP + 10.5 * PT); }
+  $('#pac-best').textContent = `Mejor marca: ${store.get('snoopy-pac-best', 0)}`;
+}
+function pacHit() {
+  for (const g of pac.ghosts) {
+    if (g.x !== pac.p.x || g.y !== pac.p.y) continue;
+    if (pac.scared > 0) { pacAdd(50); sfx('big'); Object.assign(g, { x: 7, y: 7, ox: 7, oy: 7, dx: 0, dy: 0, wait: 8 }); }
+    else {
+      pac.lives--; sfx('bad');
+      if (pac.lives <= 0) { pacEnd(); return true; }
+      pacPlace(); $('#pac-status').textContent = '¡Ay! Te atraparon 👻 Sigue intentándolo'; return true;
+    }
+  }
+  return false;
+}
+function pacEnd() {
+  pac.running = false;
+  const record = pac.score > store.get('snoopy-pac-best', 0);
+  if (record) store.set('snoopy-pac-best', pac.score);
+  if (pac.score >= 300) unlock('pac-300');
+  earn(pac.score / 12);
+  $('#pac-status').textContent = `¡Fin del juego! Hiciste ${pac.score} puntos 👻${record && pac.score > 0 ? ' ¡Nuevo récord!' : ''}`;
+  sfx(pac.score >= 100 ? 'win' : 'bad'); drawPac();
+}
+function pacStepPlayer() {
+  const p = pac.p;
+  p.ox = p.x; p.oy = p.y;
+  if ((p.nx || p.ny) && pacOpen(p.x + p.nx, p.y + p.ny)) { p.dx = p.nx; p.dy = p.ny; }
+  if (pacOpen(p.x + p.dx, p.y + p.dy)) { p.x += p.dx; p.y += p.dy; }
+  const i = p.y * PCOLS + p.x;
+  if (pac.dots.delete(i)) { pacAdd(2); sfx('tap'); }
+  if (pac.pows.delete(i)) { pacAdd(10); pac.scared = 8000; sfx('match'); }
+  if (pacHit()) return;
+  if (!pac.dots.size && !pac.pows.size) { sfx('win'); earn(6 + pac.level * 2); toast(`🎉 ¡Nivel ${pac.level} completado!`); pacLevel(pac.level + 1, pac.lives, pac.score); }
+}
+function pacStepGhosts() {
+  for (const g of pac.ghosts) {
+    g.ox = g.x; g.oy = g.y;
+    if (g.wait > 0) { g.wait--; continue; }
+    let options = Object.values(PDIRS).filter(([dx, dy]) => pacOpen(g.x + dx, g.y + dy));
+    const forward = options.filter(([dx, dy]) => !(dx === -g.dx && dy === -g.dy && (g.dx || g.dy)));
+    if (forward.length) options = forward;
+    let pick;
+    if (pac.scared > 0 || Math.random() > g.chase) pick = options[Math.floor(Math.random() * options.length)];
+    else pick = options.reduce((best, d) => Math.abs(g.x + d[0] - pac.p.x) + Math.abs(g.y + d[1] - pac.p.y) < Math.abs(g.x + best[0] - pac.p.x) + Math.abs(g.y + best[1] - pac.p.y) ? d : best);
+    [g.dx, g.dy] = pick; g.x += g.dx; g.y += g.dy;
+    if (pacHit()) return;
+  }
+}
+function pacLoop(now) {
+  if (!pac.running) return;
+  if ($('#pac-panel').hidden) { pac.running = false; $('#pac-status').textContent = 'En pausa. Pulsa Jugar para empezar de nuevo.'; return; }
+  const dt = Math.min(60, now - pac.last); pac.last = now;
+  if (pac.freeze > 0) pac.freeze -= dt;
+  else {
+    pac.ap += dt; pac.ag += dt; pac.scared = Math.max(0, pac.scared - dt);
+    let { ps, gs } = pacSpeeds();
+    while (pac.running && pac.ap >= ps) { pac.ap -= ps; pacStepPlayer(); }
+    ({ gs } = pacSpeeds());
+    while (pac.running && pac.ag >= gs) { pac.ag -= gs; pacStepGhosts(); }
+  }
+  drawPac();
+  if (pac.running) requestAnimationFrame(pacLoop);
+}
+function pacTurn(letter) { const [nx, ny] = PDIRS[letter]; pac.p.nx = nx; pac.p.ny = ny; }
+$('#pac-start').addEventListener('click', () => {
+  pacLevel(1, 3, 0); pac.running = true; pac.last = performance.now();
+  $('#pac-status').textContent = 'Desliza o usa las flechas. ¡Los fantasmas son lentos al principio!'; requestAnimationFrame(pacLoop);
+});
+document.addEventListener('keydown', event => {
+  const letter = { ArrowLeft: 'L', ArrowRight: 'R', ArrowUp: 'U', ArrowDown: 'D', a: 'L', d: 'R', w: 'U', s: 'D' }[event.key];
+  if ($('#pac-panel').hidden || !letter) return;
+  event.preventDefault(); pacTurn(letter);
+});
+$('#pac-ctrl').addEventListener('pointerdown', event => { const b = event.target.closest('button'); if (b) { event.preventDefault(); pacTurn(b.dataset.d); } });
+let swipePac = null;
+pcv.addEventListener('pointerdown', event => { swipePac = { x: event.clientX, y: event.clientY }; });
+pcv.addEventListener('pointermove', event => {
+  if (!swipePac) return;
+  const dx = event.clientX - swipePac.x, dy = event.clientY - swipePac.y;
+  if (Math.max(Math.abs(dx), Math.abs(dy)) < 14) return;
+  pacTurn(Math.abs(dx) > Math.abs(dy) ? (dx < 0 ? 'L' : 'R') : (dy < 0 ? 'U' : 'D'));
+  swipePac = { x: event.clientX, y: event.clientY };
+});
+pcv.addEventListener('pointerup', () => { swipePac = null; });
+pcv.addEventListener('pointercancel', () => { swipePac = null; });
+
+/* Aventura ahora se ejecuta en aventura-demo.html mediante un iframe aislado.
+   No cargamos el motor antiguo en la página Juegos. */
+
+newTtt(); newSudoku(); newMemo(); newM3(); newHang(); buildSimon(); buildMole(); drawCatch(); drawAce(); newC4(); new2048(); drawFlap(); pacLevel(1, 3, 0); drawPac(); updateRewardsTab(); updateCoins(); syncAventuraReward();
+document.querySelector(`[data-tab="${store.get('snoopy-tab', 'ttt')}"]`)?.click();
+window.addEventListener('focus', () => {
+  owned = store.get('snoopy-rewards', {});
+  coins = store.get('snoopy-coins', 0);
+  updateCoins(); updateRewardsTab();
+  syncAventuraReward();
+});
+</script>
+<script src="snoopy-musica.js"></script>
+<script src="juegos-extras.js" defer></script>
+</body>
+</html>

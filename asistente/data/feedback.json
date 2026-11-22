@@ -1,0 +1,11 @@
+[
+  {
+    "id": "f-a7574647a1",
+    "ts": 1794142850902,
+    "value": "up",
+    "question": "explicame como es la programacion y dame un ejemplo",
+    "reply": "¡Claro! 🐶 La programación es como dar instrucciones a una máquina para que haga algo. Por ejemplo, decirle a un robot: \"Si ve una galleta, corre hacia allá\". **Ejemplo simple en JavaScript** (para un sitio web): ```html <!-- archivo: index.html --> <!DOCTYPE html> <html> <head> <title>¡Hola desde JavaScript!</title> </head> <body> <p id=\"mensaje\">¡Hola, mundo!</p> <script> document.getElementById(\"mensaje\").innerHTML = \"¡Hola, Snoopy!\"; </script> </body> </html> ``` Este código hace que la página muestre \"¡Hola, Snoopy!\" en vez de \"¡Hola, mundo!\". ¿Quieres probarlo o ver otro ejemplo? 🍪✨",
+    "source": "ollama",
+    "page": "index.html"
+  }
+]
