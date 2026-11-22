@@ -49,7 +49,8 @@
   .as-win.as-min{height:auto}
   .as-win.as-min .as-log,.as-win.as-min .as-form,.as-win.as-min .as-mic-status{display:none}
   .as-head{display:flex;align-items:center;gap:10px;padding:12px 14px;background:var(--r);color:#fff}
-  .as-head .as-av{font-size:26px}
+  .as-head .as-av{flex:0 0 38px;width:38px;height:38px;display:grid;place-items:center;border-radius:50%;background:#bfe3f7;overflow:hidden}
+  .as-head .as-av img{width:100%;height:100%;display:block;object-fit:contain}
   .as-head .as-t{flex:1;min-width:0;line-height:1.2}
   .as-head b{display:block;font-size:15px}.as-head small{font-size:12px;opacity:.9}
   .as-head button{border:0;border-radius:10px;background:#ffffff30;color:#fff;font-size:15px;width:34px;height:34px;cursor:pointer}
@@ -179,7 +180,7 @@
   }, voiceSupported ? '🔊' : '🔇');
   voiceBtn.disabled = !voiceSupported;
   const head = h('div', { class: 'as-head' },
-    h('span', { class: 'as-av', 'aria-hidden': 'true' }, '🐶'),
+    h('span', { class: 'as-av', 'aria-hidden': 'true' }, h('img', { src: '/img/snoopy.png', alt: '', loading: 'lazy' })),
     h('div', { class: 'as-t' }, title, h('small', {}, 'Te ayudo con esta web')),
     voiceBtn,
     h('button', { type: 'button', title: 'Nueva conversación', 'aria-label': 'Nueva conversación', onclick: newChat }, '➕'));
