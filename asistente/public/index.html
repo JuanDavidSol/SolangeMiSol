@@ -30,6 +30,9 @@
   .api-line .test { background: #467c9f; }
   .api-line button:disabled { opacity: .6; cursor: wait; }
   #api-key-status { min-height: 18px; margin: 8px 0 0; }
+  .api-active{margin:0 0 16px;padding:12px 16px;border:1px solid #b6dbc7;border-radius:16px;background:#f3fff7;color:#225b41;display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap;font-size:13px;font-weight:600}
+  .api-active[hidden],.api-settings[hidden]{display:none!important}
+  .api-active button{border:1px solid #b6dbc7;border-radius:10px;padding:8px 12px;background:#fff;color:#225b41;cursor:pointer;font:600 12px inherit}
 </style>
 </head>
 <body>
@@ -39,7 +42,7 @@
     <div class="mascot" aria-hidden="true">🐶</div>
     <div><h1>Pregúntale a Snoopy</h1><p>Dudas sobre los juegos, las galletas, los premios y los vales.</p></div>
   </header>
-  <details class="api-settings">
+  <details class="api-settings" id="api-settings">
     <summary>🔑 ¿Tienes tu propia API de Gemini? Configurar</summary>
     <p>Puedes usar tu propia clave para conversar con Snoopy. Es opcional y no necesitas contraseña de administrador.</p>
     <form id="api-key-form" autocomplete="off">
@@ -63,6 +66,10 @@
     <p id="api-key-status" role="status" aria-live="polite">Pega tu clave de Gemini. Puedes pulsar «Probar conexión» directamente: no hace falta activarla primero. No guardamos la clave y tendrás que volver a pegarla al recargar.</p>
     <p>La clave viaja por HTTPS a este servidor y de allí a Gemini en cada mensaje. Quien administra el servidor debe ser de confianza; el uso de tu clave puede consumir cuota o generar cargos.</p>
   </details>
+  <div id="api-active" class="api-active" role="status" aria-live="polite" hidden>
+    <span id="api-active-label">✓ Gemini activado (conexión no verificada).</span>
+    <button type="button" id="api-change">Cambiar clave o modelo</button>
+  </div>
   <div id="chat-root"></div>
   <p class="note">Soy un asistente virtual. Los mensajes enviados con tu API se procesan en Gemini; evita compartir datos personales o secretos.</p>
 </div>

@@ -9,11 +9,31 @@
   const status = document.getElementById('api-key-status');
   const remove = document.getElementById('api-key-remove');
   const test = document.getElementById('api-key-test');
+  const settings = document.getElementById('api-settings');
+  const activePanel = document.getElementById('api-active');
+  const activeLabel = document.getElementById('api-active-label');
+  const change = document.getElementById('api-change');
   const DEFAULT_MODEL = 'gemini-3.1-flash-lite';
   const usableKey = value => typeof value === 'string' && value.length >= 8 && value.length <= 256 && /^[\x21-\x7e]+$/.test(value);
   window.getSnoopyPersonalGeminiKey = () => personalKey;
   window.getSnoopyPersonalGeminiModel = () => modelField ? modelField.value : DEFAULT_MODEL;
-  if (!form || !field || !modelField || !status || !remove || !test) return;
+  if (!form || !field || !modelField || !status || !remove || !test || !settings || !activePanel || !activeLabel || !change) return;
+
+  function showActive(message) {
+    settings.hidden = true;
+    settings.open = false;
+    activePanel.hidden = false;
+    activeLabel.textContent = message;
+  }
+  function showSettings() {
+    settings.hidden = false;
+    settings.open = true;
+    activePanel.hidden = true;
+  }
+  change.addEventListener('click', () => {
+    showSettings();
+    field.focus();
+  });
 
   function activateFromField() {
     const typed = field.value.trim();
@@ -38,7 +58,10 @@
   form.addEventListener('submit', event => {
     event.preventDefault();
     const key = activateFromField();
-    if (key) status.textContent = 'Clave activada en esta página ✓ (campo borrado por seguridad). Ahora pulsa «Probar conexión».';
+    if (key) {
+      status.textContent = 'Clave activada en esta página. La conexión todavía no se ha probado.';
+      showActive('✓ Gemini activado (sin verificar). Ya puedes hablar con Snoopy.');
+    }
   });
 
   modelField.addEventListener('change', () => {
@@ -52,6 +75,7 @@
     revision++;
     field.value = '';
     status.textContent = 'Clave quitada de esta página. No quedó guardada.';
+    showSettings();
   });
 
   test.addEventListener('click', async () => {
@@ -75,6 +99,7 @@
       status.textContent = response.ok && result.ok
         ? 'Conexión correcta ✓. Gemini funciona con ' + model + '. Puedes preguntarle a Snoopy.'
         : result.error || 'No se pudo completar la prueba (HTTP ' + response.status + ').';
+      if (response.ok && result.ok) showActive('✓ Gemini conectado: ' + model + '. Puedes hablar con Snoopy.');
     } catch (error) {
       if (currentRevision !== revision) return;
       status.textContent = error && (error.name === 'TimeoutError' || error.name === 'AbortError')

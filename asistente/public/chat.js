@@ -30,6 +30,8 @@
   let state = load() || { sid: newSid(), msgs: [], open: false, min: false };
   let cfg = null, busy = false, typing = null;
   let liveEl = null, liveText = '', liveRaf = 0;   // respuesta que se está escribiendo en este momento
+  const voiceSupported = 'speechSynthesis' in window && 'SpeechSynthesisUtterance' in window;
+  let voiceEnabled = voiceSupported;
 
   /* ---------- Estilos ---------- */
   const css = `
@@ -47,6 +49,10 @@
   .as-head b{display:block;font-size:15px}.as-head small{font-size:12px;opacity:.9}
   .as-head button{border:0;border-radius:10px;background:#ffffff30;color:#fff;font-size:15px;width:34px;height:34px;cursor:pointer}
   .as-head button:hover{background:#ffffff55}
+  .as-head button.as-speech{font-size:20px;width:40px;flex-shrink:0}
+  .as-head button:disabled{opacity:.55;cursor:not-allowed}
+  .as-replay{margin-top:7px;border:1px solid var(--line);background:#fff;color:var(--ink);border-radius:999px;padding:4px 10px;font:500 12px inherit;cursor:pointer}
+  .as-replay:hover{border-color:var(--r)}
   .as-log{flex:1;overflow-y:auto;padding:14px;display:flex;flex-direction:column;gap:10px;background:#fffaf5}
   .as-msg{max-width:86%;padding:10px 13px;border-radius:16px;font-size:14px;line-height:1.45;overflow-wrap:anywhere;animation:as-in .2s ease}
   .as-msg.as-a{align-self:flex-start;background:var(--bg);border:1px solid var(--line);border-bottom-left-radius:4px}
@@ -147,9 +153,17 @@
   const sendBtn = h('button', { type: 'submit' }, 'Enviar');
   const form = h('form', { class: 'as-form', onsubmit: e => { e.preventDefault(); ask(input.value); } }, input, sendBtn);
   const title = h('b', {}, 'Asistente');
+  const voiceBtn = h('button', {
+    type: 'button', class: 'as-speech',
+    title: voiceSupported ? 'Desactivar respuestas por voz' : 'Este navegador no admite voz',
+    'aria-label': 'Desactivar respuestas por voz', 'aria-pressed': String(voiceEnabled),
+    onclick: toggleVoice
+  }, voiceSupported ? '🔊' : '🔇');
+  voiceBtn.disabled = !voiceSupported;
   const head = h('div', { class: 'as-head' },
     h('span', { class: 'as-av', 'aria-hidden': 'true' }, '🐶'),
     h('div', { class: 'as-t' }, title, h('small', {}, 'Te ayudo con esta web')),
+    voiceBtn,
     h('button', { type: 'button', title: 'Nueva conversación', 'aria-label': 'Nueva conversación', onclick: newChat }, '➕'));
   const win = h('div', { class: 'as-win' + (MODE === 'page' ? ' as-page' : ''), role: 'dialog', 'aria-label': 'Asistente virtual' }, head, log, form);
   const root = h('div', { class: 'as-root' });
@@ -163,6 +177,58 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.open) setOpen(false); });
   } else root.append(win);
 
+  /* ---------- Voz calmada y clara en español (Web Speech API) ---------- */
+  function stopVoice() {
+    if (voiceSupported) window.speechSynthesis.cancel();
+  }
+  function preferredVoice() {
+    if (!voiceSupported) return null;
+    const spanish = window.speechSynthesis.getVoices()
+      .filter(v => /^es(?:-|$)/i.test(v.lang || ''));
+    const score = v => {
+      const lang = (v.lang || '').toLowerCase();
+      const name = (v.name || '').toLowerCase();
+      const locale = lang.startsWith('es-pe') ? 95 : lang.startsWith('es-mx') ? 85
+        : lang.startsWith('es-us') ? 80 : lang.startsWith('es') ? 65 : 0;
+      return locale + (/natural|neural|premium|google|microsoft/i.test(name) ? 30 : 0)
+        + (v.localService ? 5 : 0);
+    };
+    spanish.sort((a, b) => score(b) - score(a));
+    return spanish[0] || null;
+  }
+  function spokenText(text) {
+    return String(text || '')
+      .replace(/[\x60]{3}[\s\S]*?[\x60]{3}/g, ' Hay un ejemplo de código en la pantalla. ')
+      .replace(/\[([^\]]+)\]\([^)]+\)/g, '$1')
+      .replace(/[\x60]([^\x60]+)[\x60]/g, '$1')
+      .replace(/https?:\/\/\S+/gi, ' un enlace ')
+      .replace(/[*_#~>|]/g, ' ')
+      .replace(/\s+/g, ' ').trim().slice(0, 3200);
+  }
+  function speakReply(text, force = false) {
+    if (!voiceSupported || (!voiceEnabled && !force)) return;
+    const words = spokenText(text);
+    if (!words) return;
+    stopVoice();
+    const speech = new window.SpeechSynthesisUtterance(words);
+    const chosen = preferredVoice();
+    if (chosen) { speech.voice = chosen; speech.lang = chosen.lang; }
+    else speech.lang = 'es-PE';
+    speech.rate = 1.04;    // velocidad intermedia, fácil de entender
+    speech.pitch = 1.02;   // tono suave
+    speech.volume = 0.88;  // volumen agradable
+    window.speechSynthesis.speak(speech);
+  }
+  function toggleVoice() {
+    if (!voiceSupported) return;
+    voiceEnabled = !voiceEnabled;
+    voiceBtn.textContent = voiceEnabled ? '🔊' : '🔇';
+    voiceBtn.title = voiceEnabled ? 'Desactivar respuestas por voz' : 'Activar respuestas por voz';
+    voiceBtn.setAttribute('aria-label', voiceBtn.title);
+    voiceBtn.setAttribute('aria-pressed', String(voiceEnabled));
+    if (!voiceEnabled) stopVoice();
+  }
+
   /* ---------- Lógica ---------- */
   function layout() {
     if (MODE !== 'float') return;
@@ -171,7 +237,7 @@
     win.classList.toggle('as-min', state.min);
   }
   function setOpen(v) {
-    state.open = v; if (v) state.min = false; save(); layout();
+    state.open = v; if (v) state.min = false; else stopVoice(); save(); layout();
     if (v) { refreshChips(); setTimeout(() => input.focus(), 50); render(); }
   }
   function resolveUrl(u) {
@@ -209,7 +275,13 @@
       if (links.children.length) el.append(links);
     }
     if (last && m.r === 'a' && m.s && m.s.length) el.append(h('div', { class: 'as-chips' }, m.s.map(q => h('button', { type: 'button', onclick: () => ask(q) }, q))));
-    if (m.r === 'a' && m.q) el.append(rates(m));   // solo las respuestas reales se pueden valorar (no la bienvenida ni los errores)
+    if (m.r === 'a' && m.q) {
+      el.append(rates(m));   // solo las respuestas reales se pueden valorar
+      if (voiceSupported) el.append(h('button', {
+        type: 'button', class: 'as-replay', title: 'Escuchar esta respuesta',
+        'aria-label': 'Escuchar esta respuesta', onclick: () => speakReply(m.t, true)
+      }, '🔈 Escuchar otra vez'));
+    }
     return el;
   }
   function render() {
@@ -227,7 +299,7 @@
     if (!cfg || state.msgs.length !== 1 || !state.msgs[0].w) return;
     try { const c = await (await fetch(`${API}/api/config?page=${encodeURIComponent(page())}&section=${encodeURIComponent(section())}`)).json(); state.msgs[0].s = c.faqs || []; save(); render(); } catch { /* se deja como está */ }
   }
-  function newChat() { if (busy) return; state = { sid: newSid(), msgs: [], open: true, min: false }; save(); welcome(); input.focus(); }
+  function newChat() { if (busy) return; stopVoice(); state = { sid: newSid(), msgs: [], open: true, min: false }; save(); welcome(); input.focus(); }
 
   /* ---------- Petición al servidor (con respuesta en tiempo real) ---------- */
   const headers = { 'Content-Type': 'application/json' };
@@ -308,6 +380,7 @@
   async function ask(text) {
     text = String(text || '').trim().slice(0, 500);
     if (!text || busy) return;
+    stopVoice();
     input.value = ''; busy = true; sendBtn.disabled = true;
     state.msgs.push({ r: 'u', t: text }); render();
     let bot;
@@ -323,6 +396,7 @@
     liveEl = null; liveRaf = 0; liveText = '';
     busy = false; sendBtn.disabled = false;
     state.msgs.push(bot); state.msgs = state.msgs.slice(-60); save(); render();
+    if (bot.q && bot.t && (MODE === 'page' || state.open)) speakReply(bot.t);
     if (MODE === 'page' || state.open) input.focus();
   }
 
