@@ -445,6 +445,7 @@
           try { recognition.start(); }
           catch (_) {
             micSession = null;
+            voiceConversation = false;
             markMicListening(false);
             showMicStatus('Chrome terminó la escucha. El texto reconocido sigue en el campo; puedes enviarlo o volver a pulsar 🎤.');
           }
@@ -468,6 +469,7 @@
       showMicStatus('Preparando micrófono… Puede que Chrome solicite permiso.');
     } catch (_) {
       micSession = null;
+      voiceConversation = false;
       markMicListening(false);
       showMicStatus('No pude encender el micrófono. Comprueba los permisos del navegador.');
     }
