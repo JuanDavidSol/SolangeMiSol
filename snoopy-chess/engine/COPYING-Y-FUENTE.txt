@@ -7,8 +7,13 @@ https://github.com/nmrugg/stockfish.js/tree/v19.0.1
 https://github.com/official-stockfish/Stockfish
 https://www.gnu.org/licenses/gpl-3.0.html
 
-Archivos incluidos (sin modificar):
+Archivos incluidos (WASM original; cargador JS con ajuste de compatibilidad MIME):
 stockfish-19-lite-single.js
 stockfish-19-lite-single.wasm
 
 Su codigo fuente y licencia GPLv3 estan disponibles en los enlaces anteriores.
+
+Modificación local del archivo JS: reemplaza WebAssembly.instantiateStreaming
+por lectura ArrayBuffer e instanciación WebAssembly.instantiate,
+para servidores que no entregan Content-Type application/wasm.
+No se modificó el motor de ajedrez ni el archivo WASM.
