@@ -551,7 +551,7 @@
         <div class="brand-name">SNOOPY CHESS<small>La aventura del ajedrez</small></div>
       </div>
       <div class="topbar-right">
-        <span class="version-chip">EDICIÓN SNOOPY · 2.15</span>
+        <span class="version-chip">EDICIÓN SNOOPY · 2.16</span>
         <div class="live-label"><span class="live-dot" aria-hidden="true"></span><span id="mode-label">Dos personas · local</span></div>
       </div>
     </header>
@@ -1717,12 +1717,12 @@
       renderAll();
       const generation=botGeneration;
       // La inicialización se cuenta aparte del tiempo de búsqueda.
-      botTimeout=setTimeout(()=>{if(generation===botGeneration)fallbackBot('El motor no terminó de iniciarse en 12 segundos.');},12000);
+      botTimeout=setTimeout(()=>{if(generation===botGeneration)fallbackBot('El motor tardó demasiado en iniciar (30 segundos). Revisa que el archivo WASM responda correctamente.');},30000);
       if (engine && engineReady) {startBotSearch();return;}
       try {
         if (location.protocol==='file:') {fallbackBot('Abre Snoopy Chess desde GitHub/Render o http://localhost.');return;}
         const worker=new Worker(engineFileUrl()); engine=worker;
-        setNote('♟️ Iniciando ' + engineLabel() + ' desde archivos locales…');
+        setNote('♟️ Cargando ' + engineLabel() + ' en tu navegador. La primera carga puede tardar un poco más…');
         worker.addEventListener('message',event=>{
           if (generation!==botGeneration || worker!==engine) return;
           for (const raw of String(event.data).split(/\r?\n/)) {
@@ -1778,7 +1778,7 @@
             }
           }
         });
-        worker.addEventListener('error',()=>{if(generation===botGeneration)fallbackBot('Faltan archivos o el navegador bloqueó WebAssembly.');});
+        worker.addEventListener('error',event=>{if(generation===botGeneration)fallbackBot('Error al iniciar WebAssembly' + (event.message ? ': ' + event.message.slice(0,160) : '. Revisa los archivos del motor.'));});
         worker.postMessage('uci');
       } catch (_) {fallbackBot('El navegador no permitió iniciar el motor.');}
     }
