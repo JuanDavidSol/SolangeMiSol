@@ -135,6 +135,17 @@
   .aventura-frame { display: block; width: 100%; height: 780px; border: 2px solid var(--line); border-radius: 16px; background: #b9e6ff; }
   .aventura-label { display: inline-block; margin-bottom: 8px; padding: 3px 10px; border-radius: 999px; background: var(--red-soft); color: var(--red); font-size: 12px; font-weight: 700; }
   @media (max-width: 600px) { .aventura-frame { height: 760px; } }
+
+  /* Entrada al ajedrez: juego independiente, sin alterar los minijuegos */
+  .snoopy-chess-feature{display:flex;align-items:center;gap:16px;justify-content:space-between;margin:0 0 17px;padding:16px 18px;background:linear-gradient(110deg,#fff4dc,#fffafd);border:2px solid #efd4b1;border-radius:21px;box-shadow:0 7px 22px #ab74431a;}
+  .snoopy-chess-feature h2{font-size:19px;color:#563b34;margin:2px 0 5px;}
+  .snoopy-chess-feature p{font-size:12px;color:#796b65;line-height:1.5;margin:0;}
+  .snoopy-chess-feature small{font-size:9px;letter-spacing:.09em;font-weight:700;color:#9c7b55;}
+  .snoopy-chess-feature a{display:inline-flex;flex-shrink:0;align-items:center;justify-content:center;padding:11px 17px;border-radius:999px;text-decoration:none;background:#e8505b;color:#fff;font:700 13px 'Poppins',sans-serif;box-shadow:0 4px 12px #e8505b2b;}
+  .snoopy-chess-feature a:hover{background:#c43b51;transform:translateY(-1px);}
+  .snoopy-chess-feature a:focus-visible{outline:3px solid #b44766;outline-offset:3px;}
+  @media(max-width:480px){.snoopy-chess-feature{align-items:flex-start;flex-direction:column;gap:10px;padding:14px}.snoopy-chess-feature a{width:100%;}}
+
 </style>
 <link rel="stylesheet" href="snoopy-tema.css">
 <link rel="stylesheet" href="juegos-mobile.css">
@@ -152,6 +163,12 @@
     <span class="coins" id="coins" title="Tus galletas">🍪 0</span>
     <button class="tool mute" id="mute" type="button" aria-label="Activar o silenciar el sonido">🔊</button>
   </header>
+
+
+  <section class="snoopy-chess-feature" aria-label="Jugar Snoopy Chess">
+    <div><small>♟️ NUEVO JUEGO</small><h2>Snoopy Chess</h2><p>Jueguen juntos o practica contra Stockfish, con movimientos explicados.</p></div>
+    <a href="snoopy-chess/" aria-label="Abrir Snoopy Chess">Jugar ajedrez ♡</a>
+  </section>
 
   <div class="mobile-game-picker">
     <label for="game-picker">📱 Elige un juego</label>
