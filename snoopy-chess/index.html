@@ -396,7 +396,7 @@
 
     /* Piezas que se deslizan entre casillas: capa independiente del grid. */
     .piece-flight-layer {position:absolute;inset:0;z-index:20;pointer-events:none;overflow:visible;contain:layout;}
-    .flight-token {position:absolute;display:grid;place-items:center;will-change:transform;transform:translate3d(0,0,0);transition:transform 460ms cubic-bezier(.22,.8,.24,1);}
+    .flight-token {position:absolute;display:grid;place-items:center;will-change:transform;transform:translate3d(0,0,0);transition:transform 300ms cubic-bezier(.22,.8,.24,1);}
     .flight-token .piece {transform:none!important;transition:none!important;}
     .flight-token.captured-token{z-index:1;animation:capturedFade 380ms ease-out forwards;}
     .flight-token.moving-token{z-index:2;filter:drop-shadow(0 9px 8px #102d2955);}
@@ -1239,7 +1239,7 @@
         if(activeFlight?.layer!==layer)return;
         for(const f of flights){if(f.role==='moving-token')f.avatar.style.transform=`translate3d(${f.dx}px,${f.dy}px,0)`;}
       }));
-      flightTimer=setTimeout(()=>{if(activeFlight?.layer===layer)cancelFlight(true);},490);
+      flightTimer=setTimeout(()=>{if(activeFlight?.layer===layer)cancelFlight(true);},330);
     }
 
     function renderBoard() {
