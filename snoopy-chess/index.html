@@ -1816,8 +1816,8 @@
             }
           }
         });
-        worker.addEventListener('error',event=>{if(generation===botGeneration)failure('Error del motor: ' + (event.message || 'no se pudo ejecutar el archivo JavaScript'));});
-        worker.addEventListener('messageerror',()=>{if(generation===botGeneration)failure('Error de comunicación con el motor');});
+        worker.addEventListener('error',event=>{if(generation===botGeneration && worker===engine)failure('Error del motor: ' + (event.message || 'no se pudo ejecutar el archivo JavaScript'));});
+        worker.addEventListener('messageerror',()=>{if(generation===botGeneration && worker===engine)failure('Error de comunicación con el motor');});
         worker.postMessage('uci');
         } catch (error) {failure('El navegador no pudo iniciar el motor: ' + (error?.message || 'error desconocido'));}
       };
