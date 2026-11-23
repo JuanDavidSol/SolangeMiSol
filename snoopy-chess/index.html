@@ -551,7 +551,7 @@
         <div class="brand-name">SNOOPY CHESS<small>La aventura del ajedrez</small></div>
       </div>
       <div class="topbar-right">
-        <span class="version-chip">EDICIÓN SNOOPY · 2.17</span>
+        <span class="version-chip">EDICIÓN SNOOPY · 2.18</span>
         <div class="live-label"><span class="live-dot" aria-hidden="true"></span><span id="mode-label">Dos personas · local</span></div>
       </div>
     </header>
@@ -1526,7 +1526,7 @@
     async function inspectStockfishFiles() {
       const paths = [
         ['JavaScript', new URL('./engine/stockfish-19-lite-single.js', import.meta.url)],
-        ['WASM', new URL('./engine/stockfish-19-lite-single.wasm', import.meta.url)]
+        ['Datos WASM (JavaScript)', new URL('./engine/stockfish-19-lite-single.wasm-data.js', import.meta.url)]
       ];
       const notes = [];
       for (const [label, url] of paths) {
@@ -1545,7 +1545,7 @@
               notes.push('WASM: HTTP ' + result.status + (magic ? ' (válido al comienzo)' : ' (respuesta NO es WebAssembly)') + ', ' + type);
               await reader.cancel().catch(()=>{});
             } else notes.push('WASM: HTTP ' + result.status + ', ' + type);
-          } else notes.push('JS: HTTP ' + result.status + ', ' + type);
+          } else notes.push(label + ': HTTP ' + result.status + ', ' + type);
         } catch (error) {
           notes.push(label + ': ' + (error?.name === 'AbortError' ? 'sin respuesta en 6 s' : 'fallo de red'));
         } finally {clearTimeout(timeout);}
@@ -1755,7 +1755,7 @@
         if (generation !== botGeneration || !botThinking) return;
         activeAttempt = cdn ? 2 : 1;
         clearTimeout(botTimeout);
-        botTimeout = setTimeout(() => failure('El motor no respondió al iniciar'), cdn ? 20000 : 9000);
+        botTimeout = setTimeout(() => failure('El motor no respondió al iniciar'), cdn ? 12000 : 12000);
         if (cdn) setNote('♟️ El servidor no completó la carga. Probando el mismo Stockfish con el archivo WASM de respaldo…');
         try {
         if (location.protocol==='file:') {fallbackBot('Abre Snoopy Chess desde GitHub/Render o http://localhost.');return;}

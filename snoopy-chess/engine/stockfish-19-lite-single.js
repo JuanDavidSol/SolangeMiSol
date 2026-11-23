@@ -1,4 +1,33 @@
 /*!
+ * Stockfish 19 Lite — compatibilidad con Render cuando los .wasm dan 404.
+ * Los datos WASM originales viajan en un archivo JavaScript del mismo origen.
+ * Licencia GPLv3: https://github.com/nmrugg/stockfish.js
+ */
+(function(){
+  if (typeof importScripts !== 'function') return;
+  importScripts('./stockfish-19-lite-single.wasm-data.js');
+  if (!self.__SNOOPY_CHESS_WASM_B64) throw new Error('Faltan los datos de Stockfish WASM');
+  const nativeFetch = self.fetch.bind(self);
+  let binary;
+  const loadBinary = () => {
+    if (binary) return binary;
+    const raw = atob(self.__SNOOPY_CHESS_WASM_B64);
+    const bytes = new Uint8Array(raw.length);
+    for (let i = 0; i < raw.length; i++) bytes[i] = raw.charCodeAt(i);
+    binary = bytes;
+    self.__SNOOPY_CHESS_WASM_B64 = null;
+    return binary;
+  };
+  self.fetch = function(input, init){
+    const url = typeof input === 'string' ? input : input instanceof URL ? input.href : input.url;
+    if (/stockfish-19-lite-single\.wasm(?:[?#]|$)/i.test(url)) {
+      return Promise.resolve(new Response(loadBinary(), {status:200, headers:{'content-type':'application/wasm'}}));
+    }
+    return nativeFetch(input, init);
+  };
+})();
+
+/*!
  * Stockfish.js 19 (c) 2026, Chess.com, LLC
  * https://github.com/nmrugg/stockfish.js
  * License: GPLv3
