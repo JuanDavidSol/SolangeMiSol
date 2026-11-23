@@ -525,6 +525,21 @@
     .snoopy-chess-return a:focus-visible{outline:3px solid var(--accent);outline-offset:2px;}
     @media(max-width:500px){.snoopy-chess-return{gap:7px}.snoopy-chess-return a{font-size:10px;padding:8px 10px;}}
 
+  
+    /* SNOOPY CHESS — compañero de partida con diálogo compacto */
+    .snoopy-commentary{display:flex;align-items:center;gap:12px;margin:0 0 10px;padding:8px 11px 8px 7px;border:1px solid var(--card-edge);border-radius:15px;background:var(--card);box-shadow:0 4px 13px #493a3210;}
+    .snoopy-commentary-portrait{flex:0 0 64px;width:64px;height:65px;display:grid;place-items:center;overflow:hidden;border-radius:13px;background:var(--quiet);}
+    .snoopy-commentary-portrait img{width:100%;height:100%;object-fit:contain;object-position:center;}
+    .snoopy-commentary-fallback::after{content:"🐶";font-size:40px;line-height:1}
+    .snoopy-commentary-bubble{position:relative;min-width:0;flex:1;min-height:59px;padding:8px 13px 8px 14px;border:1px solid var(--card-edge);border-radius:13px;background:var(--quiet);display:flex;flex-direction:column;justify-content:center;}
+    .snoopy-commentary-bubble::before{position:absolute;left:-5px;top:24px;width:9px;height:9px;content:"";transform:rotate(45deg);background:var(--quiet);border-left:1px solid var(--card-edge);border-bottom:1px solid var(--card-edge);}
+    .snoopy-commentary-label{display:block;font:700 9px 'DM Mono',monospace;letter-spacing:.07em;color:var(--muted);}
+    .snoopy-commentary-bubble p{color:var(--ink);font-size:12px;font-weight:600;line-height:1.45;margin:3px 0 0;overflow-wrap:anywhere;}
+    .snoopy-commentary-bubble p.snoopy-commentary-pop{animation:snoopy-commentary-appear .25s ease-out;}
+    @keyframes snoopy-commentary-appear{from{opacity:.5;transform:translateY(3px)}to{opacity:1;transform:translateY(0)}}
+    @media(max-width:600px){.snoopy-commentary{gap:8px;margin-bottom:8px;padding:6px 8px 6px 6px;border-radius:12px}.snoopy-commentary-portrait{flex-basis:51px;width:51px;height:56px;border-radius:10px}.snoopy-commentary-bubble{min-height:50px;padding:7px 10px 7px 12px}.snoopy-commentary-bubble p{font-size:11px;line-height:1.4}.snoopy-commentary-label{font-size:8px}.snoopy-commentary-bubble::before{top:21px}}
+    @media(prefers-reduced-motion:reduce){.snoopy-commentary-bubble p.snoopy-commentary-pop{animation:none}}
+
   </style>
 </head>
 <body>
@@ -536,7 +551,7 @@
         <div class="brand-name">SNOOPY CHESS<small>La aventura del ajedrez</small></div>
       </div>
       <div class="topbar-right">
-        <span class="version-chip">EDICIÓN SNOOPY · 2.14</span>
+        <span class="version-chip">EDICIÓN SNOOPY · 2.15</span>
         <div class="live-label"><span class="live-dot" aria-hidden="true"></span><span id="mode-label">Dos personas · local</span></div>
       </div>
     </header>
@@ -590,6 +605,16 @@
           <div class="clock-row" id="clocks" hidden aria-label="Relojes de la partida">
             <div class="clock-box" id="clock-w">♙ Blancas <strong id="time-w">05:00</strong></div>
             <div class="clock-box" id="clock-b">♟ Negras <strong id="time-b">05:00</strong></div>
+          </div>
+
+          <div class="snoopy-commentary" aria-label="Snoopy acompaña la partida">
+            <div class="snoopy-commentary-portrait">
+              <img src="../img/snoopy.png" alt="Snoopy" loading="eager" decoding="async" onerror="this.hidden=true;this.parentElement.classList.add('snoopy-commentary-fallback')">
+            </div>
+            <div class="snoopy-commentary-bubble" aria-live="polite" aria-atomic="true">
+              <span class="snoopy-commentary-label">SNOOPY DICE ♡</span>
+              <p id="snoopy-says">¡Hola! El tablero está listo para una nueva aventura.</p>
+            </div>
           </div>
           <div class="turn-strip" aria-live="polite">
             <div class="turn-person"><span class="turn-piece" id="turn-piece" aria-hidden="true">♙</span><div><div class="turn-name" id="turn-name">Juegan blancas</div><div class="turn-meta" id="turn-meta">Movimiento 1</div></div></div>
@@ -677,6 +702,287 @@
     const boardElement = document.querySelector('#board');
     const moveList = document.querySelector('#move-list');
     const game = new Chess();
+
+    // Frases neutras para quien juegue, sin asumir género ni que haya dos personas a la vez.
+    // Una bolsa de frases mezcladas por situación y memoria global de las últimas ocho.
+    const SNOOPY_PHRASES = {
+      "inicio": [
+        "¡Hola! El tablero está listo para una nueva aventura.",
+        "Cada partida es una oportunidad para descubrir algo bonito.",
+        "Una jugada a la vez, sin prisas.",
+        "Hoy puede haber movimientos sorprendentes.",
+        "¡Qué alegría verte por aquí! ¿Empezamos?",
+        "Que esta partida tenga momentos divertidos.",
+        "El tablero espera su primera sorpresa.",
+        "A veces las mejores ideas empiezan con un peón.",
+        "¡Hay toda una historia esperando en estas casillas!",
+        "Un poco de calma y un poquito de curiosidad.",
+        "No importa el resultado: disfruta el camino.",
+        "Todo comienza con una pequeña decisión.",
+        "Snoopy y Woodstock te desean una partida encantadora.",
+        "Los grandes planes también empiezan con pasos pequeños.",
+        "Hoy toca jugar, pensar y disfrutar."
+      ],
+      "movimiento": [
+        "Esa jugada le dio un nuevo giro a la partida.",
+        "¡Qué interesante se está poniendo el tablero!",
+        "Cada movimiento cuenta su propia historia.",
+        "Me gusta este ritmo: tranquilo y con atención.",
+        "A veces una casilla lo cambia todo.",
+        "Otra pieza encontró su lugar.",
+        "¡Vamos descubriendo el camino jugada a jugada!",
+        "Una decisión más para recordar.",
+        "Hay muchas posibilidades detrás de cada movimiento.",
+        "Qué bonito es ir aprendiendo con cada turno.",
+        "El tablero siempre tiene algo nuevo que mostrar.",
+        "Sigue explorando; las ideas aparecen jugando.",
+        "Un movimiento pequeño puede abrir grandes opciones.",
+        "¡Eso añadió emoción a la partida!",
+        "Woodstock está mirando el tablero con curiosidad.",
+        "No hay dos partidas que cuenten la misma historia.",
+        "Un paso más en esta aventura de sesenta y cuatro casillas.",
+        "La paciencia también juega al ajedrez.",
+        "¡Mira cómo cambió la posición!",
+        "Qué bien se siente encontrar una idea propia.",
+        "Otra jugada y otra oportunidad para aprender.",
+        "Snoopy sigue cada movimiento con atención.",
+        "Todo movimiento trae algo para descubrir.",
+        "Pieza a pieza, la historia va tomando forma."
+      ],
+      "rival": [
+        "Stockfish acaba de mover. ¿Qué responderá el tablero?",
+        "El rival ya eligió; ahora toca observar.",
+        "Woodstock dice que vale la pena mirar todas las opciones.",
+        "Una respuesta del rival puede abrir nuevas ideas.",
+        "¡Vaya! La partida sigue dando sorpresas.",
+        "Mira con calma qué cambió tras esa jugada.",
+        "El tablero vuelve a pedir una idea ingeniosa.",
+        "Cada respuesta del rival es una nueva oportunidad.",
+        "Snoopy recomienda mirar bien las piezas.",
+        "¡Ahora viene la parte divertida: decidir qué hacer!",
+        "La siguiente elección está en tus manos.",
+        "El rival ya hizo su movimiento. ¡A pensar!"
+      ],
+      "captura": [
+        "¡Una captura! El tablero acaba de cambiar.",
+        "Esa pieza se despidió de la partida.",
+        "¡Vaya movimiento! Ahora hay menos piezas en juego.",
+        "Las capturas siempre traen nuevas posibilidades.",
+        "Una pieza menos, muchas ideas por descubrir.",
+        "¡Qué giro! Esa captura cambia la posición.",
+        "Hasta Woodstock se quedó mirando esa captura.",
+        "La partida acaba de ponerse más interesante.",
+        "Un pequeño cambio con grandes consecuencias.",
+        "El tablero no se queda quieto por mucho tiempo.",
+        "¡Atención! Después de una captura todo puede cambiar.",
+        "Esa jugada merece otra mirada al tablero.",
+        "Las piezas siguen contando su historia.",
+        "¿Qué nuevas casillas quedaron libres?",
+        "¡Snoopy tomó nota de ese movimiento!"
+      ],
+      "jaque": [
+        "¡Atención! Un rey necesita ayuda.",
+        "Hay jaque. Observa con calma las respuestas posibles.",
+        "¡Uy! El rey está bajo presión.",
+        "Un momento emocionante: toca cuidar al rey.",
+        "Woodstock acaba de decir: «¡Jaque!»",
+        "La corona está en peligro. ¡A pensar!",
+        "No hay prisa: revisa las jugadas legales.",
+        "¡El tablero se puso serio por un momento!",
+        "Los reyes también necesitan un buen plan.",
+        "Jaque en el tablero. Seguro hay algo que aprender.",
+        "Snoopy recomienda revisar cada casilla disponible.",
+        "¡Qué emoción! Ahora la defensa es importante."
+      ],
+      "defensa": [
+        "¡Bien! El rey vuelve a tener un respiro.",
+        "El peligro quedó atrás por ahora.",
+        "Una respuesta tranquila puede cambiarlo todo.",
+        "¡Qué alivio! El tablero recupera la calma.",
+        "Woodstock celebra que el rey esté a salvo.",
+        "Una defensa también puede ser una gran idea.",
+        "A veces lo más valioso es proteger bien una pieza.",
+        "¡Esa salida del jaque fue importante!",
+        "Los buenos planes también saben defenderse.",
+        "Peligro superado. La historia continúa.",
+        "Snoopy dice que pensar con calma ayuda mucho.",
+        "El rey puede continuar su aventura."
+      ],
+      "enroque": [
+        "¡Enroque! El rey y la torre se acomodaron.",
+        "Qué bonito movimiento en equipo.",
+        "El rey encontró un lugar más protegido.",
+        "¡Una jugada especial del ajedrez!",
+        "La torre y el rey hicieron un buen intercambio de lugares.",
+        "Woodstock acaba de aprender qué es un enroque.",
+        "Dos piezas moviéndose como parte de un solo plan.",
+        "¡Me encantan las jugadas con un toque especial!",
+        "El tablero tiene más secretos de los que parece.",
+        "Una nueva posición para proteger al rey."
+      ],
+      "promocion": [
+        "¡Qué momento! Un peón llegó muy lejos.",
+        "¡Promoción! Ese peón tiene una nueva aventura.",
+        "Los pasos pequeños también alcanzan grandes metas.",
+        "¡Mira hasta dónde llegó ese peón!",
+        "Woodstock aplaude esta transformación.",
+        "Un final de camino que también es un comienzo.",
+        "¡Ese peón hizo un recorrido increíble!",
+        "Una de las sorpresas más bonitas del ajedrez.",
+        "¡Bravo! La última fila trae nuevas posibilidades.",
+        "Snoopy dice que la constancia da frutos.",
+        "¡Qué transformación tan especial!",
+        "Esa pieza ya tiene un nuevo papel en la partida."
+      ],
+      "victoria": [
+        "¡Qué alegría! Una partida para recordar.",
+        "¡Victoria! Las buenas ideas tuvieron su momento.",
+        "Snoopy y Woodstock celebran este final.",
+        "¡Qué bonito resultado! Ahora toca disfrutarlo.",
+        "¡Bravo! Cada decisión fue parte del camino.",
+        "Una sonrisa para cerrar esta partida.",
+        "¡Gran final! El tablero tiene mucho que contar.",
+        "Los pequeños avances llevaron a un gran momento.",
+        "¡Qué aventura tan emocionante!",
+        "Woodstock está celebrando a su manera.",
+        "Esta partida merece una pequeña fiesta.",
+        "¡Jugada final! Ahora queda el recuerdo de la partida.",
+        "Hoy el tablero terminó con una buena noticia.",
+        "¡Qué gusto terminar una partida así!",
+        "Snoopy guarda esta historia entre sus favoritas."
+      ],
+      "derrota": [
+        "Cada partida deja algo nuevo para aprender.",
+        "Los grandes avances también nacen de partidas difíciles.",
+        "Hoy fue un desafío; mañana habrá otras oportunidades.",
+        "Snoopy dice que jugar con curiosidad siempre vale la pena.",
+        "Una partida termina, pero las ideas siguen.",
+        "El tablero enseña incluso cuando sorprende.",
+        "Woodstock propone guardar lo aprendido.",
+        "Hasta las partidas difíciles tienen momentos bonitos.",
+        "La próxima partida será una historia diferente.",
+        "No todas las aventuras terminan igual, ¡y eso las hace únicas!",
+        "Lo bonito del ajedrez es que siempre se puede seguir aprendiendo.",
+        "Una pausa para mirar todo lo que se descubrió.",
+        "A veces el rival encuentra una gran idea.",
+        "¡Qué partida tan llena de lecciones!",
+        "Snoopy tiene una galleta imaginaria para este momento."
+      ],
+      "final": [
+        "¡Final de partida! Qué historia nos dejó el tablero.",
+        "Snoopy y Woodstock vieron una partida muy interesante.",
+        "Cada final merece una pequeña celebración.",
+        "¡Qué recorrido hicieron estas piezas!",
+        "La partida terminó y dejó muchas jugadas para recordar.",
+        "Una nueva historia de ajedrez para guardar.",
+        "¡Qué emocionante estuvo este tablero!",
+        "Todas las partidas tienen algo especial.",
+        "La última jugada también cuenta una historia.",
+        "Un final que invita a descubrir algo nuevo.",
+        "Woodstock parece impresionado con esta partida.",
+        "¡Qué bien se siente terminar una aventura!"
+      ],
+      "tablas": [
+        "¡Tablas! El tablero encontró su equilibrio.",
+        "Una partida tan pareja merece un aplauso.",
+        "¡Qué interesante final sin ganador!",
+        "Snoopy dice que el equilibrio también es un arte.",
+        "La partida terminó en empate, pero dejó mucha historia.",
+        "¡Qué partida tan reñida!",
+        "Woodstock no sabe a quién felicitar primero.",
+        "Dos caminos distintos llegaron al mismo resultado.",
+        "¡Empate! También hay belleza en compartir el resultado.",
+        "El tablero encontró un final inesperado.",
+        "A veces las mejores historias terminan en tablas.",
+        "¡Un resultado muy equilibrado!",
+        "La partida descansará después de tanta emoción."
+      ],
+      "revisar": [
+        "Volver a mirar una jugada también es aprender.",
+        "¡Buena idea! Repasar abre nuevas posibilidades.",
+        "Snoopy está revisando el tablero con atención.",
+        "A veces un paso atrás ayuda a mirar más lejos.",
+        "Cada intento enseña una manera distinta de jugar.",
+        "¡Exploremos otra posibilidad!",
+        "La curiosidad es una gran compañera de juego.",
+        "Woodstock quiere ver qué ocurre ahora.",
+        "Revisar con calma siempre puede dar nuevas ideas.",
+        "El tablero permite imaginar muchos caminos.",
+        "Otra oportunidad para probar una jugada diferente.",
+        "¡Qué bueno poder aprender sin prisas!"
+      ],
+      "reanudar": [
+        "¡Qué bueno volver al tablero! La partida sigue aquí.",
+        "Snoopy guardó el lugar donde quedó la historia.",
+        "¡De vuelta! Hay nuevas ideas por descubrir.",
+        "Woodstock estaba esperando la siguiente jugada.",
+        "La aventura continúa justo donde la dejamos.",
+        "El tablero conserva cada pequeño avance.",
+        "¡Hola de nuevo! Una jugada más puede cambiarlo todo.",
+        "A veces retomar una partida trae ideas frescas.",
+        "Snoopy dice que nunca es tarde para seguir pensando.",
+        "¡Sigamos disfrutando esta partida!"
+      ]
+    };
+    const SNOOPY_RECENT_KEY = 'snoopy-chess-dialog-recent-v1';
+    const snoopyBags = new Map();
+    const snoopySpeech = document.querySelector('#snoopy-says');
+    let snoopyRecent = [];
+    try {
+      const storedRecent = JSON.parse(localStorage.getItem(SNOOPY_RECENT_KEY) || '[]');
+      if (Array.isArray(storedRecent)) snoopyRecent = storedRecent.filter(item => typeof item === 'string').slice(-8);
+    } catch (_) { /* La página puede funcionar sin almacenamiento persistente. */ }
+    function snoopyShuffle(items) {
+      const arr = items.slice();
+      for (let i = arr.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [arr[i], arr[j]] = [arr[j], arr[i]];
+      }
+      return arr;
+    }
+    function snoopySay(category = 'movimiento') {
+      if (!snoopySpeech) return;
+      const list = SNOOPY_PHRASES[category] || SNOOPY_PHRASES.movimiento;
+      let bag = snoopyBags.get(category);
+      if (!bag || !bag.length) bag = snoopyShuffle(list);
+      let index = bag.findIndex(phrase => !snoopyRecent.includes(phrase));
+      if (index < 0) {
+        bag = snoopyShuffle(list);
+        index = bag.findIndex(phrase => !snoopyRecent.includes(phrase));
+      }
+      const selected = bag.splice(index < 0 ? 0 : index, 1)[0];
+      snoopyBags.set(category, bag);
+      snoopyRecent = [...snoopyRecent, selected].slice(-8);
+      try { localStorage.setItem(SNOOPY_RECENT_KEY, JSON.stringify(snoopyRecent)); } catch (_) {}
+      snoopySpeech.textContent = selected;
+      snoopySpeech.classList.remove('snoopy-commentary-pop');
+      void snoopySpeech.offsetWidth;
+      snoopySpeech.classList.add('snoopy-commentary-pop');
+    }
+    function snoopyEnding() {
+      if (game.isDraw() || game.isStalemate() || game.isThreefoldRepetition() || game.isInsufficientMaterial()) return 'tablas';
+      if (timeoutLoser || game.isCheckmate()) {
+        if (mode !== 'bot') return 'final';
+        const winningColor = timeoutLoser ? (timeoutLoser === 'w' ? 'b' : 'w') : (game.turn() === 'w' ? 'b' : 'w');
+        return winningColor === humanColor ? 'victoria' : 'derrota';
+      }
+      return null;
+    }
+    function snoopySituation(move) {
+      const ending = snoopyEnding();
+      if (ending) return ending;
+      if (!move) return 'revisar';
+      if (game.isCheck()) return 'jaque';
+      if (move.promotion) return 'promocion';
+      if (move.captured) return 'captura';
+      if (move.san && move.san.startsWith('O-O')) return 'enroque';
+      const history = game.history({verbose:true});
+      const previous = history[history.length - 2];
+      if (previous && /[+#]$/.test(previous.san)) return 'defensa';
+      if (mode === 'bot' && move.color !== humanColor) return 'rival';
+      return 'movimiento';
+    }
+
     let orientation = 'w';
     let selected = null;
     let legalMoves = [];
@@ -844,6 +1150,7 @@
       if (move) softSound(game.isCheck() ? 'check' : move.captured ? 'capture' : 'move');
       lastClockStamp = performance.now();
       renderAll();
+      snoopySay(snoopySituation(move));
     }
     function clockTick() {
       const now = performance.now();
@@ -852,6 +1159,7 @@
         remaining[game.turn()] = Math.max(0, remaining[game.turn()] - dt);
         if (remaining[game.turn()] <= 0) {
           timeoutLoser = game.turn(); stopBot(); renderAll();
+          snoopySay(snoopyEnding() || 'final');
           showToast('Tiempo agotado. Ganan ' + (timeoutLoser === 'w' ? 'negras' : 'blancas') + '.');
         }
         if (now-lastClockSave > 7500) {lastClockSave = now;saveSession();}
@@ -1484,7 +1792,7 @@
       engineUnavailable=false;
       lastEngineSource=engineLabel();
       game.reset();selected=null;legalMoves=[];draggedFrom=null;hint=null;redoMoves=[];
-      resetClocks();updateModeUI();renderAll();maybeStartBotTurn();
+      resetClocks();updateModeUI();renderAll();snoopySay('inicio');maybeStartBotTurn();
       setNote('Nueva partida · Rival a ' + document.querySelector('#bot-level').value + ' Elo aprox. Selecciona una pieza o pulsa 💡.');
     }
 
@@ -1624,6 +1932,7 @@
     setNote(game.history().length ? '♟️ Partida recuperada. ' + engineLabel() + ' estará disponible para rival y pistas.' : '♟️ ' + engineLabel() + ' listo para iniciar. Selecciona una pieza o pulsa 💡 para pedir pista.');
     if (isBotTurn()) maybeStartBotTurn();
     renderAll();
+    snoopySay(game.history().length ? (snoopyEnding() || 'reanudar') : 'inicio');
   </script>
 </body>
 </html>
