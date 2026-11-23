@@ -1520,13 +1520,16 @@
     const STOCKFISH_WASM_CDN = 'https://cdn.jsdelivr.net/npm/stockfish@19.0.1/bin/stockfish-19-lite-single.wasm';
     function engineFileUrl(alternateWasm = false) {
       const url = new URL(engineMode === 'full' ? './engine/stockfish-19-single.js' : './engine/stockfish-19-lite-single.js', import.meta.url);
+      // Versión de recursos: evita que el navegador reutilice un Worker anterior al arreglo.
+      if (engineMode === 'lite') url.searchParams.set('v', '20261122-3');
       if (alternateWasm && engineMode === 'lite') url.hash = encodeURIComponent(STOCKFISH_WASM_CDN);
       return url;
     }
     async function inspectStockfishFiles() {
       const paths = [
         ['JavaScript', new URL('./engine/stockfish-19-lite-single.js', import.meta.url)],
-        ['Datos WASM (JavaScript)', new URL('./engine/stockfish-19-lite-single.wasm-data.js', import.meta.url)]
+        ['WASM', new URL('./engine/stockfish-19-lite-single.wasm', import.meta.url)],
+        ['Respaldo WASM (JavaScript)', new URL('./engine/stockfish-19-lite-single.wasm-data.js', import.meta.url)]
       ];
       const notes = [];
       for (const [label, url] of paths) {
@@ -1582,6 +1585,7 @@
           if (request!==hintRequestId || game.fen()!==fen) return;
           for (const raw of String(event.data).split(/\r?\n/)) {
             const line=raw.trim();
+            if (line.startsWith('snoopy-error ')) {fail(line.slice(13));return;}
             if (line==='uciok') worker.postMessage('isready');
             else if (line==='readyok') {
               worker.postMessage('setoption name MultiPV value 1');
@@ -1765,6 +1769,7 @@
           if (generation!==botGeneration || worker!==engine) return;
           for (const raw of String(event.data).split(/\r?\n/)) {
             const line=raw.trim();
+            if (line.startsWith('snoopy-error ')) {failure(line.slice(13));return;}
             if (line==='uciok') worker.postMessage('isready');
             else if (line==='readyok') {clearTimeout(botTimeout);engineReady=true;startBotSearch();}
             else if (line.startsWith('info ') && botSearchStarted && botThinking) {
