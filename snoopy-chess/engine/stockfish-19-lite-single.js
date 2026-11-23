@@ -18,7 +18,7 @@
 
   self.fetch = async function (input, init) {
     const url = typeof input === 'string' ? input : (input?.href || input?.url || String(input));
-    if (!/stockfish-19-lite-single\\.wasm(?:[?#]|$)/i.test(url)) return originalFetch(input, init);
+    if (!/stockfish-19-lite-single\.wasm(?:[?#]|$)/i.test(url)) return originalFetch(input, init);
 
     try {
       const result = await originalFetch(input, init);
