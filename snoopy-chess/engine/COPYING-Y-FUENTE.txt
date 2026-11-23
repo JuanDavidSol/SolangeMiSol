@@ -17,3 +17,10 @@ Modificación local del archivo JS: reemplaza WebAssembly.instantiateStreaming
 por lectura ArrayBuffer e instanciación WebAssembly.instantiate,
 para servidores que no entregan Content-Type application/wasm.
 No se modificó el motor de ajedrez ni el archivo WASM.
+
+
+Compatibilidad adicional para hosting estático:
+stockfish-19-lite-single.wasm-data.js contiene una copia exacta de los
+bytes del archivo WASM original, codificados en base64 dentro de JavaScript.
+stockfish-19-lite-single.js carga estos datos localmente, sin modificar
+el comportamiento del motor. Este empaquetado se ofrece bajo GPLv3.
