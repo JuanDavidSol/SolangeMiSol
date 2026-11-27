@@ -134,6 +134,7 @@ function fishPack(value) {
     if(Buffer.isBuffer(v)){head(0xc6,v.length,4);parts.push(v);}
     else if(typeof v==='string'){const b=Buffer.from(v,'utf8');head(0xdb,b.length,4);parts.push(b);}
     else if(typeof v==='boolean')parts.push(Buffer.from([v?0xc3:0xc2]));
+    else if(Number.isInteger(v)&&v>=0&&v<=65535){head(0xcd,v,2);}
     else if(typeof v==='number'){const b=Buffer.alloc(9);b[0]=0xcb;b.writeDoubleBE(v,1);parts.push(b);}
     else if(Array.isArray(v)){head(0xdc,v.length,2);v.forEach(put);}
     else if(v&&typeof v==='object'){const entries=Object.entries(v);head(0xde,entries.length,2);for(const [k,x] of entries){put(k);put(x);}}
@@ -164,7 +165,8 @@ async function fishVoice(req,res){
     if(!m)return send(res,400,{error:'Carga una referencia MP3, WAV o FLAC.'});
     const audio=Buffer.from(m[1],'base64');
     if(audio.length<100||audio.length>3000000)return send(res,400,{error:'La referencia debe pesar menos de 3 MB.'});
-    const payload=fishPack({text:sec.maskPII(text),references:[{audio,text:transcript}],format:'mp3',latency:'balanced',language:'es-MX'});
+    const latency=b.latency==='balanced'?'balanced':'low';
+    const payload=fishPack({text:sec.maskPII(text),references:[{audio,text:transcript}],format:'mp3',latency,chunk_length:latency==='low'?150:300,language:'es-MX'});
     const upstream=await fetch('https://api.fish.audio/v1/tts',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+key,'Content-Type':'application/msgpack',model:'s2.1-pro-free'},body:payload,signal:controller.signal});
     if(!upstream.ok){
       if(upstream.body)await upstream.body.cancel().catch(()=>{});
