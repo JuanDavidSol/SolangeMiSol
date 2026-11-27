@@ -90,6 +90,15 @@
   .as-form button.as-mic.listening{background:var(--r);color:#fff;box-shadow:0 0 0 4px #e8505b33;animation:as-mic-pulse 1.3s ease-in-out infinite}
   .as-mic-status{padding:6px 14px;font-size:12px;color:var(--muted);background:#fffaf5;border-top:1px solid var(--line)}
   .as-mic-status[hidden]{display:none}
+  .as-v3{padding:8px 14px;background:#fff8f3;border-bottom:1px solid var(--line);font-size:12px;max-height:210px;overflow:auto;flex-shrink:0}
+  .as-v3 summary{cursor:pointer;font-weight:700;color:#b73549}
+  .as-v3 p{margin:6px 0;color:var(--muted)}
+  .as-v3 audio{width:100%;height:32px;margin:4px 0}
+  .as-v3 label{display:flex;gap:7px;align-items:flex-start;margin:6px 0}
+  .as-v3 input[type=file]{max-width:100%;font-size:12px}
+  .as-v3 button,.as-v3-status button{border:1px solid var(--line);border-radius:8px;padding:5px 9px;background:white;color:#b73549;cursor:pointer;font:inherit}
+  .as-v3-status{padding:6px 14px;background:#fff8f3;color:#80505a;font-size:12px;flex-shrink:0}
+  .as-v3-status[hidden],.as-v3 [hidden],.as-v3-status [hidden],.as-win.as-min .as-v3,.as-win.as-min .as-v3-status{display:none}
   .as-err{padding:20px;text-align:center;color:var(--muted);font-size:14px}
   @keyframes as-pop{from{transform:translateY(14px) scale(.97);opacity:0}}
   @keyframes as-in{from{transform:translateY(6px);opacity:0}}
@@ -196,10 +205,153 @@
     document.addEventListener('keydown', e => { if (e.key === 'Escape' && state.open) setOpen(false); });
   } else root.append(win);
 
+  /* ---------- Snoopy V3: voz de referencia opcional ---------- */
+  const V3_KEY = 'snoopy-voice-reference-v3';
+  const V3_BASE = 'https://openbmb-voxcpm-demo.hf.space';
+  const V3_STYLE = 'A sweet, youthful male cartoon puppy voice with a medium-low pitch and warm masculine resonance. Tender, adorable, cheerful and playful. Speak at a relaxed pace, with natural pauses and expressive intonation. Soft, clear and natural Latin American Spanish. Avoid high-pitched, squeaky, feminine or robotic sounds. Keep the voice youthful without sounding like an adult man. Eliminate all shrill, piercing and squealing vocal sounds. Maintain a smooth, warm and consistent tone, even when expressing excitement. Slightly reduce the overall energy level, keeping the delivery calm, relaxed, gentle and naturally cheerful, without sounding sleepy, monotonous or overly enthusiastic. Connect words and syllables smoothly, with subtle natural variations in rhythm and emphasis.';
+  let v3Ref='', v3Name='', v3Allowed=false, v3Load=0;
+  if (MODE==='page') try {
+    const saved=JSON.parse(localStorage.getItem(V3_KEY)||'null');
+    if(saved && typeof saved.ref==='string' && saved.ref.startsWith('data:audio/') && saved.ref.length<4100000){
+      v3Ref=saved.ref;v3Name=String(saved.name||'Snoopy V3');v3Allowed=saved.allowed===true;
+    }
+  } catch(_){}
+  const v3File=h('input',{type:'file',accept:'audio/*,.mp3,.wav','aria-label':'Seleccionar voz de Snoopy'});
+  const v3Consent=h('input',{type:'checkbox'});v3Consent.checked=v3Allowed;
+  const v3Label=h('p',{}), v3Preview=h('audio',{controls:'controls',preload:'metadata'});
+  const v3Message=h('span',{}), v3Play=h('button',{type:'button',onclick:()=>{
+    const s=speechState;if(s && s.v3 && s.audio && !s.paused) v3PlayAudio(s);
+  }},'▶ Reproducir respuesta');
+  v3Play.hidden=true;
+  const v3Bar=h('div',{class:'as-v3-status',role:'status','aria-live':'polite'},v3Message,v3Play);v3Bar.hidden=true;
+  const v3Panel=h('details',{class:'as-v3'},h('summary',{},'🎙 Voz personalizada de Snoopy · V3'),
+    h('p',{},'Carga el MP3 ganador de 11,54 segundos. La muestra se guarda solo en este navegador.'),
+    v3File,v3Label,v3Preview,
+    h('label',{},v3Consent,' Tengo permiso para reutilizar la voz y acepto enviar la muestra y el texto de las respuestas al servicio público VoxCPM2 de Hugging Face. No compartas información privada.'),
+    h('p',{},'Experimental: puede haber colas y límites. Desmarca la casilla para usar la voz anterior.'),
+    h('button',{type:'button',onclick:()=>{
+      v3Load++;stopVoice();v3Ref='';v3Name='';v3Allowed=false;v3Consent.checked=false;v3File.value='';
+      v3Refresh();v3Save();v3Status('');
+      if(voiceConversation&&!busy)resumeVoiceConversation();
+    }},'Quitar referencia'));
+  function v3Status(message,play=false){
+    v3Message.textContent=message;v3Play.hidden=!play;v3Bar.hidden=!message&&!play;
+  }
+  function v3Save(){
+    try{
+      if(v3Ref&&v3Allowed)localStorage.setItem(V3_KEY,JSON.stringify({ref:v3Ref,name:v3Name,allowed:true}));
+      else localStorage.removeItem(V3_KEY);
+    }catch(_){v3Label.textContent+=' · No se pudo guardar; vuelve a cargarla al recargar la página.';}
+  }
+  function v3Refresh(){
+    v3Label.textContent=v3Ref?v3Name+(v3Allowed?' · Voz V3 activa':' · Pendiente de autorización'):'Sin audio seleccionado.';
+    if(v3Ref){if(v3Preview.getAttribute('src')!==v3Ref)v3Preview.src=v3Ref;v3Preview.hidden=false;}
+    else{v3Preview.pause();v3Preview.removeAttribute('src');v3Preview.hidden=true;}
+  }
+  v3File.addEventListener('change',()=>{
+    const file=v3File.files&&v3File.files[0];if(!file)return;
+    if(file.size>3000000||!/\.(mp3|wav|ogg|m4a|flac|webm)$/i.test(file.name)){v3Status('Elige un archivo de audio de menos de 3 MB.');return;}
+    const id=++v3Load,reader=new FileReader();
+    reader.onload=()=>{
+      if(id!==v3Load)return;
+      const data=String(reader.result||'');
+      if(!data.startsWith('data:audio/')){v3Status('Tipo de audio no reconocido; utiliza MP3 o WAV.');return;}
+      stopVoice();v3Ref=data;v3Name=file.name;v3Allowed=false;v3Consent.checked=false;
+      v3Refresh();v3Save();v3Status('Referencia cargada. Marca la casilla para activar la voz.');
+      if(voiceConversation&&!busy)resumeVoiceConversation();
+    };
+    reader.onerror=()=>v3Status('No se pudo leer el archivo.');
+    reader.readAsDataURL(file);
+  });
+  v3Consent.addEventListener('change',()=>{
+    if(!v3Ref){v3Consent.checked=false;v3Status('Selecciona primero el audio de Snoopy.');return;}
+    stopVoice();v3Allowed=v3Consent.checked;v3Refresh();v3Save();
+    v3Status(v3Allowed?'Voz V3 activa. Escribe una pregunta o habla con Snoopy.':'Voz del navegador activada.');
+    if(voiceConversation&&!busy)resumeVoiceConversation();
+  });
+  if(MODE==='page'){win.insertBefore(v3Panel,log);win.insertBefore(v3Bar,micStatus);v3Refresh();}
+  function v3Enabled(){return MODE==='page'&&v3Allowed&&Boolean(v3Ref);}
+  async function v3Fetch(url,options={}){
+    const r=await fetch(url,options);if(!r.ok)throw new Error('HTTP '+r.status);return r;
+  }
+  async function v3Generate(s,phrase,signal){
+    if(!s.refPath){
+      const fd=new FormData();
+      fd.append('files',await(await fetch(s.ref,{signal})).blob(),s.refName||'snoopy.mp3');
+      const paths=await(await v3Fetch(V3_BASE+'/gradio_api/upload',{method:'POST',body:fd,signal})).json();
+      if(!Array.isArray(paths)||typeof paths[0]!=='string')throw new Error('referencia inválida');
+      s.refPath=paths[0];
+    }
+    const payload={data:[phrase,V3_STYLE,{path:s.refPath,meta:{_type:'gradio.FileData'}},false,'',2,false,false]};
+    const event=await(await v3Fetch(V3_BASE+'/gradio_api/call/generate',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(payload),signal})).json();
+    if(typeof event.event_id!=='string')throw new Error('solicitud inválida');
+    const raw=await(await v3Fetch(V3_BASE+'/gradio_api/call/generate/'+encodeURIComponent(event.event_id),{signal})).text();
+    let result;
+    for(const block of raw.replace(/\r\n/g,'\n').split('\n\n')){
+      const type=block.match(/^event:\s*(.+)$/m)?.[1];
+      const data=block.split('\n').filter(x=>x.startsWith('data:')).map(x=>x.slice(5).trimStart()).join('\n');
+      if(type==='error')throw new Error('servicio saturado o límite alcanzado');
+      if(type==='complete')result=JSON.parse(data);
+    }
+    const file=Array.isArray(result)?result[0]:null;
+    if(!file||typeof file.url!=='string')throw new Error('sin audio generado');
+    const url=new URL(file.url,V3_BASE);
+    if(url.origin!==V3_BASE)throw new Error('dirección de audio inesperada');
+    const blob=await(await v3Fetch(url.href,{signal})).blob();
+    if(!blob.size)throw new Error('audio vacío');
+    return blob;
+  }
+  function v3Dispose(s){
+    if(s.audio){s.audio.onended=null;s.audio.onerror=null;s.audio.pause();s.audio.removeAttribute('src');s.audio=null;}
+    if(s.audioURL){URL.revokeObjectURL(s.audioURL);s.audioURL=null;}
+  }
+  function v3Fallback(s,reason){
+    if(speechState!==s||s.finished)return;
+    v3Dispose(s);s.v3=false;s.loading=false;
+    v3Status('Voz V3 no disponible ('+reason+'). Se utilizará la voz anterior.');
+    if(s.paused){s.fallbackPending=true;return;}
+    speakSegment(s);
+  }
+  function v3PlayAudio(s){
+    if(speechState!==s||!s.audio||s.paused||s.finished)return;
+    s.audio.play().then(()=>{
+      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con su voz V3.');
+    }).catch(()=>{
+      if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
+    });
+  }
+  async function v3Segment(s){
+    if(speechState!==s||s.finished||s.loading||s.paused)return;
+    const remaining=s.words.slice(s.cursor);
+    if(!remaining.trim()){v3Status('Voz V3 · respuesta completada.');finishSpeech(s);return;}
+    let size=Math.min(320,remaining.length);
+    if(size<remaining.length){
+      const cut=remaining.slice(0,size);
+      const punct=Math.max(cut.lastIndexOf('. '),cut.lastIndexOf('? '),cut.lastIndexOf('! '),cut.lastIndexOf('; '));
+      if(punct>80)size=punct+1;else if(cut.lastIndexOf(' ')>0)size=cut.lastIndexOf(' ')+1;
+    }
+    s.loading=true;const controller=new AbortController();s.controller=controller;
+    const timer=setTimeout(()=>controller.abort(),180000);
+    v3Status('Snoopy está generando su voz personalizada…');
+    try{
+      const blob=await v3Generate(s,remaining.slice(0,size).trim(),controller.signal);
+      if(speechState!==s||s.finished)return;
+      s.loading=false;s.audioURL=URL.createObjectURL(blob);s.audio=new Audio(s.audioURL);
+      s.audio.onended=()=>{if(speechState!==s)return;v3Dispose(s);s.cursor+=size;v3Segment(s);};
+      s.audio.onerror=()=>v3Fallback(s,'error de reproducción');
+      if(!s.paused)v3PlayAudio(s);
+    }catch(e){
+      if(speechState===s)v3Fallback(s,e.name==='AbortError'?'tiempo de espera agotado':String(e.message||'error de conexión').slice(0,100));
+    }finally{clearTimeout(timer);if(s.controller===controller)s.controller=null;}
+  }
+
   /* ---------- Voz calmada y clara en español (Web Speech API) ---------- */
   function stopVoice() {
     voiceGeneration++;
+    const previous=speechState;
     speechState = null;
+    if(previous&&previous.controller)previous.controller.abort();
+    if(previous&&previous.v3){v3Dispose(previous);v3Status('');}
     if (voiceSupported) window.speechSynthesis.cancel();
   }
   function preferredVoice() {
@@ -286,11 +438,15 @@
     stopVoice();
     speechState = { words, cursor: 0, utterance: null, paused: false,
       interrupted: false, finished: false, onFinished };
-    speakSegment(speechState);
+    if(v3Enabled()){
+      Object.assign(speechState,{v3:true,ref:v3Ref,refName:v3Name,loading:false});
+      v3Segment(speechState);
+    }else speakSegment(speechState);
   }
   function pauseSpokenAnswer() {
     if (!speechState || speechState.finished || speechState.paused) return;
     speechState.paused = true;
+    if(speechState.v3){if(speechState.audio)speechState.audio.pause();return;}
     if (typeof window.speechSynthesis.pause === 'function') {
       try { window.speechSynthesis.pause(); }
       catch (_) { speechState.interrupted = true; }
@@ -299,6 +455,12 @@
   function resumeSpokenAnswer() {
     const state = speechState;
     if (!state || state.finished) return false;
+    if(state.v3){
+      state.paused=false;
+      if(state.audio)v3PlayAudio(state);else if(!state.loading)v3Segment(state);
+      return true;
+    }
+    if(state.fallbackPending){state.fallbackPending=false;state.paused=false;speakSegment(state);return true;}
     if (state.paused) {
       const synth = window.speechSynthesis;
       // La pausa nativa es lo más preciso: no reinicia ninguna frase.
@@ -804,7 +966,7 @@
   });
   window.addEventListener('pagehide', () => {
     // Salir o cerrar la página sí finaliza la sesión de voz.
-    if (voiceConversation) stopVoiceConversation('');
+    if (voiceConversation) stopVoiceConversation('');else stopVoice();
   });
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', init); else init();
 })();
