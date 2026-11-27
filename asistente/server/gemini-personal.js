@@ -45,9 +45,10 @@ async function reply({ key, model, text, history = [], faqs = [], assistantName 
   contents.push({ role: 'user', parts: [{ text: String(text).slice(0, 1500) }] });
   const controller = new AbortController();
   const timeout = setTimeout(() => controller.abort(), 30000);
+  const streaming=typeof onText==='function';
   let response;
   try {
-    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:generateContent`, {
+    response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:${streaming?'streamGenerateContent?alt=sse':'generateContent'}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
       body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 1400, ...(selectedModel.startsWith('gemini-3.') ? { thinkingConfig: { thinkingLevel: 'low' } } : {}) } }),
@@ -68,10 +69,37 @@ async function reply({ key, model, text, history = [], faqs = [], assistantName 
       error.publicMessage = messages[response.status] || `Gemini no pudo responder (HTTP ${response.status}).`;
       throw error;
     }
-    const data = await response.json();
-    const message = (data.candidates?.[0]?.content?.parts || []).map(p => p.text || '').join('').trim();
+    const extract=data=>(data.candidates?.[0]?.content?.parts||[]).filter(p=>!p.thought&&typeof p.text==='string').map(p=>p.text).join('');
+    let message='';
+    if(streaming&&response.body&&response.headers.get('content-type')?.includes('text/event-stream')){
+      const reader=response.body.getReader(),decoder=new TextDecoder();
+      let buffer='',lines=[];
+      function event(){
+        if(!lines.length)return;
+        const payload=lines.join('\n');lines=[];
+        if(payload==='[DONE]')return;
+        const data=JSON.parse(payload);
+        if(data.error){const e=new Error('Gemini stream error');e.publicMessage='Gemini interrumpió la respuesta.';throw e;}
+        const chunk=extract(data);
+        if(chunk){message+=chunk;onText(chunk);}
+      }
+      function line(raw){const l=raw.replace(/\r$/,'');if(!l){event();return;}if(l.startsWith('data:'))lines.push(l.slice(5).replace(/^ /,''));}
+      try{
+        while(true){
+          const {done,value}=await reader.read();
+          if(done)break;
+          buffer+=decoder.decode(value,{stream:true});
+          let nl;while((nl=buffer.indexOf('\n'))>=0){line(buffer.slice(0,nl));buffer=buffer.slice(nl+1);}
+        }
+        buffer+=decoder.decode();if(buffer)line(buffer);event();
+      }finally{await reader.cancel().catch(()=>{});reader.releaseLock();}
+    }else{
+      const data=await response.json();
+      message=extract(data);
+      if(streaming&&message)onText(message);
+    }
+    message=message.trim();
     if (!message) { const e = new Error('Gemini empty reply'); e.publicMessage = 'Gemini no generó una respuesta. Prueba otra vez.'; throw e; }
-    if (typeof onText === 'function') onText(message);
     return { reply: message, links: [], suggestions: [], source: 'gemini-personal' };
   } catch (error) {
     if (error && error.name === 'AbortError') {
