@@ -222,7 +222,7 @@
     }
   } catch(_){}
   const FISH_KEY='snoopy-fish-settings-v4';
-  let fishKey='',fishTranscript='',fishOn=false,fishRemember=false;
+  let fishKey='',fishTranscript='',fishOn=false,fishRemember=false,fishWarmup=null;
   if(MODE==='page')try{
     const saved=JSON.parse(localStorage.getItem(FISH_KEY)||'null');
     if(saved){
@@ -287,7 +287,7 @@
     if(voiceConversation&&!busy)resumeVoiceConversation();
     return true;
   }
-  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.1 rápida'),
+  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.2 rápida'),
     h('p',{},'Usa la misma muestra de arriba sin crear una voz pública.'),
     fishInput,fishText,
     h('label',{},fishConsent,' Tengo permiso para reutilizar esta voz y autorización para usar el servicio. Acepto enviar la muestra, su transcripción y las respuestas a Fish Audio, que puede usar datos del modelo gratuito para mejorar su servicio. No envíes información privada.'),
@@ -360,6 +360,35 @@
     if(!r.ok){let msg='HTTP '+r.status;try{const b=await r.json();if(typeof b.error==='string')msg=b.error;}catch(_){}throw new Error(msg);}
     return r;
   }
+  // Adelanta una frase completa y sencilla mientras Gemini sigue generando.
+  // No se reproduce hasta confirmar que coincide con el texto final.
+  function clearFishWarmup(){
+    if(!fishWarmup)return;
+    clearTimeout(fishWarmup.timer);fishWarmup.controller.abort();fishWarmup=null;
+  }
+  function startFishWarmup(raw,turnGeneration){
+    if(turnGeneration!==voiceGeneration||fishWarmup||speechState||!voiceEnabled||!voiceSupported||!fishOn||!v3Enabled()||tabPaused||manualPaused||document.visibilityState==='hidden')return;
+    const match=/^\s*([^.\n!?;]{24,175}[.!?](?=\s|$))/.exec(raw);
+    if(!match)return;
+    const phrase=match[1].trim();
+    // Evita adelantar listas, enlaces, Markdown o texto que pudiera cambiar al limpiarlo.
+    if(/[\x60\[\]<>*_#~|\\]/.test(phrase)||spokenText(phrase)!==phrase||/\d\.$/.test(phrase))return;
+    const controller=new AbortController();
+    const warm={phrase,controller,key:fishKey,transcript:fishTranscript,ref:v3Ref};
+    warm.timer=setTimeout(()=>controller.abort(),90000);
+    fishWarmup=warm;
+    warm.response=fishResponse({fish:{key:warm.key,transcript:warm.transcript},ref:warm.ref},phrase,controller.signal)
+      .then(response=>({response}),error=>({error}));
+  }
+  function takeFishWarmup(words){
+    const w=fishWarmup;
+    if(!w)return null;
+    if(!fishOn||!voiceEnabled||w.key!==fishKey||w.ref!==v3Ref||w.transcript!==fishTranscript||w.controller.signal.aborted||
+      !words.startsWith(w.phrase)||(words.length>w.phrase.length&&words[w.phrase.length]!==' ')){
+      clearFishWarmup();return null;
+    }
+    fishWarmup=null;clearTimeout(w.timer);return w;
+  }
   function fishCanStream(){
     return typeof MediaSource!=='undefined'&&typeof MediaSource.isTypeSupported==='function'&&MediaSource.isTypeSupported('audio/mpeg');
   }
@@ -389,8 +418,10 @@
     s.audio.src=url;
     if(!streaming&&!s.paused)v3PlayAudio(s);
   }
-  async function fishStream(s,phrase,size,signal){
-    const r=await fishResponse(s,phrase,signal);
+  async function fishStream(s,phrase,size,signal,warm){
+    let r;
+    if(warm){const result=await warm.response;if(result.error)throw result.error;r=result.response;}
+    else r=await fishResponse(s,phrase,signal);
     if(speechState!==s||signal.aborted){if(r.body)await r.body.cancel().catch(()=>{});return;}
     // Safari y otros navegadores sin MSE MP3 conservan la reproducción normal.
     if(!fishCanStream()||!r.body){
@@ -483,7 +514,7 @@
   function v3PlayAudio(s){
     if(speechState!==s||!s.audio||s.paused||s.finished)return;
     s.audio.play().then(()=>{
-      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.1.':'su voz V3.'));
+      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.2.':'su voz V3.'));
     }).catch(()=>{
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
@@ -500,12 +531,15 @@
       const punct=Math.max(cut.lastIndexOf('. '),cut.lastIndexOf('? '),cut.lastIndexOf('! '),cut.lastIndexOf('; '));
       if(punct>80)size=punct+1;else if(cut.lastIndexOf(' ')>0)size=cut.lastIndexOf(' ')+1;
     }
-    s.loading=true;const controller=new AbortController();s.controller=controller;
+    const warm=s.fish&&s.cursor===0?s.warmup:null;
+    s.warmup=null;
+    if(warm)size=warm.phrase.length;
+    s.loading=true;const controller=warm?warm.controller:new AbortController();s.controller=controller;
     const timer=setTimeout(()=>controller.abort(),180000);
     s.segmentStarted=false;
     v3Status(s.fish?'Snoopy está preparando los primeros sonidos…':'Snoopy está generando su voz personalizada…');
     try{
-      if(s.fish){await fishStream(s,remaining.slice(0,size).trim(),size,controller.signal);return;}
+      if(s.fish){await fishStream(s,remaining.slice(0,size).trim(),size,controller.signal,warm);return;}
       const blob=await v3Generate(s,remaining.slice(0,size).trim(),controller.signal);
       if(speechState!==s||s.finished)return;
       s.loading=false;s.audioURL=URL.createObjectURL(blob);s.audio=new Audio(s.audioURL);
@@ -519,10 +553,12 @@
 
   /* ---------- Voz calmada y clara en español (Web Speech API) ---------- */
   function stopVoice() {
+    clearFishWarmup();
     voiceGeneration++;
     const previous=speechState;
     speechState = null;
     if(previous&&previous.controller)previous.controller.abort();
+    if(previous&&previous.warmup)previous.warmup.controller.abort();
     if(previous&&previous.v3){v3Dispose(previous);v3Status('');}
     if (voiceSupported) window.speechSynthesis.cancel();
   }
@@ -607,11 +643,12 @@
       if (onFinished) onFinished();
       return;
     }
+    const warmup=takeFishWarmup(words);
     stopVoice();
     speechState = { words, cursor: 0, utterance: null, paused: false,
       interrupted: false, finished: false, onFinished };
     if(v3Enabled()){
-      Object.assign(speechState,{v3:true,ref:v3Ref,refName:v3Name,loading:false,fish:fishOn?{key:fishKey,transcript:fishTranscript}:null});
+      Object.assign(speechState,{v3:true,ref:v3Ref,refName:v3Name,loading:false,fish:fishOn?{key:fishKey,transcript:fishTranscript}:null,warmup});
       v3Segment(speechState);
     }else speakSegment(speechState);
   }
@@ -1007,9 +1044,10 @@
 
     const reader = r.body.getReader(), decoder = new TextDecoder();
     let buffer = '', acc = '', final = null;
+    const turnGeneration=voiceGeneration;
     const onLine = raw => {
       let ev; try { ev = JSON.parse(raw); } catch { return; }
-      if (ev.type === 'delta' && typeof ev.text === 'string') showLive(acc += ev.text);
+      if (ev.type === 'delta' && typeof ev.text === 'string') {showLive(acc += ev.text);startFishWarmup(acc,turnGeneration);}
       else if (ev.type === 'done') final = ev;
       else if (ev.type === 'error') { const e = new Error(ev.error); e.userMessage = String(ev.error || ''); throw e; }
     };
@@ -1049,7 +1087,7 @@
         : 'No puedo conectar con el asistente ahora mismo. Inténtalo en un momento.');
     }
     if (liveRaf) cancelAnimationFrame(liveRaf);
-    if (!liveText) await new Promise(r => setTimeout(r, 250));   // pausa breve solo si la respuesta no se vio escribiéndose
+    if (!liveText && !fishOn) await new Promise(r => setTimeout(r, 250));   // sin demora artificial al usar Fish Audio
     liveEl = null; liveRaf = 0; liveText = '';
     busy = false; sendBtn.disabled = false;
     state.msgs.push(bot); state.msgs = state.msgs.slice(-60); save(); render();
