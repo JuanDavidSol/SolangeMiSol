@@ -109,9 +109,83 @@ function sanitizeSettings(b) {
   return s;
 }
 
+/* ---------- Fish Audio: referencia privada por solicitud, sin guardar claves ---------- */
+const fishActive = new Set();
+function readFishJson(req) {
+  return new Promise((resolve,reject)=>{
+    let size=0,done=false;const parts=[];
+    const fail=(status,error)=>{if(!done){done=true;reject({status,error});}};
+    req.on('data',c=>{
+      if(done)return;
+      size+=c.length;
+      if(size>4200000){parts.length=0;fail(413,'La referencia de audio es demasiado grande.');return;}
+      parts.push(c);
+    });
+    req.on('end',()=>{if(done)return;try{const value=JSON.parse(Buffer.concat(parts).toString('utf8'));done=true;resolve(value||{});}catch(_){fail(400,'JSON no válido.');}});
+    req.on('error',()=>fail(400,'Solicitud no válida.'));
+    req.on('aborted',()=>fail(400,'Solicitud cancelada.'));
+  });
+}
+// Subconjunto de MessagePack para el objeto TTS: cadenas, binarios, listas, mapas, booleanos y números.
+function fishPack(value) {
+  const parts=[];
+  function head(tag,n,bytes){const b=Buffer.alloc(1+bytes);b[0]=tag;if(bytes===1)b.writeUInt8(n,1);else if(bytes===2)b.writeUInt16BE(n,1);else b.writeUInt32BE(n,1);parts.push(b);}
+  function put(v){
+    if(Buffer.isBuffer(v)){head(0xc6,v.length,4);parts.push(v);}
+    else if(typeof v==='string'){const b=Buffer.from(v,'utf8');head(0xdb,b.length,4);parts.push(b);}
+    else if(typeof v==='boolean')parts.push(Buffer.from([v?0xc3:0xc2]));
+    else if(typeof v==='number'){const b=Buffer.alloc(9);b[0]=0xcb;b.writeDoubleBE(v,1);parts.push(b);}
+    else if(Array.isArray(v)){head(0xdc,v.length,2);v.forEach(put);}
+    else if(v&&typeof v==='object'){const entries=Object.entries(v);head(0xde,entries.length,2);for(const [k,x] of entries){put(k);put(x);}}
+    else throw new Error('Tipo no admitido');
+  }
+  put(value);return Buffer.concat(parts);
+}
+async function fishVoice(req,res){
+  const ip=sec.ip(req);
+  if(!sec.limit('fish-voice:'+ip,12,60000)||fishActive.has(ip)||fishActive.size>=12)
+    return send(res,429,{error:'Hay una generación en curso o demasiadas solicitudes. Espera un momento.'});
+  fishActive.add(ip);
+  const controller=new AbortController();
+  const timeout=setTimeout(()=>controller.abort(),90000);
+  const cancel=()=>controller.abort();
+  res.once('close',cancel);
+  try{
+    if(!/^application\/json(?:;|$)/i.test(req.headers['content-type']||''))return send(res,415,{error:'Formato no válido.'});
+    const b=await readFishJson(req);
+    const key=typeof b.key==='string'?b.key.trim():'';
+    const text=typeof b.text==='string'?b.text.trim():'';
+    const transcript=typeof b.transcript==='string'?b.transcript.trim():'';
+    const ref=typeof b.reference==='string'?b.reference:'';
+    if(!/^[A-Za-z0-9_.-]{16,256}$/.test(key))return send(res,400,{error:'Introduce una clave válida de Fish Audio.'});
+    if(!text||text.length>700||!transcript||transcript.length>1800)return send(res,400,{error:'Se necesita texto de respuesta y la transcripción exacta del audio.'});
+    if(b.consent!==true)return send(res,400,{error:'Falta autorizar el uso de la voz.'});
+    const m=/^data:audio\/(?:mpeg|mp3|wav|x-wav|flac|x-flac);base64,([A-Za-z0-9+/]+={0,2})$/.exec(ref);
+    if(!m)return send(res,400,{error:'Carga una referencia MP3, WAV o FLAC.'});
+    const audio=Buffer.from(m[1],'base64');
+    if(audio.length<100||audio.length>3000000)return send(res,400,{error:'La referencia debe pesar menos de 3 MB.'});
+    const payload=fishPack({text:sec.maskPII(text),references:[{audio,text:transcript}],format:'mp3',latency:'balanced',language:'es-MX'});
+    const upstream=await fetch('https://api.fish.audio/v1/tts',{method:'POST',redirect:'error',headers:{Authorization:'Bearer '+key,'Content-Type':'application/msgpack',model:'s2.1-pro-free'},body:payload,signal:controller.signal});
+    if(!upstream.ok){
+      if(upstream.body)await upstream.body.cancel().catch(()=>{});
+      const errors={401:'Clave de Fish Audio incorrecta o revocada.',402:'El modelo gratuito no está disponible para esta cuenta; no se utilizará un modelo de pago.',403:'Fish Audio no autorizó esta solicitud.',429:'Límite de Fish Audio alcanzado. Espera antes de reintentar.',503:'Fish Audio está saturado.'};
+      return send(res,502,{error:errors[upstream.status]||'Fish Audio rechazó la solicitud (HTTP '+upstream.status+').'});
+    }
+    if(!upstream.body)return send(res,502,{error:'Fish Audio no devolvió audio.'});
+    res.writeHead(200,{'Content-Type':'audio/mpeg','Cache-Control':'no-store','X-Accel-Buffering':'no','X-Content-Type-Options':'nosniff','Referrer-Policy':'no-referrer'});
+    await require('node:stream/promises').pipeline(require('node:stream').Readable.fromWeb(upstream.body),res);
+    return true;
+  }catch(e){
+    if(res.destroyed)return true;
+    if(res.headersSent){res.destroy();return true;}
+    return send(res,e.status||502,{error:e.error||(controller.signal.aborted?'Tiempo de espera agotado.':'No se pudo conectar con Fish Audio.')});
+  }finally{clearTimeout(timeout);res.removeListener('close',cancel);fishActive.delete(ip);}
+}
+
 /* ---------- API pública ---------- */
 async function publicApi(req, res, url) {
   const p = url.pathname;
+  if (req.method === 'POST' && p === '/api/fish/tts') return fishVoice(req,res);
   if (req.method === 'GET' && p === '/api/config') {
     const S = db.settings, page = sec.clean(url.searchParams.get('page') || '', 80), section = sec.clean(url.searchParams.get('section') || '', 40);
     return send(res, 200, { name: S.assistantName, welcome: S.welcome, enabled: S.enabled, siteBase: S.siteBase, faqs: S.showFaqs ? assistant.faqs(page, section, S.quickCount) : [] });
