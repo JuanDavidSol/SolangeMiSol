@@ -287,7 +287,7 @@
     if(voiceConversation&&!busy)resumeVoiceConversation();
     return true;
   }
-  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4'),
+  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.1 rápida'),
     h('p',{},'Usa la misma muestra de arriba sin crear una voz pública.'),
     fishInput,fishText,
     h('label',{},fishConsent,' Tengo permiso para reutilizar esta voz y autorización para usar el servicio. Acepto enviar la muestra, su transcripción y las respuestas a Fish Audio, que puede usar datos del modelo gratuito para mejorar su servicio. No envíes información privada.'),
@@ -355,10 +355,83 @@
   async function v3Fetch(url,options={}){
     const r=await fetch(url,options);if(!r.ok)throw new Error('HTTP '+r.status);return r;
   }
+  async function fishResponse(s,phrase,signal){
+    const r=await fetch(API+'/api/fish/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:s.fish.key,transcript:s.fish.transcript,text:phrase,reference:s.ref,consent:true}),signal});
+    if(!r.ok){let msg='HTTP '+r.status;try{const b=await r.json();if(typeof b.error==='string')msg=b.error;}catch(_){}throw new Error(msg);}
+    return r;
+  }
+  function fishCanStream(){
+    return typeof MediaSource!=='undefined'&&typeof MediaSource.isTypeSupported==='function'&&MediaSource.isTypeSupported('audio/mpeg');
+  }
+  // El servidor transmite MP3 por HTTP. MSE permite reproducirlo sin esperar el archivo completo.
+  function fishWait(target,event,signal,action){
+    return new Promise((resolve,reject)=>{
+      let done=false;
+      const clean=()=>{target.removeEventListener(event,ok);target.removeEventListener('error',fail);target.removeEventListener('abort',fail);signal.removeEventListener('abort',cancel);};
+      const settle=(fn,val)=>{if(done)return;done=true;clean();fn(val);};
+      const ok=()=>settle(resolve);
+      const fail=()=>settle(reject,new Error('Error del flujo de audio'));
+      const cancel=()=>settle(reject,new DOMException('Cancelado','AbortError'));
+      if(signal.aborted){cancel();return;}
+      target.addEventListener(event,ok,{once:true});target.addEventListener('error',fail,{once:true});target.addEventListener('abort',fail,{once:true});
+      signal.addEventListener('abort',cancel,{once:true});
+      try{if(action)action();}catch(e){settle(reject,e);}
+    });
+  }
+  function v3AttachAudio(s,url,size,streaming){
+    s.audioURL=url;s.audio=new Audio();s.audio.preload='auto';s.segmentStarted=false;
+    s.audio.onplaying=()=>{if(speechState===s)s.segmentStarted=true;};
+    s.audio.onended=()=>{
+      if(speechState!==s)return;
+      v3Dispose(s);s.cursor+=size;s.loading=false;v3Segment(s);
+    };
+    s.audio.onerror=()=>{if(speechState===s)v3Fallback(s,'error de reproducción');};
+    s.audio.src=url;
+    if(!streaming&&!s.paused)v3PlayAudio(s);
+  }
+  async function fishStream(s,phrase,size,signal){
+    const r=await fishResponse(s,phrase,signal);
+    if(speechState!==s||signal.aborted){if(r.body)await r.body.cancel().catch(()=>{});return;}
+    // Safari y otros navegadores sin MSE MP3 conservan la reproducción normal.
+    if(!fishCanStream()||!r.body){
+      const blob=await r.blob();if(!blob.size)throw new Error('Fish Audio no devolvió audio');
+      if(speechState===s&&!signal.aborted){s.loading=false;v3AttachAudio(s,URL.createObjectURL(blob),size,false);}
+      return;
+    }
+    const ms=new MediaSource();s.mediaSource=ms;
+    const reader=r.body.getReader();s.streamReader=reader;
+    try{
+      const opened=fishWait(ms,'sourceopen',signal,()=>v3AttachAudio(s,URL.createObjectURL(ms),size,true));
+      await opened;
+      const sb=ms.addSourceBuffer('audio/mpeg');
+      sb.mode='sequence';
+      let started=false,bytes=0;
+      while(true){
+        const {done,value}=await reader.read();
+        if(done)break;
+        if(signal.aborted||speechState!==s||!s.v3)return;
+        if(!value||!value.byteLength)continue;
+        bytes+=value.byteLength;
+        await fishWait(sb,'updateend',signal,()=>sb.appendBuffer(value));
+        if(!started&&sb.buffered.length>0){
+          started=true;
+          if(!s.paused)v3PlayAudio(s);
+        }
+      }
+      if(!bytes)throw new Error('Fish Audio no devolvió audio');
+      if(signal.aborted||speechState!==s||!s.v3)return;
+      if(ms.readyState==='open')ms.endOfStream();
+      s.loading=false;
+      if(!started&&!s.paused)v3PlayAudio(s);
+    }finally{
+      if(s.streamReader===reader)s.streamReader=null;
+      await reader.cancel().catch(()=>{});
+      try{reader.releaseLock();}catch(_){}
+    }
+  }
   async function v3Generate(s,phrase,signal){
     if(s.fish){
-      const r=await fetch(API+'/api/fish/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:s.fish.key,transcript:s.fish.transcript,text:phrase,reference:s.ref,consent:true}),signal});
-      if(!r.ok){let msg='HTTP '+r.status;try{const b=await r.json();if(typeof b.error==='string')msg=b.error;}catch(_){}throw new Error(msg);}
+      const r=await fishResponse(s,phrase,signal);
       const blob=await r.blob();if(!blob.size)throw new Error('Fish Audio no devolvió audio');
       return blob;
     }
@@ -389,12 +462,20 @@
     return blob;
   }
   function v3Dispose(s){
-    if(s.audio){s.audio.onended=null;s.audio.onerror=null;s.audio.pause();s.audio.removeAttribute('src');s.audio=null;}
+    if(s.streamReader){s.streamReader.cancel().catch(()=>{});s.streamReader=null;}
+    if(s.audio){s.audio.onended=null;s.audio.onerror=null;s.audio.onplaying=null;s.audio.pause();s.audio.removeAttribute('src');s.audio.load();s.audio=null;}
     if(s.audioURL){URL.revokeObjectURL(s.audioURL);s.audioURL=null;}
+    s.mediaSource=null;
   }
   function v3Fallback(s,reason){
     if(speechState!==s||s.finished)return;
+    const partial=s.fish&&s.segmentStarted;
+    if(s.controller)s.controller.abort();
     v3Dispose(s);s.v3=false;s.loading=false;
+    if(partial){
+      v3Status('La transmisión de voz se interrumpió. Pulsa Escuchar otra vez si quieres repetir la respuesta.');
+      finishSpeech(s);return;
+    }
     v3Status((s.fish?'Fish Audio V4':'Voz V3')+' no disponible ('+reason+'). Se utilizará la voz anterior.');
     if(s.paused){s.fallbackPending=true;return;}
     speakSegment(s);
@@ -402,7 +483,7 @@
   function v3PlayAudio(s){
     if(speechState!==s||!s.audio||s.paused||s.finished)return;
     s.audio.play().then(()=>{
-      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.':'su voz V3.'));
+      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.1.':'su voz V3.'));
     }).catch(()=>{
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
@@ -411,7 +492,9 @@
     if(speechState!==s||s.finished||s.loading||s.paused)return;
     const remaining=s.words.slice(s.cursor);
     if(!remaining.trim()){v3Status((s.fish?'Fish Audio V4':'Voz V3')+' · respuesta completada.');finishSpeech(s);return;}
-    let size=Math.min(320,remaining.length);
+    // En navegadores sin streaming, priorizar una primera frase corta.
+    const cap=s.fish&&!fishCanStream()&&s.cursor===0?135:320;
+    let size=Math.min(cap,remaining.length);
     if(size<remaining.length){
       const cut=remaining.slice(0,size);
       const punct=Math.max(cut.lastIndexOf('. '),cut.lastIndexOf('? '),cut.lastIndexOf('! '),cut.lastIndexOf('; '));
@@ -419,8 +502,10 @@
     }
     s.loading=true;const controller=new AbortController();s.controller=controller;
     const timer=setTimeout(()=>controller.abort(),180000);
-    v3Status(s.fish?'Snoopy está generando audio con Fish Audio…':'Snoopy está generando su voz personalizada…');
+    s.segmentStarted=false;
+    v3Status(s.fish?'Snoopy está preparando los primeros sonidos…':'Snoopy está generando su voz personalizada…');
     try{
+      if(s.fish){await fishStream(s,remaining.slice(0,size).trim(),size,controller.signal);return;}
       const blob=await v3Generate(s,remaining.slice(0,size).trim(),controller.signal);
       if(speechState!==s||s.finished)return;
       s.loading=false;s.audioURL=URL.createObjectURL(blob);s.audio=new Audio(s.audioURL);
@@ -428,7 +513,7 @@
       s.audio.onerror=()=>v3Fallback(s,'error de reproducción');
       if(!s.paused)v3PlayAudio(s);
     }catch(e){
-      if(speechState===s)v3Fallback(s,e.name==='AbortError'?'tiempo de espera agotado':String(e.message||'error de conexión').slice(0,100));
+      if(speechState===s&&s.v3)v3Fallback(s,e.name==='AbortError'?'tiempo de espera agotado':String(e.message||'error de conexión').slice(0,100));
     }finally{clearTimeout(timer);if(s.controller===controller)s.controller=null;}
   }
 
