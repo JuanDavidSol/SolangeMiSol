@@ -23,7 +23,7 @@ const MIME = {
   '.mp4': 'video/mp4', '.webm': 'video/webm',
   '.woff2': 'font/woff2', '.woff': 'font/woff', '.ttf': 'font/ttf', '.pdf': 'application/pdf'
 };
-const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self'; frame-ancestors 'self'; base-uri 'none'; form-action 'self'";
+const CSP = "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src https://fonts.gstatic.com; img-src 'self' data:; connect-src 'self' https://openbmb-voxcpm-demo.hf.space data:; media-src 'self' data: blob:; frame-ancestors 'self'; base-uri 'none'; form-action 'self'";
 
 /* ---------- Utilidades ---------- */
 function send(res, status, body, headers = {}) {
