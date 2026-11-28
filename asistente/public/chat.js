@@ -222,13 +222,14 @@
     }
   } catch(_){}
   const FISH_KEY='snoopy-fish-settings-v4';
-  let fishKey='',fishTranscript='',fishOn=false,fishRemember=false,fishWarmup=null,fishLatency='low',fishContinuous=true,fishNoCuts=true;
+  let fishKey='',fishTranscript='',fishOn=false,fishRemember=false,fishWarmup=null,fishLatency='low',fishContinuous=true,fishNoCuts=true,fishConcise=true,fishReplay=null;
   if(MODE==='page')try{
     const saved=JSON.parse(localStorage.getItem(FISH_KEY)||'null');
     if(saved){
       fishLatency=saved.latency==='balanced'?'balanced':'low';
       fishContinuous=saved.continuous!==false;
       fishNoCuts=saved.noCuts!==false;
+      fishConcise=saved.concise!==false;
       fishTranscript=typeof saved.transcript==='string'?saved.transcript.slice(0,1800):'';
       if(saved.remember===true&&typeof saved.key==='string'&&/^[A-Za-z0-9_.-]{16,256}$/.test(saved.key)){
         fishKey=saved.key;fishRemember=true;
@@ -264,12 +265,13 @@
   const fishFast=h('input',{type:'checkbox'});fishFast.checked=fishLatency==='low';
   const fishFlow=h('input',{type:'checkbox'});fishFlow.checked=fishContinuous;
   const fishStrict=h('input',{type:'checkbox'});fishStrict.checked=fishNoCuts;fishFlow.disabled=fishNoCuts;
+  const fishShort=h('input',{type:'checkbox'});fishShort.checked=fishConcise;
   const fishInfo=h('p',{role:'status','aria-live':'polite'});
   const fishTiming=h('p',{role:'status','aria-live':'polite'},'La latencia se medirá al empezar a reproducir la voz.');
   function fishSave(){
     try{
-      if(fishRemember&&fishKey)localStorage.setItem(FISH_KEY,JSON.stringify({remember:true,key:fishKey,transcript:fishTranscript,active:fishOn,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts}));
-      else localStorage.setItem(FISH_KEY,JSON.stringify({remember:false,transcript:fishTranscript,active:false,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts}));
+      if(fishRemember&&fishKey)localStorage.setItem(FISH_KEY,JSON.stringify({remember:true,key:fishKey,transcript:fishTranscript,active:fishOn,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts,concise:fishConcise}));
+      else localStorage.setItem(FISH_KEY,JSON.stringify({remember:false,transcript:fishTranscript,active:false,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts,concise:fishConcise}));
       return true;
     }catch(_){return false;}
   }
@@ -277,7 +279,7 @@
     fishInfo.textContent=fishOn?'Fish Audio V4 activo · modelo gratuito · conexión todavía no verificada.':'Fish Audio no está activo.';
   }
   function fishDeactivate(){
-    fishOn=false;fishConsent.checked=false;fishSave();fishRefresh();
+    fishReplay=null;fishOn=false;fishConsent.checked=false;fishSave();fishRefresh();
   }
   function fishActivate(){
     const k=fishInput.value.trim(),t=fishText.value.trim();
@@ -285,7 +287,7 @@
     if(!v3Ref){fishInfo.textContent='Carga primero el MP3 ganador de Snoopy.';return false;}
     if(!t){fishInfo.textContent='Escribe la transcripción exacta del audio.';return false;}
     if(!fishConsent.checked){fishInfo.textContent='Marca la autorización para activar Fish Audio.';return false;}
-    stopVoice();fishKey=k;fishTranscript=t;fishOn=true;fishRemember=fishRememberInput.checked;
+    stopVoice();if(k!==fishKey||t!==fishTranscript)fishReplay=null;fishKey=k;fishTranscript=t;fishOn=true;fishRemember=fishRememberInput.checked;
     v3Allowed=false;v3Consent.checked=false;
     v3Refresh();v3Save();fishRefresh();
     if(!fishSave())fishInfo.textContent+=' No se pudo recordar la clave.';
@@ -293,10 +295,11 @@
     if(voiceConversation&&!busy)resumeVoiceConversation();
     return true;
   }
-  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.6 sin cortes de carga'),
+  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.7 conversación ágil'),
     h('p',{},'Usa la misma muestra de arriba sin crear una voz pública.'),
     fishInput,fishText,
     h('label',{},fishStrict,' Sin cortes de carga: descarga el audio entero antes de hablar. Recomendado si hay pausas.'),
+    h('label',{},fishShort,' Conversación ágil: Gemini responde más brevemente en preguntas sencillas. Las explicaciones detalladas siguen disponibles.'),
     h('label',{},fishFlow,' Streaming con reserva de audio (solo si desactivas el modo sin cortes).'),
     h('label',{},fishFast,' Baja latencia de generación (desmarca para priorizar una voz más natural).'),
     h('label',{},fishConsent,' Tengo permiso para reutilizar esta voz y autorización para usar el servicio. Acepto enviar la muestra, su transcripción y las respuestas a Fish Audio, que puede usar datos del modelo gratuito para mejorar su servicio. No envíes información privada.'),
@@ -320,6 +323,7 @@
     fishInfo,fishTiming,
     h('p',{},'La clave viaja por HTTPS a este servidor y a Fish Audio; no se guarda en el servidor. Solo se solicita el modelo s2.1-pro-free. Si no está disponible, no se cambia a un modelo de pago. El acceso gratuito anunciado llega hasta el 30/11/2026. Cada dispositivo necesita su propia configuración.'));
   v3Panel.append(fishPanel);fishRefresh();
+  fishShort.addEventListener('change',()=>{fishConcise=fishShort.checked;fishSave();});
   fishStrict.addEventListener('change',()=>{fishNoCuts=fishStrict.checked;fishFlow.disabled=fishNoCuts;clearFishWarmup();fishSave();fishTiming.textContent=fishNoCuts?'Sin cortes de carga: espera el audio completo antes de reproducirlo.':'Streaming activado; pueden ocurrir cortes si la generación es lenta.';});
   fishFlow.addEventListener('change',()=>{fishContinuous=fishFlow.checked;clearFishWarmup();fishSave();fishTiming.textContent=fishContinuous?'Lectura fluida: genera y reproduce a la vez, con colchón de audio.':'Inicio rápido: menos colchón de audio; puede haber cortes.';});
   fishFast.addEventListener('change',()=>{fishLatency=fishFast.checked?'low':'balanced';clearFishWarmup();fishSave();fishTiming.textContent='Modo '+(fishLatency==='low'?'baja latencia':'equilibrado')+' · se aplicará a la próxima respuesta.';});
@@ -429,7 +433,7 @@
       if(s.fishCompletedAt!=null&&s.ttsStartedAt!=null)items.push('Audio recibido: '+seconds((s.fishCompletedAt-s.ttsStartedAt)/1000));
       if(s.audio&&Number.isFinite(s.audio.duration))items.push('Duración: '+seconds(s.audio.duration));
       items.push('Esperas del reproductor: '+s.stalls);
-      if(s.fishCompletedAt!=null)items.push('Audio completo en memoria');
+      if(s.fishCompletedAt!=null)items.push(s.fishCached?'Audio reutilizado de esta sesión':'Audio completo en memoria');
       fishTiming.textContent=items.filter(Boolean).join(' · ');
     }
     s.reportFish=reportFish;
@@ -466,6 +470,12 @@
     if(!streaming&&!s.paused)v3PlayAudio(s);
   }
   async function fishStream(s,phrase,size,signal,warm){
+    // Only the most recent complete audio; RAM only, no persistent audio or extra provider calls.
+    if(s.fish.noCuts&&fishReplay&&fishReplay.phrase===phrase&&fishReplay.ref===s.ref&&fishReplay.transcript===s.fish.transcript&&fishReplay.latency===s.fish.latency&&!signal.aborted&&speechState===s){
+      s.fishCompletedAt=performance.now();s.loading=false;s.fishBytes=fishReplay.blob.size;s.fishCached=true;
+      v3AttachAudio(s,URL.createObjectURL(fishReplay.blob),size,false);
+      return;
+    }
     let r;
     if(warm){const result=await warm.response;if(result.error)throw result.error;r=result.response;}
     else r=await fishResponse(s,phrase,signal);
@@ -477,6 +487,7 @@
       const blob=await r.blob();if(!blob.size)throw new Error('Fish Audio no devolvió audio');
       if(speechState!==s||signal.aborted)return;
       s.fishCompletedAt=performance.now();s.loading=false;s.fishBytes=blob.size;
+      fishReplay=blob.size<=4000000?{phrase,ref:s.ref,transcript:s.fish.transcript,latency:s.fish.latency,blob}:null;
       v3AttachAudio(s,URL.createObjectURL(blob),size,false);
       return;
     }
@@ -591,7 +602,7 @@
   function v3PlayAudio(s){
     if(speechState!==s||!s.audio||s.paused||s.finished||(s.fish&&(!s.bufferReady||s.buffering)))return;
     s.audio.play().then(()=>{
-      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.6.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
+      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.7.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
     }).catch(()=>{
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
@@ -726,7 +737,7 @@
     speechState = { words, cursor: 0, utterance: null, paused: false,
       interrupted: false, finished: false, onFinished, turnStartedAt };
     if(v3Enabled()){
-      Object.assign(speechState,{v3:true,ref:v3Ref,refName:v3Name,loading:false,fish:fishOn?{key:fishKey,transcript:fishTranscript,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts}:null,warmup});
+      Object.assign(speechState,{v3:true,ref:v3Ref,refName:v3Name,loading:false,fish:fishOn?{key:fishKey,transcript:fishTranscript,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts,concise:fishConcise}:null,warmup});
       v3Segment(speechState);
     }else speakSegment(speechState);
   }
@@ -1075,7 +1086,7 @@
   /* ---------- Petición al servidor (con respuesta en tiempo real) ---------- */
   const headers = { 'Content-Type': 'application/json' };
   const payload = text => {
-    const body = { session: state.sid, message: text, page: page(), section: section() };
+    const body = { session: state.sid, message: text, page: page(), section: section(), conciseVoice: fishOn&&voiceEnabled&&fishConcise };
     const getKey = window.getSnoopyPersonalGeminiKey;
     const key = typeof getKey === 'function' ? getKey() : '';
     if (key) {
