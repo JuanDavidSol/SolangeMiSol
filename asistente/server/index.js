@@ -228,7 +228,7 @@ async function publicApi(req, res, url) {
     if (personalKey && !personalGemini.validModel(personalModel))
       return send(res, 400, { error: 'El modelo personal de Gemini no es válido.' });
     const respond = opts => personalKey
-      ? personalGemini.reply({ ...opts, key: personalKey, model: personalModel, assistantName: db.settings.assistantName,
+      ? personalGemini.reply({ ...opts, key: personalKey, model: personalModel, conciseVoice: b.conciseVoice === true, assistantName: db.settings.assistantName,
           faqs: assistant.faqs(page, section, 7) })
       : assistant.reply(opts);
 
