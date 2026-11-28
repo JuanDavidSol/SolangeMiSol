@@ -540,7 +540,7 @@
   }
   function v3Enabled(){return MODE==='page'&&(v3Allowed||fishOn)&&Boolean(v3Ref);}
   async function v3Fetch(url,options={}){
-    const r=await fetch(url,options);if(!r.ok)throw new Error('HTTP '+r.status);return r;
+    const r=await fetch(url,options);if(!r.ok){if(r.status===429)throw Error('límite de solicitudes de VoxCPM2 (HTTP 429)');if(r.status===503)throw Error('VoxCPM2 temporalmente no disponible (HTTP 503)');throw new Error('VoxCPM2 HTTP '+r.status);}return r;
   }
   async function fishResponse(s,phrase,signal){
     const r=await fetch(API+'/api/fish/tts',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({key:s.fish.key,transcript:s.fish.transcript,text:phrase,reference:s.ref,consent:true,latency:s.fish.latency||'low'}),signal});
@@ -830,7 +830,11 @@
     }
     if(!s.refPath){
       const fd=new FormData();
-      fd.append('files',await(await fetch(s.ref,{signal})).blob(),s.refName||'snoopy.mp3');
+      const refBlob=await(await fetch(s.ref,{signal})).blob();
+      const mime=(refBlob.type||'').split(';')[0].toLowerCase();
+      const ext={'audio/mpeg':'mp3','audio/mp3':'mp3','audio/wav':'wav','audio/x-wav':'wav','audio/wave':'wav','audio/ogg':'ogg','audio/opus':'ogg','audio/flac':'flac','audio/x-flac':'flac','audio/mp4':'m4a','audio/x-m4a':'m4a','audio/webm':'webm','audio/aac':'aac'}[mime];
+      if(!ext)throw Error('formato de referencia no reconocido');
+      fd.append('files',refBlob,'referencia.'+ext);
       const paths=await(await v3Fetch(V3_BASE+'/gradio_api/upload',{method:'POST',body:fd,signal})).json();
       if(!Array.isArray(paths)||typeof paths[0]!=='string')throw new Error('referencia inválida');
       s.refPath=paths[0];
@@ -843,7 +847,14 @@
     for(const block of raw.replace(/\r\n/g,'\n').split('\n\n')){
       const type=block.match(/^event:\s*(.+)$/m)?.[1];
       const data=block.split('\n').filter(x=>x.startsWith('data:')).map(x=>x.slice(5).trimStart()).join('\n');
-      if(type==='error')throw new Error('servicio saturado o límite alcanzado');
+      if(type==='error'){
+        // Never expose upstream payloads, which may include private paths or text.
+        const detail=data.toLowerCase();
+        if(/quota|rate.limit|gpu.seconds|resource.exhausted|429|too many requests/.test(detail))throw Error('cuota o límite de VoxCPM2 alcanzado');
+        if(/queue.full|overload|503|unavailable|capacity/.test(detail))throw Error('VoxCPM2 temporalmente saturado');
+        if(/ffmpeg|decode|audio format|invalid audio|unsupported format/.test(detail))throw Error('VoxCPM2 no pudo leer la referencia de audio');
+        throw Error('VoxCPM2 rechazó la generación sin especificar la causa');
+      }
       if(type==='complete')result=JSON.parse(data);
     }
     const file=Array.isArray(result)?result[0]:null;
