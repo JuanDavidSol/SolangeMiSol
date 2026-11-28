@@ -11,6 +11,7 @@ const ollama = require('./ollama');
 const gemini = require('./gemini');
 const personalGemini = require('./gemini-personal');
 const sonoraStore = require('./sonora-store');
+const privateVoice = require('./private-voice');
 const indexer = require('./indexer');
 
 /* Solo se sirven archivos con estas extensiones. Cualquier otra (sin extensión, .env, .log, .bak…) responde 404 */
@@ -405,7 +406,7 @@ const server = http.createServer(async (req, res) => {
     if (pathname.startsWith('/api/')) {
       cors(req, res);
       if (req.method === 'OPTIONS') { res.writeHead(204); return res.end(); }
-      const handled = pathname.startsWith('/api/sonora/')
+      const handled = pathname.startsWith('/api/private-voice/') ? await privateVoice(req,res,url) : pathname.startsWith('/api/sonora/')
         ? await sonoraStore(req, res, url)
         : pathname.startsWith('/api/admin/') ? await adminApi(req, res, url) : await publicApi(req, res, url);
       if (handled === false) send(res, 404, { error: 'No encontrado' });
