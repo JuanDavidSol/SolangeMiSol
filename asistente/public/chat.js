@@ -325,7 +325,92 @@
       }},'Quitar clave')),
     fishInfo,fishTiming,
     h('p',{},'La clave viaja por HTTPS a este servidor y a Fish Audio; no se guarda en el servidor. Solo se solicita el modelo s2.1-pro-free. Si no está disponible, no se cambia a un modelo de pago. El acceso gratuito anunciado llega hasta el 30/11/2026. Cada dispositivo necesita su propia configuración.'));
-  v3Panel.append(fishPanel);fishRefresh();
+  const voiceTransferFile=h('input',{type:'file',accept:'.snoopyvoice','aria-label':'Importar perfil cifrado de voz'});
+  const voiceTransferPass=h('input',{type:'password',autocomplete:'off',maxlength:'256',placeholder:'Frase privada de transferencia','aria-label':'Frase privada de transferencia'});
+  const voiceTransferStatus=h('p',{role:'status','aria-live':'polite'});
+  const voiceTransferConsent=h('input',{type:'checkbox'});
+  const exportVoiceButton=h('button',{type:'button',onclick:()=>transferVoice(false)},'Exportar perfil cifrado');
+  const importVoiceButton=h('button',{type:'button',onclick:()=>transferVoice(true)},'Importar perfil cifrado');
+  const voiceTransferPanel=h('details',{class:'as-fish'},h('summary',{},'Guardar y transferir voz V3'),
+    h('p',{},'Exporta la referencia autorizada a un archivo cifrado. En otro dispositivo, importa el archivo una sola vez y confirma el uso de VoxCPM2. No se incluyen claves API. No se sube el archivo a GitHub ni al servidor de Snoopy.'),
+    voiceTransferPass,h('label',{},voiceTransferConsent,' Es mi voz o tengo autorización expresa para transferirla, con los permisos necesarios. Entiendo que quien reciba el perfil puede copiar o reutilizar la voz.'),
+    h('div',{class:'as-fish-actions'},exportVoiceButton),voiceTransferFile,h('div',{class:'as-fish-actions'},importVoiceButton),voiceTransferStatus);
+  const savedReplyPlayer=h('audio',{controls:'controls',preload:'metadata'});savedReplyPlayer.hidden=true;
+  const savedReplyStatus=h('p',{role:'status','aria-live':'polite'},'Cuando termine una respuesta V3, podrás descargarla completa.');
+  const savedReplyDownload=h('button',{type:'button',onclick:()=>downloadSavedReply()},'Descargar última respuesta V3');savedReplyDownload.disabled=true;
+  const savedReplyClear=h('button',{type:'button',onclick:()=>clearSavedReply()},'Quitar audio de la vista');savedReplyClear.disabled=true;
+  const savedReplyPanel=h('details',{class:'as-fish'},h('summary',{},'Respuestas de audio V3'),
+    h('p',{},'Guarda cada respuesta completa como WAV para escucharla o compartirla después. Solo se conserva la última respuesta en esta vista; los archivos descargados permanecen en tu dispositivo.'),
+    savedReplyStatus,savedReplyPlayer,h('div',{class:'as-fish-actions'},savedReplyDownload,savedReplyClear));
+  v3Panel.append(voiceTransferPanel,savedReplyPanel,fishPanel);fishRefresh();
+  let transferBusy=false,lastReplyBlob=null,lastReplyURL=null,replyAssembly=0;
+  const transferAAD=new TextEncoder().encode('Snoopy:private-voice-transfer:v1');
+  function downloadVoiceFile(blob,name){
+    const url=URL.createObjectURL(blob),a=h('a',{href:url,download:name});
+    document.body.append(a);a.click();a.remove();setTimeout(()=>URL.revokeObjectURL(url),60000);
+  }
+  async function transferKey(phrase,salt,usage){
+    const raw=new TextEncoder().encode(phrase);
+    try{const base=await crypto.subtle.importKey('raw',raw,'PBKDF2',false,['deriveKey']);return await crypto.subtle.deriveKey({name:'PBKDF2',salt,iterations:600000,hash:'SHA-256'},base,{name:'AES-GCM',length:256},false,[usage])}
+    finally{raw.fill(0)}
+  }
+  async function transferVoice(importing){
+    if(transferBusy)return;
+    let phrase=voiceTransferPass.value,plain=null;
+    try{
+      if(phrase.length<20)throw Error('Usa una frase privada larga, de al menos 20 caracteres.');
+      if(!voiceTransferConsent.checked)throw Error('Confirma primero la autorización.');
+      transferBusy=true;exportVoiceButton.disabled=importVoiceButton.disabled=true;
+      if(!importing){
+        if(!v3Ref||!v3Allowed)throw Error('Primero activa una referencia autorizada de VoxCPM2 V3.');
+        plain=new TextEncoder().encode(JSON.stringify({ref:v3Ref,name:v3Name}));
+        const salt=crypto.getRandomValues(new Uint8Array(16)),iv=crypto.getRandomValues(new Uint8Array(12));
+        const key=await transferKey(phrase,salt,'encrypt');
+        const cipher=new Uint8Array(await crypto.subtle.encrypt({name:'AES-GCM',iv,additionalData:transferAAD},key,plain));
+        const bytes=new Uint8Array(32+cipher.length);bytes.set([83,86,80,49]);bytes.set(salt,4);bytes.set(iv,20);bytes.set(cipher,32);
+        downloadVoiceFile(new Blob([bytes],{type:'application/octet-stream'}),'voz-snoopy.snoopyvoice');
+        voiceTransferStatus.textContent='Perfil exportado. Transfiere el archivo y la frase por canales privados separados.';
+      }else{
+        const file=voiceTransferFile.files?.[0];if(!file||file.size>4200000||file.size<48)throw Error('Selecciona un perfil .snoopyvoice válido.');
+        const bytes=new Uint8Array(await file.arrayBuffer());if(![83,86,80,49].every((v,i)=>bytes[i]===v))throw Error('Formato de perfil desconocido.');
+        const key=await transferKey(phrase,bytes.slice(4,20),'decrypt');
+        try{plain=new Uint8Array(await crypto.subtle.decrypt({name:'AES-GCM',iv:bytes.slice(20,32),additionalData:transferAAD},key,bytes.slice(32)))}catch{throw Error('Frase incorrecta o archivo dañado.')}
+        const data=JSON.parse(new TextDecoder().decode(plain));
+        if(typeof data.ref!=='string'||data.ref.length>4100000||!/^data:audio\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/]+={0,2}$/i.test(data.ref))throw Error('Referencia de audio inválida.');
+        if(v3Ref&&!confirm('¿Sustituir la referencia de voz de este navegador?'))return;
+        if(!confirm('VoxCPM2 utiliza un servicio público externo. ¿Autorizas enviar esta referencia y las respuestas al servicio para sintetizar la voz?'))return;
+        stopVoice();fishDeactivate();v3Ref=data.ref;v3Name=typeof data.name==='string'?data.name.slice(0,120):'Voz importada';v3Allowed=true;v3Consent.checked=true;
+        v3Refresh();v3Save();voiceTransferStatus.textContent='Voz V3 importada y activa en este navegador.';
+      }
+    }catch(e){voiceTransferStatus.textContent=e.message}
+    finally{if(plain)plain.fill(0);phrase='';voiceTransferPass.value='';voiceTransferConsent.checked=false;voiceTransferFile.value='';transferBusy=false;exportVoiceButton.disabled=importVoiceButton.disabled=false}
+  }
+  function clearSavedReply(){
+    replyAssembly++;savedReplyPlayer.pause();savedReplyPlayer.removeAttribute('src');savedReplyPlayer.load();savedReplyPlayer.hidden=true;
+    if(lastReplyURL)URL.revokeObjectURL(lastReplyURL);lastReplyURL=null;lastReplyBlob=null;savedReplyDownload.disabled=savedReplyClear.disabled=true;
+    savedReplyStatus.textContent='Cuando termine una respuesta V3, podrás descargarla completa.';
+  }
+  function downloadSavedReply(){if(lastReplyBlob)downloadVoiceFile(lastReplyBlob,'snoopy-respuesta-'+new Date().toISOString().replace(/[:.]/g,'-')+'.wav')}
+  async function assembleSavedReply(parts){
+    if(!parts.length)return;
+    const generation=++replyAssembly;let ctx=null;
+    savedReplyStatus.textContent='Preparando archivo WAV de la respuesta completa…';
+    try{
+      if(parts.reduce((n,b)=>n+b.size,0)>40000000)throw Error('Respuesta demasiado grande para la descarga.');
+      ctx=new (window.AudioContext||window.webkitAudioContext)({sampleRate:24000});
+      const decoded=[];let total=0;
+      for(const part of parts){const audio=await ctx.decodeAudioData(await part.arrayBuffer());total+=audio.length;if(total>ctx.sampleRate*60*15)throw Error('Audio demasiado largo.');const mono=new Float32Array(audio.length);for(let ch=0;ch<audio.numberOfChannels;ch++){const samples=audio.getChannelData(ch);for(let i=0;i<samples.length;i++)mono[i]+=samples[i]/audio.numberOfChannels}decoded.push(mono)}
+      const wav=new ArrayBuffer(44+total*2),view=new DataView(wav),ascii=(at,str)=>{for(let i=0;i<str.length;i++)view.setUint8(at+i,str.charCodeAt(i))};
+      ascii(0,'RIFF');view.setUint32(4,wav.byteLength-8,true);ascii(8,'WAVE');ascii(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,ctx.sampleRate,true);view.setUint32(28,ctx.sampleRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);ascii(36,'data');view.setUint32(40,total*2,true);
+      let at=44;for(const chunk of decoded)for(const x of chunk){const v=Math.max(-1,Math.min(1,x));view.setInt16(at,v<0?v*32768:v*32767,true);at+=2}
+      if(generation!==replyAssembly)return;
+      savedReplyPlayer.pause();if(lastReplyURL)URL.revokeObjectURL(lastReplyURL);
+      lastReplyBlob=new Blob([wav],{type:'audio/wav'});lastReplyURL=URL.createObjectURL(lastReplyBlob);savedReplyPlayer.src=lastReplyURL;savedReplyPlayer.hidden=false;
+      savedReplyDownload.disabled=savedReplyClear.disabled=false;
+      savedReplyStatus.textContent='Respuesta V3 completa lista para descargar.';
+    }catch(e){if(generation===replyAssembly)savedReplyStatus.textContent='No se pudo preparar el WAV: '+e.message}
+    finally{if(ctx)await ctx.close().catch(()=>{})}
+  }
   fishShort.addEventListener('change',()=>{fishConcise=fishShort.checked;fishSave();});
   fishStrict.addEventListener('change',()=>{fishNoCuts=fishStrict.checked;if(fishNoCuts){fishAhead=false;fishAheadInput.checked=false;}fishFlow.disabled=fishNoCuts||fishAhead;clearFishWarmup();fishSave();fishTiming.textContent=fishNoCuts?'Sin cortes de carga: espera el audio completo antes de reproducirlo.':'Streaming activado; pueden ocurrir cortes si la generación es lenta.';});
   fishAheadInput.addEventListener('change',()=>{fishAhead=fishAheadInput.checked;if(fishAhead){fishNoCuts=false;fishStrict.checked=false;}else{fishNoCuts=true;fishStrict.checked=true;}fishFlow.disabled=fishNoCuts||fishAhead;clearFishWarmup();fishSave();fishTiming.textContent=fishAhead?'Generación anticipada experimental: se aplicará en la siguiente respuesta larga.':'Modo estable sin cortes de carga.';});
@@ -717,7 +802,7 @@
   async function v3Segment(s){
     if(speechState!==s||s.finished||s.loading||s.paused)return;
     const remaining=s.words.slice(s.cursor);
-    if(!remaining.trim()){v3Status((s.fish?'Fish Audio V4':'Voz V3')+' · respuesta completada.');finishSpeech(s);return;}
+    if(!remaining.trim()){v3Status((s.fish?'Fish Audio V4':'Voz V3')+' · respuesta completada.');if(!s.fish&&s.replyParts?.length)void assembleSavedReply(s.replyParts);finishSpeech(s);return;}
     // En navegadores sin streaming, priorizar una primera frase corta.
     const cap=s.fish?3200:320;
     let size=Math.min(cap,remaining.length);
@@ -738,6 +823,7 @@
       if(s.fish){await fishStream(s,remaining.slice(0,size).trim(),size,controller.signal,warm);return;}
       const blob=await v3Generate(s,remaining.slice(0,size).trim(),controller.signal);
       if(speechState!==s||s.finished)return;
+      if(!s.replyParts)s.replyParts=[];s.replyParts.push(blob);
       s.loading=false;s.audioURL=URL.createObjectURL(blob);s.audio=new Audio(s.audioURL);
       s.audio.onended=()=>{if(speechState!==s)return;v3Dispose(s);s.cursor+=size;v3Segment(s);};
       s.audio.onerror=()=>v3Fallback(s,'error de reproducción');
