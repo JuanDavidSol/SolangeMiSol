@@ -148,7 +148,7 @@ async function fishVoice(req,res){
     return send(res,429,{error:'Hay una generación en curso o demasiadas solicitudes. Espera un momento.'});
   fishActive.add(ip);
   const controller=new AbortController();
-  const timeout=setTimeout(()=>controller.abort(),90000);
+  const timeout=setTimeout(()=>controller.abort(),180000);
   const cancel=()=>controller.abort();
   res.once('close',cancel);
   try{
@@ -159,7 +159,7 @@ async function fishVoice(req,res){
     const transcript=typeof b.transcript==='string'?b.transcript.trim():'';
     const ref=typeof b.reference==='string'?b.reference:'';
     if(!/^[A-Za-z0-9_.-]{16,256}$/.test(key))return send(res,400,{error:'Introduce una clave válida de Fish Audio.'});
-    if(!text||text.length>700||!transcript||transcript.length>1800)return send(res,400,{error:'Se necesita texto de respuesta y la transcripción exacta del audio.'});
+    if(!text||text.length>3200||!transcript||transcript.length>1800)return send(res,400,{error:'Se necesita texto de respuesta y la transcripción exacta del audio.'});
     if(b.consent!==true)return send(res,400,{error:'Falta autorizar el uso de la voz.'});
     const m=/^data:audio\/(?:mpeg|mp3|wav|x-wav|flac|x-flac);base64,([A-Za-z0-9+/]+={0,2})$/.exec(ref);
     if(!m)return send(res,400,{error:'Carga una referencia MP3, WAV o FLAC.'});
