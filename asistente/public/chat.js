@@ -907,12 +907,90 @@
   function v3PlayAudio(s){
     if(speechState!==s||!s.audio||s.paused||s.finished||(s.fish&&(!s.bufferReady||s.buffering)))return;
     s.audio.play().then(()=>{
-      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.9.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
+      if(speechState===s&&!s.paused)v3Status(s.v3Queue?v3QueueStatus(s):'Snoopy está hablando con '+(s.fish?'Fish Audio V4.9.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
     }).catch(()=>{
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
   }
+  // V3: one active generation, two prepared fragments ahead of playback.
+  function v3SplitWords(words){
+    const parts=[];let pos=0;
+    while(pos<words.length){
+      const remaining=words.slice(pos);
+      if(!remaining.trim())break;
+      const cap=parts.length===0?220:320;
+      let size=Math.min(cap,remaining.length);
+      if(size<remaining.length){
+        const cut=remaining.slice(0,size);
+        const punct=Math.max(cut.lastIndexOf('. '),cut.lastIndexOf('? '),cut.lastIndexOf('! '),cut.lastIndexOf('; '));
+        const comma=Math.max(cut.lastIndexOf(', '),cut.lastIndexOf(': '));
+        if(punct>=70)size=punct+1;
+        else if(comma>=100)size=comma+1;
+        else if(cut.lastIndexOf(' ')>0)size=cut.lastIndexOf(' ')+1;
+      }
+      const phrase=remaining.slice(0,size).trim();if(phrase)parts.push(phrase);
+      pos+=size;
+    }
+    return parts;
+  }
+  function v3QueueAlive(s){return speechState===s&&s.v3&&!s.finished}
+  function v3QueueStatus(s){
+    const q=s.v3Queue;
+    return 'Voz V3 · parte '+(q.play+1)+' de '+q.parts.length+' · '+Math.max(0,q.blobs.length-q.play-1)+' en reserva';
+  }
+  function v3QueuePump(s){
+    if(!v3QueueAlive(s)||s.paused)return;
+    if(!s.v3Queue)s.v3Queue={parts:v3SplitWords(s.words),blobs:[],play:0,started:false,generating:false,error:null};
+    const q=s.v3Queue,total=q.parts.length;
+    if(!s.audio){
+      if(q.play===total){
+        v3Status('Voz V3 · respuesta completada.');
+        if(q.blobs.length)void assembleSavedReply(q.blobs);
+        finishSpeech(s);return;
+      }
+      const available=q.blobs.length-q.play;
+      const initial=Math.min(2,total-q.play);
+      if(available>0&&(q.started||available>=initial||q.error)){
+        q.started=true;
+        const index=q.play;
+        s.audioURL=URL.createObjectURL(q.blobs[index]);
+        const player=new Audio(s.audioURL);s.audio=player;player.preload='auto';
+        player.onended=()=>{
+          if(!v3QueueAlive(s)||s.audio!==player)return;
+          v3Dispose(s);q.play=index+1;v3QueuePump(s);
+        };
+        player.onerror=()=>{if(v3QueueAlive(s)&&s.audio===player)v3Fallback(s,'error de reproducción')};
+        v3PlayAudio(s);
+      }else if(q.error){
+        v3Fallback(s,q.error);return;
+      }else{
+        v3Status(q.started?'Preparando el siguiente fragmento de voz…':'Preparando voz V3 · '+available+' de '+initial+' fragmentos iniciales…');
+      }
+    }
+    const buffered=q.blobs.length-q.play-(s.audio?1:0);
+    if(!q.error&&!q.generating&&q.blobs.length<total&&buffered<2)void v3QueueGenerate(s);
+  }
+  async function v3QueueGenerate(s){
+    const q=s.v3Queue;
+    if(!v3QueueAlive(s)||q.generating||q.error||q.blobs.length>=q.parts.length)return;
+    const index=q.blobs.length,controller=new AbortController();
+    q.generating=true;s.controller=controller;
+    const timer=setTimeout(()=>controller.abort(),180000);
+    try{
+      const blob=await v3Generate(s,q.parts[index],controller.signal);
+      if(!v3QueueAlive(s))return;
+      if(controller.signal.aborted)throw new DOMException('Cancelado','AbortError');
+      q.blobs.push(blob);
+    }catch(e){
+      if(v3QueueAlive(s))q.error=e.name==='AbortError'?'tiempo de espera agotado':String(e.message||'error de conexión').slice(0,120);
+    }finally{
+      clearTimeout(timer);q.generating=false;
+      if(s.controller===controller)s.controller=null;
+    }
+    if(v3QueueAlive(s))v3QueuePump(s);
+  }
   async function v3Segment(s){
+    if(!s.fish){v3QueuePump(s);return;}
     if(speechState!==s||s.finished||s.loading||s.paused)return;
     const remaining=s.words.slice(s.cursor);
     if(!remaining.trim()){v3Status((s.fish?'Fish Audio V4':'Voz V3')+' · respuesta completada.');if(!s.fish&&s.replyParts?.length)void assembleSavedReply(s.replyParts);finishSpeech(s);return;}
@@ -1061,7 +1139,8 @@
     if (!state || state.finished) return false;
     if(state.v3){
       state.paused=false;
-      if(state.audio)v3PlayAudio(state);else if(!state.loading)v3Segment(state);
+      if(state.v3Queue){if(state.audio)v3PlayAudio(state);v3QueuePump(state);}
+      else if(state.audio)v3PlayAudio(state);else if(!state.loading)v3Segment(state);
       return true;
     }
     if(state.fallbackPending){state.fallbackPending=false;state.paused=false;speakSegment(state);return true;}
