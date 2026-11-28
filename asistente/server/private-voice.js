@@ -11,7 +11,17 @@ const secret=process.env.SNOOPY_R2_SECRET_ACCESS_KEY||process.env.R2_SECRET_ACCE
 const root=process.env.SNOOPY_VOICE_SECRET||crypto.createHmac('sha256',secret).update('Snoopy:private-voice:root:v1:'+account+':'+bucket).digest('hex');
 const password=process.env.SNOOPY_VOICE_PASSWORD||'';
 const admin=process.env.SNOOPY_VOICE_ADMIN_PASSWORD||cfg.ADMIN_PASSWORD||'';
-const ready=/^[a-f0-9]{32}$/i.test(account)&&/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)&&!!access&&!!secret&&root.length>=32&&password.length>=12&&(!admin||password!==admin)&&root!==password&&root!==admin;
+const configIssues=[];
+if(!/^[a-f0-9]{32}$/i.test(account))configIssues.push('R2_ACCOUNT_ID: 32 caracteres hexadecimales, no la URL');
+if(!/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket))configIssues.push('R2_BUCKET: nombre válido del bucket');
+if(!access)configIssues.push('R2_ACCESS_KEY_ID: falta');
+if(!secret)configIssues.push('R2_SECRET_ACCESS_KEY: falta');
+if(root.length<32)configIssues.push('SNOOPY_VOICE_SECRET: mínimo 32 caracteres si se configura manualmente');
+if(password.length<12)configIssues.push('SNOOPY_VOICE_PASSWORD: mínimo 12 caracteres');
+if(admin&&password===admin)configIssues.push('La clave de voz y la de administración deben ser distintas');
+if(root===password||root===admin)configIssues.push('La clave de cifrado debe ser distinta de las contraseñas');
+const ready=configIssues.length===0;
+if(!ready)console.warn('[Snoopy voz R2] Configuración pendiente: '+configIssues.join('; '));
 const object='snoopy-private/voice-v3.enc';
 const cookieName='snoopy_private_voice';
 const maxBytes=4200000;
@@ -83,7 +93,7 @@ module.exports=async function privateVoice(req,res,url){
   const p=url.pathname,method=req.method;
   // Restrict to same-origin browser calls, including the read endpoint.
   if(req.headers['x-snoopy-voice']!=='1'||(req.headers['sec-fetch-site']&&req.headers['sec-fetch-site']!=='same-origin'))return send(res,403,{error:'Solicitud no autorizada.'});
-  if(!ready)return send(res,503,{error:'La voz privada de R2 todavía no está configurada en Render.'});
+  if(!ready)return send(res,503,{error:'La voz privada de R2 todavía no está configurada en Render. Revisa las variables de entorno y el diagnóstico [Snoopy voz R2] en los registros de Render.'});
   const ip=sec.ip(req);
   if(!sec.limit('private-voice:'+ip,40,60000))return send(res,429,{error:'Espera un momento antes de reintentar.'});
   try{
