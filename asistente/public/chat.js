@@ -216,7 +216,7 @@
   /* ---------- Snoopy V3: voz de referencia opcional ---------- */
   const V3_KEY = 'snoopy-voice-reference-v3';
   const V3_BASE = 'https://openbmb-voxcpm-demo.hf.space';
-  const V3_STYLE = 'Natural conversational Latin American Spanish, preserving the speaker identity, pitch and timbre of the authorized reference recording. Clear articulation, warm and calm delivery, subtle expressive intonation, connected words, natural rhythm and appropriate pauses. Avoid exaggerated acting, cartoon effects, robotic delivery and artificial pitch shifts.';
+  const V3_STYLE = 'Natural conversational Latin American Spanish, preserving the speaker identity, pitch and timbre of the authorized reference recording. Clear articulation, gentle, considerate and naturally warm delivery, subtle expressive intonation with a reassuring but non-theatrical tone, connected words, natural rhythm and appropriate pauses. Avoid exaggerated acting, cartoon effects, robotic delivery and artificial pitch shifts.';
   let v3Ref='', v3Name='', v3Allowed=false, v3Load=0, v3CloudLoaded=false;
   const CLOUD_VOICE_KEY='snoopy-private-voice-enabled-v1';
   if (MODE==='page') try {
