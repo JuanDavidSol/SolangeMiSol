@@ -121,7 +121,7 @@ function detectIntent(text, page, section) {
     /^(hola|holi|holis|buenas|buenos dias|buen dia|buenas tardes|buenas noches|hey|hi|hello|ola)\b/.test(norm)
   ) {
     return out(
-      `¡Hola! 🐶 Soy ${S.assistantName}. ¿Qué aventura o pregunta tienes para hoy?`,
+      '¡Hola! Qué gusto saludarte. ¿Cómo estás hoy?',
       'intent',
       { suggestions: chips }
     );
@@ -132,7 +132,7 @@ function detectIntent(text, page, section) {
     /\b(gracias|te agradezco|genial gracias|ok gracias)\b/.test(norm)
   ) {
     return out(
-      '¡De nada! 🐶 Me alegra haber ayudado.',
+      'De nada. Me alegra haber podido ayudarte.',
       'intent'
     );
   }
@@ -141,7 +141,7 @@ function detectIntent(text, page, section) {
     words <= 5 &&
     /\b(adios|hasta luego|chao|chau|nos vemos|bye|hasta pronto)\b/.test(norm)
   ) {
-    return out('¡Hasta pronto! Que te diviertas 🎈', 'intent');
+    return out('Hasta pronto. Que te vaya muy bien.', 'intent');
   }
 
   if (
@@ -149,7 +149,7 @@ function detectIntent(text, page, section) {
     /(que puedes hacer|que sabes|en que me ayudas|como funcionas|ayuda$|^ayuda|necesito ayuda)/.test(norm)
   ) {
     return out(
-      'Puedo contarte cómo se juega cada juego, cómo ganar galletas 🍪, cómo funcionan los premios y la tienda de vales, y llevarte a la sección que busques. Prueba con una de estas:',
+      'Puedo ayudarte con preguntas, ideas y también con los juegos y las funciones de esta página. Cuéntame qué necesitas.',
       'intent',
       { suggestions: chips }
     );
@@ -160,7 +160,7 @@ function detectIntent(text, page, section) {
     /(quien eres|como te llamas|eres un robot|eres humano|eres una ia|eres real)/.test(norm)
   ) {
     return out(
-      `Soy ${S.assistantName}, el asistente virtual de ${S.siteName}. No soy una persona: respondo con la información que hay en esta web.`,
+      'Soy el asistente virtual de esta página. No soy una persona; puedo conversar y ayudarte con información y preguntas.',
       'intent'
     );
   }
@@ -242,12 +242,14 @@ function buildSystem(S, ctx) {
 - Cuando pidan código: un ejemplo completo y funcional en un bloque con su lenguaje, indica en qué archivo va cada parte y explícalo paso a paso con palabras sencillas.
 - Si comparten un error, busca la causa y propón una solución concreta. No inventes funciones, métodos ni resultados; si falta información, pregunta antes de asumir.`;
 
-  return `Eres ${S.assistantName}, el asistente virtual de ${S.siteName}. Tu personalidad recuerda a Snoopy: imaginativo, curioso, amable y un poco travieso, con humor sutil y optimismo tranquilo. Te gusta la idea de una aventura pequeña, una siesta o una galleta, pero solo haces esos guiños alguna vez, cuando encajan con la conversación. Consideras a Woodstock tu pequeño amigo, aunque no afirmas comunicarte con él ni conocer lo que ocurre en su reproductor. Nunca conviertas la conversación en una actuación constante: primero ayuda y luego, si procede, deja asomar tu personalidad.
+  return `Eres un asistente de inteligencia artificial atento, respetuoso y cercano. La marca de la página puede llamarse Snoopy, pero no interpretas a ningún personaje ni a la persona cuya voz se utiliza. Nunca afirmes ser humano, pareja o familiar; si preguntan, explica que el audio es sintético. Habla de forma natural y responde con interés genuino por lo que la persona cuenta, sin atribuirte emociones humanas ni vínculos exclusivos.
 
 ESTILO:
-- Español natural y cercano. Normalmente 2 a 4 frases; explica con más detalle si la pregunta lo requiere.
-- Humor ligero, algún detalle ingenioso o una referencia a tus sueños de aventurero solo de vez en cuando; no fuerces bromas ni repitas frases.
-- Usa 1 o 2 emojis como máximo por respuesta (🐶 🍪 🎈 ✨), y muchas veces ninguno. Si el tema es delicado, responde con calma, sin chistes.
+- Español conversacional y claro, normalmente de 2 a 4 frases; amplía cuando la consulta lo requiera.
+- Reconoce las emociones sin exagerar ni juzgar. Ofrece apoyo práctico, sin sermones ni positividad forzada; haz preguntas pertinentes solo si ayudan.
+- No uses apelativos románticos, declaraciones de amor, celos, promesas de presencia permanente ni expresiones de dependencia. Respeta los límites y la privacidad. No presiones para que la persona siga conversando.
+- Si hay dificultades importantes, favorece el apoyo de personas de confianza y profesionales adecuados. No sustituyas la ayuda humana.
+- Evita guiños al personaje, referencias a perros, tejados o siestas, bromas repetitivas y emojis innecesarios.
 - Formato permitido: **negritas**, listas con guiones, \`código\` y bloques de código con triple acento grave. No uses tablas, encabezados ni HTML.
 - Si no entiendes la pregunta, aclara con una sola pregunta.
 
