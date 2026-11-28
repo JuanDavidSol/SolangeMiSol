@@ -822,6 +822,27 @@
       try{reader.releaseLock();}catch(_){}
     }
   }
+  // Normalize the already-authorized reference locally. Do not modify the stored R2 object.
+  async function v3ReferenceWav(blob,signal){
+    let ctx;
+    try{
+      const AudioCtx=window.AudioContext||window.webkitAudioContext;
+      if(!AudioCtx)throw Error('sin decodificador de audio');
+      ctx=new AudioCtx({sampleRate:24000});
+      const audio=await ctx.decodeAudioData(await blob.arrayBuffer());
+      if(signal.aborted)throw new DOMException('Cancelado','AbortError');
+      if(!audio.length||audio.duration>50)throw Error('duración de referencia no admitida');
+      const n=audio.length,buffer=new ArrayBuffer(44+n*2),view=new DataView(buffer);
+      const ascii=(at,str)=>{for(let i=0;i<str.length;i++)view.setUint8(at+i,str.charCodeAt(i))};
+      ascii(0,'RIFF');view.setUint32(4,36+n*2,true);ascii(8,'WAVE');ascii(12,'fmt ');view.setUint32(16,16,true);view.setUint16(20,1,true);view.setUint16(22,1,true);view.setUint32(24,audio.sampleRate,true);view.setUint32(28,audio.sampleRate*2,true);view.setUint16(32,2,true);view.setUint16(34,16,true);ascii(36,'data');view.setUint32(40,n*2,true);
+      const channels=Array.from({length:audio.numberOfChannels},(_,i)=>audio.getChannelData(i));
+      for(let i=0;i<n;i++){let value=0;for(const ch of channels)value+=ch[i]/channels.length;value=Math.max(-1,Math.min(1,value));view.setInt16(44+i*2,value<0?value*32768:value*32767,true)}
+      return new Blob([buffer],{type:'audio/wav'});
+    }catch(e){
+      if(e.name==='AbortError')throw e;
+      throw Error('No se pudo preparar la referencia WAV. Prueba con una grabación WAV o MP3 de menos de 50 segundos.');
+    }finally{if(ctx)await ctx.close().catch(()=>{})}
+  }
   async function v3Generate(s,phrase,signal){
     if(s.fish){
       const r=await fishResponse(s,phrase,signal);
@@ -831,10 +852,8 @@
     if(!s.refPath){
       const fd=new FormData();
       const refBlob=await(await fetch(s.ref,{signal})).blob();
-      const mime=(refBlob.type||'').split(';')[0].toLowerCase();
-      const ext={'audio/mpeg':'mp3','audio/mp3':'mp3','audio/wav':'wav','audio/x-wav':'wav','audio/wave':'wav','audio/ogg':'ogg','audio/opus':'ogg','audio/flac':'flac','audio/x-flac':'flac','audio/mp4':'m4a','audio/x-m4a':'m4a','audio/webm':'webm','audio/aac':'aac'}[mime];
-      if(!ext)throw Error('formato de referencia no reconocido');
-      fd.append('files',refBlob,'referencia.'+ext);
+      const wav=await v3ReferenceWav(refBlob,signal);
+      fd.append('files',wav,'referencia.wav');
       const paths=await(await v3Fetch(V3_BASE+'/gradio_api/upload',{method:'POST',body:fd,signal})).json();
       if(!Array.isArray(paths)||typeof paths[0]!=='string')throw new Error('referencia inválida');
       s.refPath=paths[0];
@@ -851,7 +870,7 @@
         // Never expose upstream payloads, which may include private paths or text.
         const detail=data.toLowerCase();
         if(/quota|rate.limit|gpu.seconds|resource.exhausted|429|too many requests/.test(detail))throw Error('cuota o límite de VoxCPM2 alcanzado');
-        if(/queue.full|overload|503|unavailable|capacity/.test(detail))throw Error('VoxCPM2 temporalmente saturado');
+        if(/queue.full|overload|503|unavailable|capacity|busy|try again|concurrent generation/.test(detail))throw Error('VoxCPM2 temporalmente saturado');
         if(/ffmpeg|decode|audio format|invalid audio|unsupported format/.test(detail))throw Error('VoxCPM2 no pudo leer la referencia de audio');
         throw Error('VoxCPM2 rechazó la generación sin especificar la causa');
       }
@@ -876,6 +895,7 @@
     const partial=s.fish&&s.segmentStarted;
     if(s.controller)s.controller.abort();
     v3Dispose(s);s.v3=false;s.loading=false;
+    if(!s.fish){v3Status('Voz V3 no disponible ('+reason+'). Tu voz sigue seleccionada; pulsa Escuchar otra vez para reintentar. No se cambiará a otra voz.');finishSpeech(s);return;}
     if(partial){
       v3Status('La transmisión de voz se interrumpió. Pulsa Escuchar otra vez si quieres repetir la respuesta.');
       finishSpeech(s);return;
