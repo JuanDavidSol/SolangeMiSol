@@ -15,7 +15,7 @@ function validKey(key) {
   return typeof key === 'string' && key.length >= 8 && key.length <= 256 && /^[\x21-\x7e]+$/.test(key);
 }
 
-async function reply({ key, model, text, history = [], faqs = [], assistantName = 'Snoopy', onText }) {
+async function reply({ key, model, text, history = [], faqs = [], assistantName = 'Snoopy', onText, conciseVoice = false }) {
   if (!validKey(key)) {
     const e = new Error('Invalid personal Gemini key');
     e.publicMessage = 'La clave de Gemini no tiene un formato válido.';
@@ -34,6 +34,7 @@ async function reply({ key, model, text, history = [], faqs = [], assistantName 
   }).filter(Boolean).join('\n\n').slice(0, 4200) : '';
   const system = `Eres ${String(assistantName || 'Snoopy').slice(0, 40)}, un asistente versátil y amable con la personalidad sutil de Snoopy: curioso, imaginativo, bondadoso y ligeramente travieso. Puedes aportar un toque de humor suave, o mencionar alguna siesta o aventura imaginaria cuando resulte oportuno, pero nunca fuerces esos guiños ni los repitas en todas las respuestas. Woodstock es tu pequeño amigo; no afirmes hablar realmente con él ni tener acceso a su reproductor. Prioriza la utilidad y el respeto por el tema: ante asuntos serios, responde sin bromas. Responde en español claro y natural sobre temas generales: juegos, tecnología, aprendizaje, matemáticas, ideas y preguntas cotidianas. A veces el mensaje llega por dictado de voz, con errores de transcripción o sin puntuación: interpreta la intención usando el contexto de la conversación, sin inventar detalles ni cambiar el sentido; si algo importante es ambiguo, pide una aclaración breve. Responde de manera conversacional, útil y no demasiado extensa para que también se pueda escuchar en voz alta. No inventes reglas, premios, galletas ni datos concretos de esta web. Si no sabes un dato, dilo.\n` +
     (faqBlock ? `Estas son preguntas y respuestas públicas de la web, úsalas solo si son relevantes:\n${faqBlock}` : '');
+  const voiceSystem = conciseVoice ? system + '\nPara una conversación por voz de baja latencia, responde directamente. Para saludos o preguntas sencillas, usa una a tres frases breves sin introducciones repetitivas. Mantén toda la información necesaria para responder correctamente; cuando el usuario solicite detalle, código, explicación extensa o el tema requiera matices, conserva la extensión necesaria. No cortes una respuesta ni omitas información importante.' : system;
   const contents = [];
   for (const turn of history.slice(-10)) {
     if (turn && (turn.r === 'u' || turn.r === 'a') && typeof turn.t === 'string') {
@@ -51,7 +52,7 @@ async function reply({ key, model, text, history = [], faqs = [], assistantName 
     response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(selectedModel)}:${streaming?'streamGenerateContent?alt=sse':'generateContent'}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json', 'x-goog-api-key': key },
-      body: JSON.stringify({ systemInstruction: { parts: [{ text: system }] }, contents, generationConfig: { maxOutputTokens: 1400, ...(selectedModel.startsWith('gemini-3.') ? { thinkingConfig: { thinkingLevel: 'low' } } : {}) } }),
+      body: JSON.stringify({ systemInstruction: { parts: [{ text: voiceSystem }] }, contents, generationConfig: { maxOutputTokens: 1400, ...(selectedModel.startsWith('gemini-3.') ? { thinkingConfig: { thinkingLevel: 'low' } } : {}) } }),
       signal: controller.signal,
       redirect: 'error'
     });
