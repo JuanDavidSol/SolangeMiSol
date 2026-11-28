@@ -24,14 +24,14 @@ function send(res,status,body,extra={}){
 }
 function issue(){
   const value=String(Math.floor(Date.now()/1000)+30*86400)+'.'+crypto.randomBytes(16).toString('hex');
-  return value+'.'+hmac(derive('session'),value).toString('hex');
+  return value+'.'+hmac(derive('session:'+password),value).toString('hex');
 }
 function authorized(req){
   const c=String(req.headers.cookie||'').split(';').map(x=>x.trim()).find(x=>x.startsWith(cookieName+'='));
   if(!c)return false;
   const value=c.slice(cookieName.length+1),parts=value.split('.');
   if(parts.length!==3||!/^\d{10}$/.test(parts[0])||!/^[a-f0-9]{32}$/.test(parts[1])||!/^[a-f0-9]{64}$/.test(parts[2])||Number(parts[0])<=Date.now()/1000)return false;
-  const sig=hmac(derive('session'),parts[0]+'.'+parts[1]).toString('hex');
+  const sig=hmac(derive('session:'+password),parts[0]+'.'+parts[1]).toString('hex');
   return crypto.timingSafeEqual(Buffer.from(sig,'hex'),Buffer.from(parts[2],'hex'));
 }
 function cookie(value,age){return cookieName+'='+value+'; Path=/api/private-voice/; HttpOnly; Secure; SameSite=Strict; Max-Age='+age}
