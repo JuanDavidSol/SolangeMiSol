@@ -90,7 +90,10 @@
   .as-form button.as-mic.listening{background:var(--r);color:#fff;box-shadow:0 0 0 4px #e8505b33;animation:as-mic-pulse 1.3s ease-in-out infinite}
   .as-mic-status{padding:6px 14px;font-size:12px;color:var(--muted);background:#fffaf5;border-top:1px solid var(--line)}
   .as-mic-status[hidden]{display:none}
-  .as-v3{padding:8px 14px;background:#fff8f3;border-bottom:1px solid var(--line);font-size:12px;max-height:210px;overflow:auto;flex-shrink:0}
+  .as-v3{padding:10px 14px;background:#fff8f3;border-bottom:1px solid var(--line);font-size:13px;max-height:min(330px,42vh);overflow:auto;flex-shrink:0}
+  .as-v3 [hidden]{display:none!important}
+  .as-v3 .as-fish-actions button{min-height:36px}
+  .as-v3 .as-fish-actions button:first-child{font-weight:600}
   .as-v3 summary{cursor:pointer;font-weight:700;color:#b73549}
   .as-v3 p{margin:6px 0;color:var(--muted)}
   .as-v3 audio{width:100%;height:32px;margin:4px 0}
@@ -248,11 +251,11 @@
   }},'▶ Reproducir respuesta');
   v3Play.hidden=true;
   const v3Bar=h('div',{class:'as-v3-status',role:'status','aria-live':'polite'},v3Message,v3Play);v3Bar.hidden=true;
-  const v3Panel=h('details',{class:'as-v3'},h('summary',{},'🎙 Voz personalizada de Snoopy · V4'),
-    h('p',{},'Carga el MP3 ganador de Snoopy. La muestra se guarda en este navegador cuando activas un motor de voz.'),
+  const voiceSummary=h('summary',{},'🎙 Mi voz');
+  const v3Panel=h('details',{class:'as-v3'},voiceSummary);
+  const localVoiceControls=h('div',{},h('p',{},'1. Selecciona tu grabación (o usa la que ya tienes).'),
     v3File,v3Label,v3Preview,
-    h('label',{},v3Consent,' Tengo permiso para reutilizar la voz y acepto enviar la muestra y el texto de las respuestas al servicio público VoxCPM2 de Hugging Face. No compartas información privada.'),
-    h('p',{},'Experimental: puede haber colas y límites. Desmarca la casilla para usar la voz anterior.'),
+    h('label',{},v3Consent,' Autorizo usar esta voz y enviar la muestra y las respuestas al servicio externo VoxCPM2. No introduciré información privada.'),
     h('button',{type:'button',onclick:()=>{
       v3Load++;forgetCloudVoice();v3CloudLoaded=false;stopVoice();v3Ref='';v3Name='';v3Allowed=false;v3Consent.checked=false;v3File.value='';fishTranscript='';fishText.value='';fishDeactivate();
       v3Refresh();v3Save();v3Status('');
@@ -343,23 +346,28 @@
   const savedReplyPanel=h('details',{class:'as-fish'},h('summary',{},'Respuestas de audio V3'),
     h('p',{},'Guarda cada respuesta completa como WAV para escucharla o compartirla después. Solo se conserva la última respuesta en esta vista; los archivos descargados permanecen en tu dispositivo.'),
     savedReplyStatus,savedReplyPlayer,h('div',{class:'as-fish-actions'},savedReplyDownload,savedReplyClear));
-  const cloudPass=h('input',{type:'password',autocomplete:'off',maxlength:'256',placeholder:'Clave privada de voz','aria-label':'Clave privada de voz'});
+  const cloudPass=h('input',{type:'password',autocomplete:'off',maxlength:'256',placeholder:'Tu clave de voz','aria-label':'Clave privada de voz'});
   const cloudConsent=h('input',{type:'checkbox'});
   const cloudAdmin=h('input',{type:'password',autocomplete:'off',maxlength:'256',placeholder:'Contraseña de administrador','aria-label':'Contraseña de administrador de voz'});
   const cloudShareConsent=h('input',{type:'checkbox'});
   const cloudStatus=h('p',{role:'status','aria-live':'polite'});
-  const cloudOpen=h('button',{type:'button',onclick:()=>cloudAction('login')},'Activar voz privada');
+  const cloudOpen=h('button',{type:'button',onclick:()=>cloudAction('login')},'Activar mi voz');
   const cloudClose=h('button',{type:'button',onclick:()=>cloudAction('logout')},'Desactivar en este dispositivo');
-  const cloudSave=h('button',{type:'button',onclick:()=>cloudAction('save')},'Guardar voz en R2');
+  const cloudSave=h('button',{type:'button',onclick:()=>cloudAction('save')},'Guardar mi voz');
   const cloudDelete=h('button',{type:'button',onclick:()=>cloudAction('delete')},'Retirar voz de R2');
-  const cloudPanel=h('details',{class:'as-fish'},h('summary',{},'Voz privada en R2'),
-    h('p',{},'Activa la voz privada una vez con la clave de acceso. Este navegador recordará la autorización durante la sesión privada (hasta 30 días).'),
-    cloudPass,h('label',{},cloudConsent,' Autorizo usar la voz guardada y enviar la referencia y las respuestas al servicio externo VoxCPM2. No introduciré información privada.'),
-    h('div',{class:'as-fish-actions'},cloudOpen,cloudClose),
-    h('details',{},h('summary',{},'Administrar voz'),h('p',{},'Selecciona y prueba tu propia referencia V3 antes de guardarla. No se comparten claves API ni conversaciones.'),
-      cloudAdmin,h('label',{},cloudShareConsent,' Autorizo guardar y compartir esta voz, con los permisos necesarios. Entiendo que una persona autorizada podría copiarla o reutilizarla.'),
-      h('div',{class:'as-fish-actions'},cloudSave,cloudDelete)),cloudStatus);
-  v3Panel.append(cloudPanel,voiceTransferPanel,savedReplyPanel,fishPanel);fishRefresh();
+  const cloudLogin=h('div',{class:'as-fish'},cloudPass,
+    h('label',{},cloudConsent,' Acepto usar la voz privada con VoxCPM2, un servicio externo que recibe la referencia y las respuestas. No introduciré información privada.'),
+    h('div',{class:'as-fish-actions'},cloudOpen));
+  const voiceOwner=h('details',{class:'as-fish'},h('summary',{},'Guardar o cambiar mi voz'),
+    localVoiceControls,
+    h('p',{},'2. Confirma el guardado privado.'),
+    cloudAdmin,h('label',{},cloudShareConsent,' Es mi voz o tengo permiso expreso para compartirla, con las autorizaciones necesarias. La persona autorizada podría copiarla.'),
+    h('div',{class:'as-fish-actions'},cloudSave,cloudDelete));
+  const advancedVoice=h('details',{class:'as-fish'},h('summary',{},'Configuración avanzada'),
+    h('div',{class:'as-fish-actions'},cloudClose),voiceTransferPanel,fishPanel);
+  savedReplyPanel.querySelector('summary').textContent='Audios para descargar';
+  const cloudPanel=h('div',{},cloudLogin,cloudStatus,voiceOwner);
+  v3Panel.append(cloudPanel,savedReplyPanel,advancedVoice);fishRefresh();
   let cloudBusy=false;
   function forgetCloudVoice(){
     try{localStorage.removeItem(CLOUD_VOICE_KEY)}catch{}
@@ -392,7 +400,7 @@
         secret=cloudPass.value;
         if(!secret)throw Error('Introduce la clave privada de voz.');
         if(v3Ref&&!v3CloudLoaded&&!confirm('¿Usar la voz guardada en R2 en lugar de la referencia local?'))return;
-        await cloudApi('login','POST',{password:secret});await loadCloudVoice();
+        await cloudApi('login','POST',{password:secret});await loadCloudVoice();voiceOwner.open=false;advancedVoice.open=false;v3Panel.open=false;
       }else if(action==='logout'){
         await cloudApi('logout','POST',{});dropCloudVoice();cloudStatus.textContent='Voz privada desactivada en este dispositivo.';
       }else if(action==='save'){
@@ -401,7 +409,7 @@
         secret=cloudAdmin.value;if(!secret)throw Error('Introduce tu contraseña de administrador.');
         if(!confirm('¿Guardar esta referencia en R2? Sustituirá el perfil compartido anterior, si existe.'))return;
         await cloudApi('profile','PUT',{admin:secret,ref:v3Ref,consent:true});
-        cloudStatus.textContent='Voz guardada en R2. Ya puede activarse desde otro dispositivo con la clave privada.';
+        cloudStatus.textContent='Voz guardada. En el otro dispositivo, abre Mi voz e introduce la clave de voz.';voiceOwner.open=false;
       }else if(action==='delete'){
         secret=cloudAdmin.value;if(!secret)throw Error('Introduce tu contraseña de administrador.');
         if(!confirm('¿Retirar la voz de R2? No se eliminarán las copias que ya se hayan descargado.'))return;
@@ -499,6 +507,8 @@
     }catch(_){v3Label.textContent+=' · No se pudo guardar; vuelve a cargarla al recargar la página.';}
   }
   function v3Refresh(){
+    voiceSummary.textContent='🎙 Mi voz · '+(fishOn?'Fish Audio':v3CloudLoaded&&v3Allowed?'Activa desde R2':v3Allowed&&v3Ref?'Activa en este navegador':'Activar');
+    cloudLogin.hidden=Boolean(v3CloudLoaded&&v3Allowed&&!fishOn);
     v3Label.textContent=v3Ref?v3Name+(fishOn?' · Fish Audio V4 activo':v3Allowed?' · VoxCPM2 V3 activo':' · Pendiente de autorización'):'Sin audio seleccionado.';
     if(v3Ref){if(v3Preview.getAttribute('src')!==v3Ref)v3Preview.src=v3Ref;v3Preview.hidden=false;}
     else{v3Preview.pause();v3Preview.removeAttribute('src');v3Preview.hidden=true;}
