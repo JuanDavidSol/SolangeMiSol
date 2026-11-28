@@ -3,14 +3,15 @@
 const crypto=require('crypto');
 const sec=require('./security');
 const cfg=require('./config');
-const account=process.env.SNOOPY_R2_ACCOUNT_ID||'';
-const bucket=process.env.SNOOPY_R2_BUCKET||'';
-const access=process.env.SNOOPY_R2_ACCESS_KEY_ID||'';
-const secret=process.env.SNOOPY_R2_SECRET_ACCESS_KEY||'';
-const root=process.env.SNOOPY_VOICE_SECRET||'';
+const account=process.env.SNOOPY_R2_ACCOUNT_ID||process.env.R2_ACCOUNT_ID||'';
+const bucket=process.env.SNOOPY_R2_BUCKET||process.env.R2_BUCKET||'';
+const access=process.env.SNOOPY_R2_ACCESS_KEY_ID||process.env.R2_ACCESS_KEY_ID||'';
+const secret=process.env.SNOOPY_R2_SECRET_ACCESS_KEY||process.env.R2_SECRET_ACCESS_KEY||'';
+// Preserve an explicitly configured encryption secret. Otherwise derive a stable, domain-separated key from the existing R2 secret.
+const root=process.env.SNOOPY_VOICE_SECRET||crypto.createHmac('sha256',secret).update('Snoopy:private-voice:root:v1:'+account+':'+bucket).digest('hex');
 const password=process.env.SNOOPY_VOICE_PASSWORD||'';
 const admin=process.env.SNOOPY_VOICE_ADMIN_PASSWORD||cfg.ADMIN_PASSWORD||'';
-const ready=/^[a-f0-9]{32}$/i.test(account)&&/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)&&!!access&&!!secret&&root.length>=32&&password.length>=20&&admin.length>=20&&password!==admin&&root!==password&&root!==admin;
+const ready=/^[a-f0-9]{32}$/i.test(account)&&/^[a-z0-9][a-z0-9-]{1,61}[a-z0-9]$/.test(bucket)&&!!access&&!!secret&&root.length>=32&&password.length>=12&&(!admin||password!==admin)&&root!==password&&root!==admin;
 const object='snoopy-private/voice-v3.enc';
 const cookieName='snoopy_private_voice';
 const maxBytes=4200000;
@@ -101,7 +102,7 @@ module.exports=async function privateVoice(req,res,url){
     if(p==='/api/private-voice/profile'&&(method==='PUT'||method==='DELETE')){
       if(!sec.limit('private-voice-admin:'+ip,6,600000))return send(res,429,{error:'Demasiados intentos de administración. Espera diez minutos.'});
       const b=await body(req,maxBytes);
-      if(typeof b.admin!=='string'||b.admin.length>256||!same(b.admin,admin))return send(res,403,{error:'Contraseña de administrador incorrecta.'});
+      if(typeof b.admin!=='string'||!b.admin||b.admin.length>200||b.admin===password||!(admin?same(b.admin,admin):Boolean(sec.login(b.admin))))return send(res,403,{error:'Introduce la contraseña de administración de Snoopy, distinta de la clave privada de voz.'});
       if(method==='PUT'){
         if(b.consent!==true)return send(res,400,{error:'Confirma la autorización para compartir la voz.'});
         const profile=validateProfile(b);
