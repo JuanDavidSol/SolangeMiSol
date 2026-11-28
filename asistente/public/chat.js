@@ -363,7 +363,12 @@
     h('p',{},'2. Confirma el guardado privado.'),
     cloudAdmin,h('label',{},cloudShareConsent,' Es mi voz o tengo permiso expreso para compartirla, con las autorizaciones necesarias. La persona autorizada podría copiarla.'),
     h('div',{class:'as-fish-actions'},cloudSave,cloudDelete));
+  let v3Buffered=false;
+  try{v3Buffered=localStorage.getItem('snoopy-v3-two-part-buffer')==='1'}catch{}
+  const v3BufferOption=h('input',{type:'checkbox'});v3BufferOption.checked=v3Buffered;
+  v3BufferOption.addEventListener('change',()=>{v3Buffered=v3BufferOption.checked;try{localStorage.setItem('snoopy-v3-two-part-buffer',v3Buffered?'1':'0')}catch{}});
   const advancedVoice=h('details',{class:'as-fish'},h('summary',{},'Configuración avanzada'),
+    h('label',{},v3BufferOption,' Esperar dos fragmentos antes de hablar (opcional; aumenta la espera inicial).'),
     h('div',{class:'as-fish-actions'},cloudClose),voiceTransferPanel,fishPanel);
   savedReplyPanel.querySelector('summary').textContent='Audios para descargar';
   const cloudPanel=h('div',{},cloudLogin,cloudStatus,voiceOwner);
@@ -852,8 +857,10 @@
     if(!s.refPath){
       const fd=new FormData();
       const refBlob=await(await fetch(s.ref,{signal})).blob();
-      const wav=await v3ReferenceWav(refBlob,signal);
-      fd.append('files',wav,'referencia.wav');
+      const mime=(refBlob.type||'').split(';')[0].toLowerCase();
+      const ext={'audio/mpeg':'mp3','audio/mp3':'mp3','audio/wav':'wav','audio/x-wav':'wav','audio/wave':'wav','audio/ogg':'ogg','audio/opus':'ogg','audio/flac':'flac','audio/x-flac':'flac','audio/mp4':'m4a','audio/x-m4a':'m4a','audio/webm':'webm','audio/aac':'aac'}[mime];
+      if(ext)fd.append('files',refBlob,'referencia.'+ext);
+      else fd.append('files',await v3ReferenceWav(refBlob,signal),'referencia.wav');
       const paths=await(await v3Fetch(V3_BASE+'/gradio_api/upload',{method:'POST',body:fd,signal})).json();
       if(!Array.isArray(paths)||typeof paths[0]!=='string')throw new Error('referencia inválida');
       s.refPath=paths[0];
@@ -870,7 +877,7 @@
         // Never expose upstream payloads, which may include private paths or text.
         const detail=data.toLowerCase();
         if(/quota|rate.limit|gpu.seconds|resource.exhausted|429|too many requests/.test(detail))throw Error('cuota o límite de VoxCPM2 alcanzado');
-        if(/queue.full|overload|503|unavailable|capacity|busy|try again|concurrent generation/.test(detail))throw Error('VoxCPM2 temporalmente saturado');
+        if(/queue.full|overload|\b503\b|temporarily unavailable|capacity|\bbusy\b|concurrent generation/.test(detail))throw Error('VoxCPM2 temporalmente saturado');
         if(/ffmpeg|decode|audio format|invalid audio|unsupported format/.test(detail))throw Error('VoxCPM2 no pudo leer la referencia de audio');
         throw Error('VoxCPM2 rechazó la generación sin especificar la causa');
       }
@@ -912,13 +919,13 @@
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
   }
-  // V3: one active generation, two prepared fragments ahead of playback.
+  // V3: start immediately after the first clip, or use the optional two-clip initial reserve.
   function v3SplitWords(words){
     const parts=[];let pos=0;
     while(pos<words.length){
       const remaining=words.slice(pos);
       if(!remaining.trim())break;
-      const cap=parts.length===0?220:320;
+      const cap=320;
       let size=Math.min(cap,remaining.length);
       if(size<remaining.length){
         const cut=remaining.slice(0,size);
@@ -949,7 +956,7 @@
         finishSpeech(s);return;
       }
       const available=q.blobs.length-q.play;
-      const initial=Math.min(2,total-q.play);
+      const initial=Math.min(s.v3Buffered?2:1,total-q.play);
       if(available>0&&(q.started||available>=initial||q.error)){
         q.started=true;
         const index=q.play;
@@ -968,7 +975,7 @@
       }
     }
     const buffered=q.blobs.length-q.play-(s.audio?1:0);
-    if(!q.error&&!q.generating&&q.blobs.length<total&&buffered<2)void v3QueueGenerate(s);
+    if(!q.error&&!q.generating&&q.blobs.length<total&&buffered<(s.v3Buffered?2:1))void v3QueueGenerate(s);
   }
   async function v3QueueGenerate(s){
     const q=s.v3Queue;
@@ -1121,7 +1128,7 @@
     speechState = { words, cursor: 0, utterance: null, paused: false,
       interrupted: false, finished: false, onFinished, turnStartedAt };
     if(v3Enabled()){
-      Object.assign(speechState,{v3:true,ref:v3Ref,refName:v3Name,loading:false,fish:fishOn?{key:fishKey,transcript:fishTranscript,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts,concise:fishConcise,ahead:fishAhead}:null,warmup});
+      Object.assign(speechState,{v3:true,v3Buffered,ref:v3Ref,refName:v3Name,loading:false,fish:fishOn?{key:fishKey,transcript:fishTranscript,latency:fishLatency,continuous:fishContinuous,noCuts:fishNoCuts,concise:fishConcise,ahead:fishAhead}:null,warmup});
       v3Segment(speechState);
     }else speakSegment(speechState);
   }
