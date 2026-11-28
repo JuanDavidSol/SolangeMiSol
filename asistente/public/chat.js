@@ -291,10 +291,10 @@
     if(voiceConversation&&!busy)resumeVoiceConversation();
     return true;
   }
-  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.4 lectura continua'),
+  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.5 voz fluida'),
     h('p',{},'Usa la misma muestra de arriba sin crear una voz pública.'),
     fishInput,fishText,
-    h('label',{},fishFlow,' Lectura continua (prepara toda la respuesta antes de hablar, sin esperas entre fragmentos). Desmarca para volver al streaming rápido.'),
+    h('label',{},fishFlow,' Lectura fluida (genera toda la respuesta en una petición y reproduce con audio adelantado). Desmarca para empezar antes con menos colchón.'),
     h('label',{},fishFast,' Baja latencia de generación (desmarca para priorizar una voz más natural).'),
     h('label',{},fishConsent,' Tengo permiso para reutilizar esta voz y autorización para usar el servicio. Acepto enviar la muestra, su transcripción y las respuestas a Fish Audio, que puede usar datos del modelo gratuito para mejorar su servicio. No envíes información privada.'),
     h('label',{},fishRememberInput,' Recordar mi clave en este navegador (opcional; se guarda sin cifrado adicional).'),
@@ -317,7 +317,7 @@
     fishInfo,fishTiming,
     h('p',{},'La clave viaja por HTTPS a este servidor y a Fish Audio; no se guarda en el servidor. Solo se solicita el modelo s2.1-pro-free. Si no está disponible, no se cambia a un modelo de pago. El acceso gratuito anunciado llega hasta el 30/11/2026. Cada dispositivo necesita su propia configuración.'));
   v3Panel.append(fishPanel);fishRefresh();
-  fishFlow.addEventListener('change',()=>{fishContinuous=fishFlow.checked;clearFishWarmup();fishSave();fishTiming.textContent=fishContinuous?'Lectura continua: se prepara el audio completo.':'Streaming rápido: puede haber pausas entre fragmentos.';});
+  fishFlow.addEventListener('change',()=>{fishContinuous=fishFlow.checked;clearFishWarmup();fishSave();fishTiming.textContent=fishContinuous?'Lectura fluida: genera y reproduce a la vez, con colchón de audio.':'Inicio rápido: menos colchón de audio; puede haber cortes.';});
   fishFast.addEventListener('change',()=>{fishLatency=fishFast.checked?'low':'balanced';clearFishWarmup();fishSave();fishTiming.textContent='Modo '+(fishLatency==='low'?'baja latencia':'equilibrado')+' · se aplicará a la próxima respuesta.';});
   fishConsent.addEventListener('change',()=>{
     if(!fishConsent.checked&&fishOn){stopVoice();fishDeactivate();v3Save();v3Refresh();if(voiceConversation&&!busy)resumeVoiceConversation();}
@@ -416,10 +416,10 @@
     });
   }
   function v3AttachAudio(s,url,size,streaming){
-    s.audioURL=url;s.audio=new Audio();s.audio.preload='auto';s.segmentStarted=false;
+    s.audioURL=url;s.audio=new Audio();s.audio.preload='auto';s.segmentStarted=false;s.bufferReady=!streaming;s.networkEnded=!streaming;s.buffering=false;s.stalls=0;
     s.audio.onplaying=()=>{
       if(speechState!==s)return;
-      s.segmentStarted=true;
+      s.segmentStarted=true;s.buffering=false;
       if(s.fish&&!s.firstAudioMeasured&&s.ttsStartedAt!=null){
         s.firstAudioMeasured=true;
         const now=performance.now(),tts=((now-s.ttsStartedAt)/1000).toFixed(2);
@@ -427,6 +427,14 @@
         s.latencyLabel='Voz: '+tts+' s'+total;
         fishTiming.textContent=s.latencyLabel;
       }
+    };
+    s.audio.onwaiting=()=>{
+      if(speechState!==s||!s.fish||!s.segmentStarted||s.paused||s.networkEnded||s.buffering)return;
+      s.stalls++;s.buffering=true;
+      // Evita intentos de arranque con unas pocas muestras tras un corte de red.
+      s.audio.pause();
+      v3Status('Recuperando el colchón de audio… ('+s.stalls+' cortes)');
+      fishTiming.textContent=(s.latencyLabel||'')+' · Cortes de transmisión: '+s.stalls;
     };
     s.audio.onended=()=>{
       if(speechState!==s)return;
@@ -442,7 +450,7 @@
     else r=await fishResponse(s,phrase,signal);
     if(speechState!==s||signal.aborted){if(r.body)await r.body.cancel().catch(()=>{});return;}
     // Safari y otros navegadores sin MSE MP3 conservan la reproducción normal.
-    if(s.fish.continuous||!fishCanStream()||!r.body){
+    if(!fishCanStream()||!r.body){
       const blob=await r.blob();if(!blob.size)throw new Error('Fish Audio no devolvió audio');
       if(speechState===s&&!signal.aborted){s.loading=false;v3AttachAudio(s,URL.createObjectURL(blob),size,false);}
       return;
@@ -454,24 +462,49 @@
       await opened;
       const sb=ms.addSourceBuffer('audio/mpeg');
       sb.mode='sequence';
-      let started=false,bytes=0;
+      let started=false,bytes=0,firstChunkAt=null;
+      // Espera un colchón inicial, no el audio entero. Si la generación va lenta,
+      // aumenta la reserva hasta ocho segundos en modo fluido.
+      function pump(){
+        if(speechState!==s||!s.audio)return;
+        const pos=s.audio.currentTime||0;
+        let ahead=0,end=0;
+        for(let i=0;i<sb.buffered.length;i++){
+          const a=sb.buffered.start(i),b=sb.buffered.end(i);
+          end=Math.max(end,b);
+          if(pos>=a-0.08&&pos<=b)ahead=Math.max(ahead,b-pos);
+        }
+        if(!started&&firstChunkAt!=null){
+          const elapsed=Math.max(0.25,(performance.now()-firstChunkAt)/1000);
+          const rate=end/elapsed;
+          const target=s.fish.continuous?Math.min(8,Math.max(3,rate<1.15?5:3,elapsed*0.35)):0.7;
+          if(ahead>=target){
+            started=true;s.bufferReady=true;
+            if(!s.paused)v3PlayAudio(s);
+          }
+        }else if(started&&s.buffering&&ahead>=(s.fish.continuous?3:1)){
+          s.buffering=false;
+          if(!s.paused)v3PlayAudio(s);
+        }
+      }
       while(true){
         const {done,value}=await reader.read();
         if(done)break;
         if(signal.aborted||speechState!==s||!s.v3)return;
         if(!value||!value.byteLength)continue;
         bytes+=value.byteLength;
+        if(firstChunkAt==null)firstChunkAt=performance.now();
         await fishWait(sb,'updateend',signal,()=>sb.appendBuffer(value));
-        if(!started&&sb.buffered.length>0){
-          started=true;
-          if(!s.paused)v3PlayAudio(s);
-        }
+        pump();
       }
       if(!bytes)throw new Error('Fish Audio no devolvió audio');
       if(signal.aborted||speechState!==s||!s.v3)return;
+      s.networkEnded=true;s.bufferReady=true;
       if(ms.readyState==='open')ms.endOfStream();
       s.loading=false;
-      if(!started&&!s.paused)v3PlayAudio(s);
+      const needsPlay=!started||s.buffering;
+      s.buffering=false;
+      if(needsPlay&&!s.paused)v3PlayAudio(s);
     }finally{
       if(s.streamReader===reader)s.streamReader=null;
       await reader.cancel().catch(()=>{});
@@ -512,7 +545,7 @@
   }
   function v3Dispose(s){
     if(s.streamReader){s.streamReader.cancel().catch(()=>{});s.streamReader=null;}
-    if(s.audio){s.audio.onended=null;s.audio.onerror=null;s.audio.onplaying=null;s.audio.pause();s.audio.removeAttribute('src');s.audio.load();s.audio=null;}
+    if(s.audio){s.audio.onended=null;s.audio.onerror=null;s.audio.onplaying=null;s.audio.onwaiting=null;s.audio.pause();s.audio.removeAttribute('src');s.audio.load();s.audio=null;}
     if(s.audioURL){URL.revokeObjectURL(s.audioURL);s.audioURL=null;}
     s.mediaSource=null;
   }
@@ -530,9 +563,9 @@
     speakSegment(s);
   }
   function v3PlayAudio(s){
-    if(speechState!==s||!s.audio||s.paused||s.finished)return;
+    if(speechState!==s||!s.audio||s.paused||s.finished||(s.fish&&(!s.bufferReady||s.buffering)))return;
     s.audio.play().then(()=>{
-      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.4.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
+      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.5.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
     }).catch(()=>{
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
@@ -542,7 +575,7 @@
     const remaining=s.words.slice(s.cursor);
     if(!remaining.trim()){v3Status((s.fish?'Fish Audio V4':'Voz V3')+' · respuesta completada.');finishSpeech(s);return;}
     // En navegadores sin streaming, priorizar una primera frase corta.
-    const cap=s.fish&&s.fish.continuous?3200:s.fish&&s.cursor===0&&(s.fish.latency==='low'||!fishCanStream())?150:320;
+    const cap=s.fish?3200:320;
     let size=Math.min(cap,remaining.length);
     if(size<remaining.length){
       const cut=remaining.slice(0,size);
@@ -556,7 +589,7 @@
     s.loading=true;const controller=warm?warm.controller:new AbortController();s.controller=controller;
     const timer=setTimeout(()=>controller.abort(),180000);
     s.segmentStarted=false;
-    v3Status(s.fish?(s.fish.continuous?'Preparando la respuesta completa para leerla de corrido…':'Snoopy está preparando los primeros sonidos…'):'Snoopy está generando su voz personalizada…');
+    v3Status(s.fish?(s.fish.continuous?'Generando voz y preparando el colchón de audio…':'Snoopy está preparando los primeros sonidos…'):'Snoopy está generando su voz personalizada…');
     try{
       if(s.fish){await fishStream(s,remaining.slice(0,size).trim(),size,controller.signal,warm);return;}
       const blob=await v3Generate(s,remaining.slice(0,size).trim(),controller.signal);
@@ -662,7 +695,7 @@
       if (onFinished) onFinished();
       return;
     }
-    const warmup=takeFishWarmup(words);
+    const warmup=null; // una única petición de voz por respuesta, sin dividir la primera frase
     stopVoice();
     speechState = { words, cursor: 0, utterance: null, paused: false,
       interrupted: false, finished: false, onFinished, turnStartedAt };
@@ -1063,10 +1096,9 @@
 
     const reader = r.body.getReader(), decoder = new TextDecoder();
     let buffer = '', acc = '', final = null;
-    const turnGeneration=voiceGeneration;
     const onLine = raw => {
       let ev; try { ev = JSON.parse(raw); } catch { return; }
-      if (ev.type === 'delta' && typeof ev.text === 'string') {showLive(acc += ev.text);startFishWarmup(acc,turnGeneration);}
+      if (ev.type === 'delta' && typeof ev.text === 'string') showLive(acc += ev.text);
       else if (ev.type === 'done') final = ev;
       else if (ev.type === 'error') { const e = new Error(ev.error); e.userMessage = String(ev.error || ''); throw e; }
     };
