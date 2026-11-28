@@ -216,7 +216,7 @@
   /* ---------- Snoopy V3: voz de referencia opcional ---------- */
   const V3_KEY = 'snoopy-voice-reference-v3';
   const V3_BASE = 'https://openbmb-voxcpm-demo.hf.space';
-  const V3_STYLE = 'A sweet, youthful male cartoon puppy voice with a medium-low pitch and warm masculine resonance. Tender, adorable, cheerful and playful. Speak at a relaxed pace, with natural pauses and expressive intonation. Soft, clear and natural Latin American Spanish. Avoid high-pitched, squeaky, feminine or robotic sounds. Keep the voice youthful without sounding like an adult man. Eliminate all shrill, piercing and squealing vocal sounds. Maintain a smooth, warm and consistent tone, even when expressing excitement. Slightly reduce the overall energy level, keeping the delivery calm, relaxed, gentle and naturally cheerful, without sounding sleepy, monotonous or overly enthusiastic. Connect words and syllables smoothly, with subtle natural variations in rhythm and emphasis.';
+  const V3_STYLE = 'Natural conversational Latin American Spanish, preserving the speaker identity, pitch and timbre of the authorized reference recording. Clear articulation, warm and calm delivery, subtle expressive intonation, connected words, natural rhythm and appropriate pauses. Avoid exaggerated acting, cartoon effects, robotic delivery and artificial pitch shifts.';
   let v3Ref='', v3Name='', v3Allowed=false, v3Load=0, v3CloudLoaded=false;
   const CLOUD_VOICE_KEY='snoopy-private-voice-enabled-v1';
   if (MODE==='page') try {
@@ -1349,7 +1349,7 @@
   }
   function welcome() {
     const hour = new Date().getHours(), saludo = hour < 12 ? 'Buenos días' : hour < 19 ? 'Buenas tardes' : 'Buenas noches';
-    const t = String(cfg.welcome || '¡Hola!').replace('{saludo}', saludo).replace('{nombre}', cfg.name);
+    const t = '¡'+saludo+'! Qué gusto saludarte. ¿Cómo estás hoy?';
     state.msgs = [{ r: 'a', t, l: [], s: cfg.faqs || [], w: 1 }]; save(); render();
   }
   async function refreshChips() {
