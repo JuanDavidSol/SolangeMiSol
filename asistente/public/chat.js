@@ -222,7 +222,7 @@
     }
   } catch(_){}
   const FISH_KEY='snoopy-fish-settings-v4';
-  let fishKey='',fishTranscript='',fishOn=false,fishRemember=false,fishWarmup=null,fishLatency='low',fishContinuous=true,fishNoCuts=true,fishConcise=true,fishReplay=null,fishAhead=false;
+  let fishKey='',fishTranscript='',fishOn=false,fishRemember=false,fishWarmup=null,fishLatency='low',fishContinuous=true,fishNoCuts=true,fishConcise=true,fishReplay=null,fishAhead=false,fishProfile=null;
   if(MODE==='page')try{
     const saved=JSON.parse(localStorage.getItem(FISH_KEY)||'null');
     if(saved){
@@ -281,7 +281,7 @@
     fishInfo.textContent=fishOn?'Fish Audio V4 activo · modelo gratuito · conexión todavía no verificada.':'Fish Audio no está activo.';
   }
   function fishDeactivate(){
-    fishReplay=null;fishOn=false;fishConsent.checked=false;fishSave();fishRefresh();
+    fishReplay=null;fishProfile=null;fishOn=false;fishConsent.checked=false;fishSave();fishRefresh();
   }
   function fishActivate(){
     const k=fishInput.value.trim(),t=fishText.value.trim();
@@ -289,7 +289,7 @@
     if(!v3Ref){fishInfo.textContent='Carga primero el MP3 ganador de Snoopy.';return false;}
     if(!t){fishInfo.textContent='Escribe la transcripción exacta del audio.';return false;}
     if(!fishConsent.checked){fishInfo.textContent='Marca la autorización para activar Fish Audio.';return false;}
-    stopVoice();if(k!==fishKey||t!==fishTranscript)fishReplay=null;fishKey=k;fishTranscript=t;fishOn=true;fishRemember=fishRememberInput.checked;
+    stopVoice();if(k!==fishKey||t!==fishTranscript){fishReplay=null;fishProfile=null;}fishKey=k;fishTranscript=t;fishOn=true;fishRemember=fishRememberInput.checked;
     v3Allowed=false;v3Consent.checked=false;
     v3Refresh();v3Save();fishRefresh();
     if(!fishSave())fishInfo.textContent+=' No se pudo recordar la clave.';
@@ -297,11 +297,11 @@
     if(voiceConversation&&!busy)resumeVoiceConversation();
     return true;
   }
-  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.8 generación anticipada'),
+  const fishPanel=h('div',{class:'as-fish'},h('strong',{},'🐟 Fish Audio · V4.9 anticipación adaptativa'),
     h('p',{},'Usa la misma muestra de arriba sin crear una voz pública.'),
     fishInput,fishText,
     h('label',{},fishStrict,' Sin cortes de carga: descarga el audio entero antes de hablar. Recomendado si hay pausas.'),
-    h('label',{},fishAheadInput,' Generación anticipada experimental (respuestas largas: prepara las frases siguientes mientras habla; puede haber esperas si el servicio va lento).'),
+    h('label',{},fishAheadInput,' Generación anticipada experimental (una transmisión continua, reserva adaptada a la velocidad de Fish Audio).'),
     h('label',{},fishShort,' Conversación ágil: Gemini responde más brevemente en preguntas sencillas. Las explicaciones detalladas siguen disponibles.'),
     h('label',{},fishFlow,' Streaming con reserva de audio (si desactivas los dos modos anteriores).'),
     h('label',{},fishFast,' Baja latencia de generación (desmarca para priorizar una voz más natural).'),
@@ -436,7 +436,8 @@
       if(s.fishHeadersAt!=null&&s.ttsStartedAt!=null)items.push('Inicio de respuesta del servidor: '+seconds((s.fishHeadersAt-s.ttsStartedAt)/1000));
       if(s.fishCompletedAt!=null&&s.ttsStartedAt!=null)items.push('Audio recibido: '+seconds((s.fishCompletedAt-s.ttsStartedAt)/1000));
       if(s.audio&&Number.isFinite(s.audio.duration))items.push('Duración: '+seconds(s.audio.duration));
-      if(s.aheadTotal)items.push('Fragmentos preparados: '+s.aheadReady+'/'+s.aheadTotal);
+      if(s.aheadTarget!=null)items.push('Reserva objetivo: '+seconds(s.aheadTarget));
+      if(s.aheadRate!=null)items.push('Velocidad de generación: '+s.aheadRate.toFixed(2)+'x');
       items.push('Esperas del reproductor: '+s.stalls);
       if(s.fishCompletedAt!=null)items.push(s.fishCached?'Audio reutilizado de esta sesión':'Audio completo en memoria');
       fishTiming.textContent=items.filter(Boolean).join(' · ');
@@ -474,92 +475,105 @@
     s.audio.src=url;
     if(!streaming&&!s.paused)v3PlayAudio(s);
   }
-  // Fragmentos completos; no corta palabras y conserva toda la respuesta.
-  function fishSplitAhead(phrase){
-    const chunks=[];let rest=phrase.trim();
-    while(rest){
-      const limit=chunks.length?600:220,minimum=chunks.length?300:95;
-      if(rest.length<=limit){chunks.push(rest);break;}
-      const head=rest.slice(0,limit+1);
-      const natural=[...head.matchAll(/[.!?;](?=\s|$)/g)].map(m=>m.index+1).filter(i=>i>=minimum&&i<=limit);
-      let at=natural.length?natural[natural.length-1]:head.lastIndexOf(' ',limit);
-      if(at<=0)at=limit;
-      // Evita una petición adicional por una última frase minúscula.
-      if(rest.length-at<90&&rest.length<=limit+90)at=rest.length;
-      chunks.push(rest.slice(0,at).trim());rest=rest.slice(at).trim();
-    }
-    return chunks;
-  }
-  function fishAheadTarget(chunks,next,secondsPerChar,audioPerChar){
-    let gen=0,speech=0,need=0;
-    for(let j=next;j<chunks.length;j++){
-      gen+=chunks[j].length*secondsPerChar;
-      need=Math.max(need,gen-speech);
-      speech+=chunks[j].length*audioPerChar;
-    }
-    return Math.max(2.5,need+1.5);
+  // Predice el déficit de audio restante con las mediciones de esta sesión.
+  // Si el motor va más lento que la lectura, conserva una reserva mayor.
+  function fishAdaptiveTarget(total,produced,rate,margin){
+    const remaining=Math.max(0,total-produced);
+    const safeRate=Math.max(0.15,Math.min(4,rate));
+    const deficit=remaining*Math.max(0,1/safeRate-1);
+    return Math.max(2.5,Math.min(18,deficit+margin));
   }
   async function fishAheadStream(s,phrase,size,signal){
-    const chunks=fishSplitAhead(phrase);
-    s.aheadTotal=chunks.length;s.aheadReady=0;
-    const ms=new MediaSource();s.mediaSource=ms;
-    await fishWait(ms,'sourceopen',signal,()=>v3AttachAudio(s,URL.createObjectURL(ms),size,true));
-    const sb=ms.addSourceBuffer('audio/mpeg');sb.mode='sequence';
-    let started=false,generated=0,genSeconds=0,audioSeconds=0,bytes=0;
-    const alive=()=>speechState===s&&s.v3&&!signal.aborted;
-    function reserve(){
-      let end=0,ahead=0;const pos=s.audio.currentTime||0;
-      for(let i=0;i<sb.buffered.length;i++){
-        const a=sb.buffered.start(i),b=sb.buffered.end(i);
-        end=Math.max(end,b);
-        if(pos>=a-0.08&&pos<=b)ahead=Math.max(ahead,b-pos);
-      }
-      return {end,ahead};
-    }
-    function pump(){
-      if(!alive()||!s.audio||!generated)return;
-      const {ahead}=reserve(),next=s.aheadReady;
-      // Estimate future generation from actual completed requests and actual buffered duration.
-      const target=fishAheadTarget(chunks,next,genSeconds/generated*1.20,audioSeconds/generated);
-      if(!started&&(next===chunks.length||ahead>=target)){
-        started=true;s.bufferReady=true;
-        if(!s.paused)v3PlayAudio(s);
-      }else if(started&&s.buffering&&(next===chunks.length||ahead>=Math.max(3,target))){
-        s.buffering=false;
-        if(!s.paused)v3PlayAudio(s);
-      }else if(!started){
-        v3Status('Preparando reserva inteligente… '+next+'/'+chunks.length+' fragmentos.');
-      }
-    }
-    for(let i=0;i<chunks.length;i++){
-      if(!alive())return;
-      const t=performance.now(),before=reserve().end;
-      const r=await fishResponse(s,chunks[i],signal);
-      if(i===0)s.fishHeadersAt=performance.now();
+    const previous=fishProfile&&fishProfile.ref===s.ref&&fishProfile.latency===s.fish.latency?fishProfile:null;
+    const r=await fishResponse(s,phrase,signal);
+    if(speechState!==s||signal.aborted){if(r.body)await r.body.cancel().catch(()=>{});return;}
+    s.fishHeadersAt=performance.now();
+    if(!r.body){
       const blob=await r.blob();
-      if(!alive())return;
-      if(!blob.size)throw new Error('Fish Audio devolvió un fragmento vacío');
-      const data=await blob.arrayBuffer();
-      if(!alive())return;
-      await fishWait(sb,'updateend',signal,()=>sb.appendBuffer(data));
-      if(!alive())return;
-      genSeconds+=(performance.now()-t)/1000;generated+=chunks[i].length;
-      audioSeconds+=Math.max(0,reserve().end-before);bytes+=blob.size;
-      s.aheadReady=i+1;
-      if(s.reportFish)s.reportFish();
-      pump();
+      if(speechState!==s||signal.aborted)return;
+      if(!blob.size)throw new Error('Fish Audio no devolvió audio');
+      s.fishCompletedAt=performance.now();s.loading=false;s.fishBytes=blob.size;
+      v3AttachAudio(s,URL.createObjectURL(blob),size,false);return;
     }
-    if(!alive())return;
-    s.networkEnded=true;s.bufferReady=true;s.fishCompletedAt=performance.now();s.fishBytes=bytes;
-    if(ms.readyState==='open')ms.endOfStream();
-    s.loading=false;
-    if(s.reportFish)s.reportFish();
-    const needsPlay=!started||s.buffering;
-    s.buffering=false;
-    if(needsPlay&&!s.paused)v3PlayAudio(s);
+    const ms=new MediaSource();s.mediaSource=ms;
+    const reader=r.body.getReader();s.streamReader=reader;
+    const alive=()=>speechState===s&&s.v3&&!signal.aborted;
+    try{
+      await fishWait(ms,'sourceopen',signal,()=>v3AttachAudio(s,URL.createObjectURL(ms),size,true));
+      const sb=ms.addSourceBuffer('audio/mpeg');sb.mode='sequence';
+      let started=false,bytes=0,firstAt=null,initialEnd=0;
+      const totalGuess=phrase.length*(previous?previous.audioPerChar:0.075);
+      function reserve(){
+        let end=0,ahead=0;const pos=s.audio.currentTime||0;
+        for(let i=0;i<sb.buffered.length;i++){
+          const a=sb.buffered.start(i),b=sb.buffered.end(i);
+          end=Math.max(end,b);
+          if(pos>=a-0.08&&pos<=b)ahead=Math.max(ahead,b-pos);
+        }
+        return {end,ahead};
+      }
+      function pump(){
+        if(!alive()||!s.audio||firstAt==null)return;
+        const {end,ahead}=reserve();
+        if(!end)return;
+        if(!initialEnd){initialEnd=end;firstAt=performance.now();}
+        const elapsed=(performance.now()-firstAt)/1000;
+        // Ignore the first burst and use historical throughput until enough new data arrives.
+        const observed=elapsed>=0.65?Math.max(0.15,Math.min(4,(end-initialEnd)/elapsed)):null;
+        const baseline=previous?previous.rate:0.95;
+        const weight=observed==null?0:Math.min(0.85,elapsed/5);
+        const rate=baseline*(1-weight)+(observed==null?baseline:observed)*weight;
+        const margin=previous?previous.margin:2.8;
+        const target=fishAdaptiveTarget(Math.max(totalGuess,end),end,rate,margin);
+        s.aheadTarget=target;s.aheadRate=rate;
+        if(!started&&ahead>=target){
+          started=true;s.bufferReady=true;
+          if(!s.paused)v3PlayAudio(s);
+        }else if(started&&s.buffering&&ahead>=Math.max(3,target)){
+          s.buffering=false;
+          if(!s.paused)v3PlayAudio(s);
+        }else if(!started){
+          v3Status('Preparando audio… '+ahead.toFixed(1)+' / '+target.toFixed(1)+' s de reserva.');
+        }
+        if(s.reportFish)s.reportFish();
+      }
+      while(true){
+        const {done,value}=await reader.read();
+        if(done)break;
+        if(!alive())return;
+        if(!value||!value.byteLength)continue;
+        bytes+=value.byteLength;
+        if(firstAt==null)firstAt=performance.now();
+        await fishWait(sb,'updateend',signal,()=>sb.appendBuffer(value));
+        pump();
+      }
+      if(!alive())return;
+      if(!bytes||!reserve().end)throw new Error('Fish Audio no devolvió audio reproducible');
+      const duration=reserve().end;
+      const elapsed=firstAt==null?0:(performance.now()-firstAt)/1000;
+      if(elapsed>=0.65&&duration>initialEnd&&phrase.length>=120){
+        const measured=Math.max(0.15,Math.min(4,(duration-initialEnd)/elapsed));
+        const perChar=Math.max(0.025,Math.min(0.20,duration/phrase.length));
+        fishProfile={ref:s.ref,latency:s.fish.latency,
+          rate:previous?previous.rate*0.35+measured*0.65:measured,
+          audioPerChar:previous?previous.audioPerChar*0.5+perChar*0.5:perChar,
+          margin:Math.max(2.5,Math.min(10,(previous?previous.margin:2.8)+(s.stalls?1.8:-0.15)))};
+      }
+      s.networkEnded=true;s.bufferReady=true;s.fishCompletedAt=performance.now();s.fishBytes=bytes;
+      if(ms.readyState==='open')ms.endOfStream();
+      s.loading=false;
+      if(s.reportFish)s.reportFish();
+      const needsPlay=!started||s.buffering;
+      s.buffering=false;
+      if(needsPlay&&!s.paused)v3PlayAudio(s);
+    }finally{
+      if(s.streamReader===reader)s.streamReader=null;
+      await reader.cancel().catch(()=>{});
+      try{reader.releaseLock();}catch(_){}
+    }
   }
   async function fishStream(s,phrase,size,signal,warm){
-    if(s.fish.ahead&&phrase.length>300&&fishCanStream()){
+    if(s.fish.ahead&&phrase.length>180&&fishCanStream()){
       await fishAheadStream(s,phrase,size,signal);
       return;
     }
@@ -695,7 +709,7 @@
   function v3PlayAudio(s){
     if(speechState!==s||!s.audio||s.paused||s.finished||(s.fish&&(!s.bufferReady||s.buffering)))return;
     s.audio.play().then(()=>{
-      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.8.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
+      if(speechState===s&&!s.paused)v3Status('Snoopy está hablando con '+(s.fish?'Fish Audio V4.9.'+(s.latencyLabel?' · '+s.latencyLabel:''):'su voz V3.'));
     }).catch(()=>{
       if(speechState===s&&!s.paused)v3Status('Pulsa Reproducir respuesta para escuchar a Snoopy.',true);
     });
