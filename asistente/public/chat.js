@@ -214,7 +214,8 @@
   const V3_KEY = 'snoopy-voice-reference-v3';
   const V3_BASE = 'https://openbmb-voxcpm-demo.hf.space';
   const V3_STYLE = 'A sweet, youthful male cartoon puppy voice with a medium-low pitch and warm masculine resonance. Tender, adorable, cheerful and playful. Speak at a relaxed pace, with natural pauses and expressive intonation. Soft, clear and natural Latin American Spanish. Avoid high-pitched, squeaky, feminine or robotic sounds. Keep the voice youthful without sounding like an adult man. Eliminate all shrill, piercing and squealing vocal sounds. Maintain a smooth, warm and consistent tone, even when expressing excitement. Slightly reduce the overall energy level, keeping the delivery calm, relaxed, gentle and naturally cheerful, without sounding sleepy, monotonous or overly enthusiastic. Connect words and syllables smoothly, with subtle natural variations in rhythm and emphasis.';
-  let v3Ref='', v3Name='', v3Allowed=false, v3Load=0;
+  let v3Ref='', v3Name='', v3Allowed=false, v3Load=0, v3CloudLoaded=false;
+  const CLOUD_VOICE_KEY='snoopy-private-voice-enabled-v1';
   if (MODE==='page') try {
     const saved=JSON.parse(localStorage.getItem(V3_KEY)||'null');
     if(saved && typeof saved.ref==='string' && saved.ref.startsWith('data:audio/') && saved.ref.length<4100000){
@@ -253,7 +254,7 @@
     h('label',{},v3Consent,' Tengo permiso para reutilizar la voz y acepto enviar la muestra y el texto de las respuestas al servicio público VoxCPM2 de Hugging Face. No compartas información privada.'),
     h('p',{},'Experimental: puede haber colas y límites. Desmarca la casilla para usar la voz anterior.'),
     h('button',{type:'button',onclick:()=>{
-      v3Load++;stopVoice();v3Ref='';v3Name='';v3Allowed=false;v3Consent.checked=false;v3File.value='';fishTranscript='';fishText.value='';fishDeactivate();
+      v3Load++;forgetCloudVoice();v3CloudLoaded=false;stopVoice();v3Ref='';v3Name='';v3Allowed=false;v3Consent.checked=false;v3File.value='';fishTranscript='';fishText.value='';fishDeactivate();
       v3Refresh();v3Save();v3Status('');
       if(voiceConversation&&!busy)resumeVoiceConversation();
     }},'Quitar referencia'));
@@ -342,7 +343,74 @@
   const savedReplyPanel=h('details',{class:'as-fish'},h('summary',{},'Respuestas de audio V3'),
     h('p',{},'Guarda cada respuesta completa como WAV para escucharla o compartirla después. Solo se conserva la última respuesta en esta vista; los archivos descargados permanecen en tu dispositivo.'),
     savedReplyStatus,savedReplyPlayer,h('div',{class:'as-fish-actions'},savedReplyDownload,savedReplyClear));
-  v3Panel.append(voiceTransferPanel,savedReplyPanel,fishPanel);fishRefresh();
+  const cloudPass=h('input',{type:'password',autocomplete:'off',maxlength:'256',placeholder:'Clave privada de voz','aria-label':'Clave privada de voz'});
+  const cloudConsent=h('input',{type:'checkbox'});
+  const cloudAdmin=h('input',{type:'password',autocomplete:'off',maxlength:'256',placeholder:'Contraseña de administrador','aria-label':'Contraseña de administrador de voz'});
+  const cloudShareConsent=h('input',{type:'checkbox'});
+  const cloudStatus=h('p',{role:'status','aria-live':'polite'});
+  const cloudOpen=h('button',{type:'button',onclick:()=>cloudAction('login')},'Activar voz privada');
+  const cloudClose=h('button',{type:'button',onclick:()=>cloudAction('logout')},'Desactivar en este dispositivo');
+  const cloudSave=h('button',{type:'button',onclick:()=>cloudAction('save')},'Guardar voz en R2');
+  const cloudDelete=h('button',{type:'button',onclick:()=>cloudAction('delete')},'Retirar voz de R2');
+  const cloudPanel=h('details',{class:'as-fish'},h('summary',{},'Voz privada en R2'),
+    h('p',{},'Activa la voz privada una vez con la clave de acceso. Este navegador recordará la autorización durante la sesión privada (hasta 30 días).'),
+    cloudPass,h('label',{},cloudConsent,' Autorizo usar la voz guardada y enviar la referencia y las respuestas al servicio externo VoxCPM2. No introduciré información privada.'),
+    h('div',{class:'as-fish-actions'},cloudOpen,cloudClose),
+    h('details',{},h('summary',{},'Administrar voz'),h('p',{},'Selecciona y prueba tu propia referencia V3 antes de guardarla. No se comparten claves API ni conversaciones.'),
+      cloudAdmin,h('label',{},cloudShareConsent,' Autorizo guardar y compartir esta voz, con los permisos necesarios. Entiendo que una persona autorizada podría copiarla o reutilizarla.'),
+      h('div',{class:'as-fish-actions'},cloudSave,cloudDelete)),cloudStatus);
+  v3Panel.append(cloudPanel,voiceTransferPanel,savedReplyPanel,fishPanel);fishRefresh();
+  let cloudBusy=false;
+  function forgetCloudVoice(){
+    try{localStorage.removeItem(CLOUD_VOICE_KEY)}catch{}
+  }
+  async function cloudApi(path,method='GET',data){
+    const r=await fetch('/api/private-voice/'+path,{method,credentials:'same-origin',cache:'no-store',headers:{'X-Snoopy-Voice':'1',...(data?{'Content-Type':'application/json'}:{})},...(data?{body:JSON.stringify(data)}:{})});
+    let b={};try{b=await r.json()}catch{}
+    if(!r.ok){const e=Error(b.error||'Error '+r.status);e.status=r.status;throw e}return b;
+  }
+  async function loadCloudVoice(){
+    const ticket=++v3Load;
+    const profile=await cloudApi('profile');
+    if(ticket!==v3Load)return;
+    if(typeof profile.ref!=='string'||profile.ref.length>4100000||!profile.ref.startsWith('data:audio/'))throw Error('Perfil de voz no válido.');
+    stopVoice();fishDeactivate();v3CloudLoaded=true;v3Ref=profile.ref;v3Name='Voz privada guardada';v3Allowed=true;v3Consent.checked=true;
+    try{localStorage.removeItem(V3_KEY);localStorage.setItem(CLOUD_VOICE_KEY,'1')}catch{}
+    v3Refresh();cloudStatus.textContent='Voz privada V3 activa en este dispositivo.';
+    if(voiceConversation&&!busy)resumeVoiceConversation();
+  }
+  function dropCloudVoice(){
+    forgetCloudVoice();v3Load++;
+    if(v3CloudLoaded){stopVoice();fishDeactivate();v3CloudLoaded=false;v3Ref='';v3Name='';v3Allowed=false;v3Consent.checked=false;v3Refresh();v3Save()}
+  }
+  async function cloudAction(action){
+    if(cloudBusy)return;cloudBusy=true;let secret='';
+    for(const el of [cloudOpen,cloudClose,cloudSave,cloudDelete])el.disabled=true;
+    try{
+      if(action==='login'){
+        if(!cloudConsent.checked)throw Error('Confirma el uso de VoxCPM2.');
+        secret=cloudPass.value;
+        if(!secret)throw Error('Introduce la clave privada de voz.');
+        if(v3Ref&&!v3CloudLoaded&&!confirm('¿Usar la voz guardada en R2 en lugar de la referencia local?'))return;
+        await cloudApi('login','POST',{password:secret});await loadCloudVoice();
+      }else if(action==='logout'){
+        await cloudApi('logout','POST',{});dropCloudVoice();cloudStatus.textContent='Voz privada desactivada en este dispositivo.';
+      }else if(action==='save'){
+        if(!v3Ref||!v3Allowed||v3CloudLoaded)throw Error('Carga y autoriza primero una referencia local V3.');
+        if(!cloudShareConsent.checked)throw Error('Confirma la autorización para compartir la voz.');
+        secret=cloudAdmin.value;if(!secret)throw Error('Introduce tu contraseña de administrador.');
+        if(!confirm('¿Guardar esta referencia en R2? Sustituirá el perfil compartido anterior, si existe.'))return;
+        await cloudApi('profile','PUT',{admin:secret,ref:v3Ref,consent:true});
+        cloudStatus.textContent='Voz guardada en R2. Ya puede activarse desde otro dispositivo con la clave privada.';
+      }else if(action==='delete'){
+        secret=cloudAdmin.value;if(!secret)throw Error('Introduce tu contraseña de administrador.');
+        if(!confirm('¿Retirar la voz de R2? No se eliminarán las copias que ya se hayan descargado.'))return;
+        await cloudApi('profile','DELETE',{admin:secret});dropCloudVoice();
+        cloudStatus.textContent='Perfil retirado de R2. Las copias previas no se eliminan.';
+      }
+    }catch(e){cloudStatus.textContent=e.message}
+    finally{secret='';cloudPass.value='';cloudAdmin.value='';cloudShareConsent.checked=false;cloudBusy=false;for(const el of [cloudOpen,cloudClose,cloudSave,cloudDelete])el.disabled=false}
+  }
   let transferBusy=false,lastReplyBlob=null,lastReplyURL=null,replyAssembly=0;
   const transferAAD=new TextEncoder().encode('Snoopy:private-voice-transfer:v1');
   function downloadVoiceFile(blob,name){
@@ -379,7 +447,7 @@
         if(typeof data.ref!=='string'||data.ref.length>4100000||!/^data:audio\/[a-z0-9.+-]+;base64,[A-Za-z0-9+/]+={0,2}$/i.test(data.ref))throw Error('Referencia de audio inválida.');
         if(v3Ref&&!confirm('¿Sustituir la referencia de voz de este navegador?'))return;
         if(!confirm('VoxCPM2 utiliza un servicio público externo. ¿Autorizas enviar esta referencia y las respuestas al servicio para sintetizar la voz?'))return;
-        stopVoice();fishDeactivate();v3Ref=data.ref;v3Name=typeof data.name==='string'?data.name.slice(0,120):'Voz importada';v3Allowed=true;v3Consent.checked=true;
+        stopVoice();forgetCloudVoice();v3CloudLoaded=false;fishDeactivate();v3Ref=data.ref;v3Name=typeof data.name==='string'?data.name.slice(0,120):'Voz importada';v3Allowed=true;v3Consent.checked=true;
         v3Refresh();v3Save();voiceTransferStatus.textContent='Voz V3 importada y activa en este navegador.';
       }
     }catch(e){voiceTransferStatus.textContent=e.message}
@@ -425,6 +493,7 @@
   }
   function v3Save(){
     try{
+      if(v3CloudLoaded){localStorage.removeItem(V3_KEY);return;}
       if(v3Ref&&(v3Allowed||fishOn))localStorage.setItem(V3_KEY,JSON.stringify({ref:v3Ref,name:v3Name,allowed:v3Allowed}));
       else localStorage.removeItem(V3_KEY);
     }catch(_){v3Label.textContent+=' · No se pudo guardar; vuelve a cargarla al recargar la página.';}
@@ -442,7 +511,7 @@
       if(id!==v3Load)return;
       const data=String(reader.result||'');
       if(!data.startsWith('data:audio/')){v3Status('Tipo de audio no reconocido; utiliza MP3 o WAV.');return;}
-      stopVoice();v3Ref=data;v3Name=file.name;v3Allowed=false;v3Consent.checked=false;fishTranscript='';fishText.value='';fishDeactivate();
+      stopVoice();forgetCloudVoice();v3CloudLoaded=false;v3Ref=data;v3Name=file.name;v3Allowed=false;v3Consent.checked=false;fishTranscript='';fishText.value='';fishDeactivate();
       v3Refresh();v3Save();v3Status('Referencia cargada. Marca la casilla para activar la voz.');
       if(voiceConversation&&!busy)resumeVoiceConversation();
     };
@@ -451,11 +520,14 @@
   });
   v3Consent.addEventListener('change',()=>{
     if(!v3Ref){v3Consent.checked=false;v3Status('Selecciona primero el audio de Snoopy.');return;}
+    if(v3CloudLoaded&&!v3Consent.checked){dropCloudVoice();cloudStatus.textContent='Voz privada desactivada en este dispositivo.';void cloudApi('logout','POST',{}).catch(()=>{});return;}
     stopVoice();v3Allowed=v3Consent.checked;if(v3Allowed)fishDeactivate();v3Refresh();v3Save();
     v3Status(v3Allowed?'Voz V3 activa. Escribe una pregunta o habla con Snoopy.':'Voz del navegador activada.');
     if(voiceConversation&&!busy)resumeVoiceConversation();
   });
-  if(MODE==='page'){win.insertBefore(v3Panel,log);win.insertBefore(v3Bar,micStatus);v3Refresh();}
+  if(MODE==='page'){win.insertBefore(v3Panel,log);win.insertBefore(v3Bar,micStatus);v3Refresh();
+    Promise.resolve().then(async()=>{try{if(localStorage.getItem(CLOUD_VOICE_KEY)==='1')await loadCloudVoice()}catch(e){if(e.status===401||e.status===404)dropCloudVoice();cloudStatus.textContent=e.message}});
+  }
   function v3Enabled(){return MODE==='page'&&(v3Allowed||fishOn)&&Boolean(v3Ref);}
   async function v3Fetch(url,options={}){
     const r=await fetch(url,options);if(!r.ok)throw new Error('HTTP '+r.status);return r;
